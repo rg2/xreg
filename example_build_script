@@ -1,0 +1,280 @@
+#!/bin/bash
+#
+# Example script for building dependencies and xReg.
+# This is not pretty, but can be used in a pinch and serves well to illustrate
+# the settings used for achieving a successful build.
+
+# stop after the first failed command
+set -e
+
+mkdir build
+cd build
+
+NEED_TO_DOWNLOAD=true
+NEED_TO_BUILD_THIRD_PARTY=true
+NEED_TO_START_XREG=true
+
+DO_GUI=true
+
+#BUILD_CONFIG="Debug"
+BUILD_CONFIG="Release"
+
+BUILD_ROOT=`pwd`
+
+if [ "$NEED_TO_DOWNLOAD" = true ]; then
+  echo "Downloading third party libraries..."
+  
+  # Choose the TBB package for your operating system:
+  OS_STR=`uname -s`
+
+  if [ "$OS_STR" == "Darwin" ]; then
+    TBB_URL="https://github.com/intel/tbb/releases/download/2018_U1/tbb2018_20170919oss_mac.tgz"
+  elif [ "$OS_STR" == "Linux" ]; then
+    TBB_URL="https://github.com/intel/tbb/releases/download/2018_U1/tbb2018_20170919oss_lin.tgz"
+  else
+    TBB_URL="https://github.com/intel/tbb/releases/download/2018_U1/tbb2018_20170919oss_win.zip"
+  fi
+
+  TBB_FILE=`basename $TBB_URL`
+
+  wget $TBB_URL
+
+  tar xf $TBB_FILE
+
+  rm $TBB_FILE
+
+  BOOST_URL="https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.zip"
+
+  BOOST_FILE=`basename $BOOST_URL`
+
+  wget $BOOST_URL
+
+  unzip -q $BOOST_FILE
+
+  rm $BOOST_FILE
+
+  EIGEN_URL="https://gitlab.com/libeigen/eigen/-/archive/3.3.4/eigen-3.3.4.zip"
+
+  EIGEN_FILE=`basename $EIGEN_URL`
+
+  wget $EIGEN_URL
+
+  unzip -q $EIGEN_FILE
+
+  rm $EIGEN_FILE
+
+  VIENNACL_URL="https://github.com/viennacl/viennacl-dev/archive/release-1.7.1.zip"
+
+  VIENNACL_FILE=`basename $VIENNACL_URL`
+
+  wget $VIENNACL_URL
+
+  unzip -q $VIENNACL_FILE
+
+  rm $VIENNACL_FILE
+
+  FMT_URL="https://github.com/fmtlib/fmt/archive/5.3.0.zip"
+
+  FMT_FILE=`basename $FMT_URL`
+
+  wget $FMT_URL
+
+  unzip -q $FMT_FILE
+
+  rm $FMT_FILE
+
+  NLOPT_URL="https://github.com/stevengj/nlopt/archive/v2.5.0.zip"
+
+  NLOPT_FILE=`basename $NLOPT_URL`
+
+  wget $NLOPT_URL
+
+  unzip -q $NLOPT_FILE
+
+  rm $NLOPT_FILE
+
+  VTK_URL="https://www.vtk.org/files/release/7.1/VTK-7.1.1.zip"
+
+  wget $VTK_URL
+
+  VTK_FILE=`basename $VTK_URL`
+
+  unzip -q $VTK_FILE
+
+  rm $VTK_FILE
+
+  ITK_URL="https://github.com/InsightSoftwareConsortium/ITK/releases/download/v4.13.2/InsightToolkit-4.13.2.zip"
+
+  ITK_FILE=`basename $ITK_URL`
+
+  wget $ITK_URL
+
+  unzip -q $ITK_FILE
+
+  rm $ITK_FILE
+  
+  OPENCV_URL="https://github.com/opencv/opencv/archive/3.2.0.zip"
+
+  OPENCV_FILE=`basename $OPENCV_URL`
+
+  wget $OPENCV_URL
+
+  unzip -q $OPENCV_FILE
+
+  rm $OPENCV_FILE
+fi
+
+TBB_INC_DIR="$BUILD_ROOT/tbb2018_20170919oss/include"
+TBB_DIR="$BUILD_ROOT/tbb2018_20170919oss/cmake"
+
+BOOST_DIR="$BUILD_ROOT/`ls | grep "boost_*"`"
+
+EIGEN_DIR="$BUILD_ROOT/`ls | grep "eigen-*"`"
+
+VIENNACL_DIR="$BUILD_ROOT/`ls | grep "viennacl-dev-release-*"`"
+
+FMT_DIR="$BUILD_ROOT/`ls | grep "fmt-*"`"
+
+NLOPT_DIR="$BUILD_ROOT/`ls | grep "nlopt-*"`"
+
+VTK_DIR="$BUILD_ROOT/`ls | grep "VTK-*"`"
+
+ITK_DIR="$BUILD_ROOT/`ls | grep "InsightToolkit-*"`"
+
+OPENCV_DIR="$BUILD_ROOT/`ls | grep "opencv-*"`"
+
+if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
+  echo "Building third-party libraries..."
+
+  cd $FMT_DIR
+  mkdir build
+  cd build
+  cmake -G Ninja .. \
+    -DCMAKE_CXX_STANDARD:STRING="11" \
+    -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
+    -DFMT_USE_CPP11:BOOL=ON \
+    -DFMT_TEST:BOOL=OFF \
+    -DFMT_INSTALL:BOOL=ON \
+    -DFMT_DOC:BOOL=OFF
+  ninja
+  cd ../../
+
+cd $NLOPT_DIR
+  mkdir build
+  cd build
+  cmake -G Ninja .. \
+    -DCMAKE_CXX_STANDARD:STRING="11" \
+    -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
+    -DBUILD_SHARED_LIBS:BOOL=OFF \
+    -DNLOPT_CXX:BOOL=OFF \
+    -DNLOPT_PYTHON:BOOL=OFF \
+    -DNLOPT_OCTAVE:BOOL=OFF \
+    -DNLOPT_MATLAB:BOOL=OFF \
+    -DNLOPT_GUILE:BOOL=OFF \
+    -DNLOPT_SWIG:BOOL=OFF \
+    -DNLOPT_LINK_PYTHON:BOOL=OFF
+  ninja
+  cd ../../
+
+  cd $VTK_DIR
+  mkdir build
+  cd build
+
+  VTK_NO_RENDER_FLAGS=""
+  if [ "$DO_GUI" = false ]; then
+    VTK_NO_RENDER_FLAGS="-DVTK_RENDERING_BACKEND=None -DVTK_Group_Rendering:BOOL=OFF"
+  fi
+
+  TBB_ROOT="$TBB_INC_DIR/.." cmake -G Ninja .. \
+    -DCMAKE_CXX_STANDARD:STRING="11" \
+    -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
+    -DBUILD_SHARED_LIBS:BOOL=OFF \
+    -DVTK_Group_Imaging:BOOL=ON \
+    -DVTK_Group_Views:BOOL=ON \
+    -DBUILD_TESTING:BOOL=OFF \
+    -DVTK_USE_CXX11_FEATURES:BOOL=ON \
+    -DVTK_SMP_IMPLEMENTATION_TYPE:STRING="TBB" $VTK_NO_RENDER_FLAGS
+
+  ninja
+
+  cd ../..
+
+  cd $ITK_DIR
+  mkdir build
+  cd build
+
+  cmake -G Ninja .. \
+      -DCMAKE_CXX_STANDARD:STRING="11" \
+      -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
+      -DBUILD_SHARED_LIBS:BOOL=OFF \
+      -DBUILD_TESTING:BOOL=OFF \
+      -DBUILD_EXAMPLES:BOOL=OFF \
+      -DITK_USE_GPU:BOOL=OFF \
+      -DModule_ITKReview:BOOL=ON \
+      -DModule_LabelErodeDilate:BOOL=ON \
+      -DVCL_INCLUDE_CXX_0X:BOOL=ON
+
+  ninja
+
+  cd ../..
+
+  cd $OPENCV_DIR
+  mkdir build
+  cd build
+
+  # Need to set this OFF on MARCC (and other systems without the necessary deps)
+  OPENCV_GUI_FLAGS=""
+  if [ "$DO_GUI" = false ]; then
+    OPENCV_GUI_FLAGS="-DBUILD_opencv_highgui:BOOL=OFF -DWITH_GSTREAMER:BOOL=OFF"
+  fi
+
+  # On Ubuntu 14.04, you may need to add this:
+  # -DWITH_LAPACK=OFF
+
+  cmake -G Ninja .. \
+        -DCMAKE_CXX_STANDARD:STRING="11" \
+        -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
+        -DBUILD_SHARED_LIBS:BOOL=OFF \
+        -DBUILD_TESTS:BOOL=OFF \
+        -DBUILD_EXAMPLES:BOOL=OFF \
+        -DBUILD_DOCS:BOOL=OFF \
+        -DBUILD_WITH_DEBUG_INFO:BOOL=OFF \
+        -DWITH_TBB:BOOL=ON \
+        -DTBB_INCLUDE_DIRS:PATH="${TBB_INC_DIR}" \
+        -DBUILD_TBB:BOOL=OFF \
+        -DWITH_IPP:BOOL=OFF \
+        -DWITH_VTK:BOOL=OFF \
+        -DWITH_CUBLAS:BOOL=OFF \
+        -DWITH_CUDA:BOOL=OFF \
+        -DWITH_CUFFT:BOOL=OFF \
+        -DWITH_OPENCL:BOOL=OFF \
+        -DBUILD_opencv_python2:BOOL=OFF \
+        -DBUILD_opencv_python3:BOOL=OFF $OPENCV_GUI_FLAGS
+
+  ninja
+
+  cd ../..
+  
+fi
+
+# START: XREG BUILD:
+
+if [ "$NEED_TO_START_XREG" = true ]; then
+
+  cmake -G Ninja .. \
+    -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON \
+    -DViennaCL_DIR:PATH="$VIENNACL_DIR" \
+    -DEIGEN3_INCLUDE_DIR:PATH="$EIGEN_DIR" \
+    -DBoost_INCLUDE_DIR:PATH="$BOOST_DIR" \
+    -DNLopt_DIR:BOOL="$NLOPT_DIR/build" \
+    -DTBB_DIR:PATH="$TBB_DIR" \
+    -Dfmt_DIR:PATH="$FMT_DIR/build" \
+    -DVTK_DIR:PATH="$VTK_DIR/build" \
+    -DITK_DIR:PATH="$ITK_DIR/build" \
+    -DOpenCV_DIR:PATH="$OPENCV_DIR/build"
+
+  ninja
+
+fi
+

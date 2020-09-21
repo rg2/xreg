@@ -1,0 +1,17 @@
+
+.git
+
+*.swp
+
+build
+build_release
+build_debug
+
+*.md
+
+*.png
+
+.DS_Store
+
+docker
+
