@@ -4,4 +4,4 @@ Plausible movements are enforced by sampling rigid transformations with anatomic
 
 A comprehensive listing of the program's usage may be obtained by passing `-h` or `--help`.
 
-An example of this program's usage is given in the walkthrough [here](https://github.com/rg2/jhmr-v2/wiki/Walkthrough%3A-Simulated-PAO-Adjustments).
+An example of this program's usage is given in the walkthrough [here](https://github.com/rg2/xreg/wiki/Walkthrough%3A-Simulated-PAO-Adjustments).

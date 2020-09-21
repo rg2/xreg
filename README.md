@@ -5,9 +5,9 @@ In addition to accelerating the development of new registration components throu
 
 Much of the functionality provided by xReg is also useful for other computer-assisted surgery tasks.
 A comprehensive listing of the features of the library are provided below, along with a list of the executable programs that are also included in this repository.
-Please visit the [wiki](https://github.com/rg2/jhmr-v2/wiki) for descriptions on the use of the library and executable programs.
-Basic usage of the executables is provided via a walkthrough/tutorial [here](https://github.com/rg2/jhmr-v2/wiki#walkthrough).
-Please submit an [issue](https://github.com/rg2/jhmr-v2/issues) for any problems, feature requests, or suggestions.
+Please visit the [wiki](https://github.com/rg2/xreg/wiki) for descriptions on the use of the library and executable programs.
+Basic usage of the executables is provided via a walkthrough/tutorial [here](https://github.com/rg2/xreg/wiki#walkthrough).
+Please submit an [issue](https://github.com/rg2/xreg/issues) for any problems, feature requests, or suggestions.
 
 This software was originally created while conducting research with [Russell Taylor](http://www.cs.jhu.edu/~rht), [Mehran Armand](https://bigss.lcsr.jhu.edu), and [Mathias Unberath](https://mathiasunberath.github.io/) within the [Laboratory for Computational Sensing and Robotics](https://lcsr.jhu.edu) at [Johns Hopkins University](https://www.jhu.edu).
 The current repository represents a rewrite/refactor of the original, internal, version of this software, with a focus on minimizing compile times and being reusable to novice developers and researchers.

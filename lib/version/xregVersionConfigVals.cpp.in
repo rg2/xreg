@@ -32,7 +32,7 @@ const char* xregGIT_SHA1 = "@XREG_GIT_SHA1@";
 bool xregHAS_GIT_SHA1 = @XREG_HAS_GIT_SHA1@;
 
 // Change this to CMAKE_PROJECT_VERSION if you want the version
-// associated with the top-level project. Since the jhmr library
+// associated with the top-level project. Since the xreg library
 // may be built as part of another project via the add_subdirectory()
 // command, PROJECT_VERSION is used here.
 const char* xregPROJ_VERSION = "@PROJECT_VERSION@";

@@ -18,7 +18,7 @@ The tool requires the following information as input:
   * The side which contains the fragment and femur to be registered; either "left" or "right"
   * 3D landmarks of the pelvis which are used to define the APP with an origin at the center of the ipsilateral femoral head (stored in FCSV format (`.fcsv`))
   * 3D landmarks of the pelvis which are used to solve the PnP problem (stored in FCSV format (`.fcsv`))
-  * A collection of 2D views along with 2D landmarks in at least one view (stored in the [xReg projection data format](https://github.com/rg2/jhmr-v2/wiki/Projection-Data-HDF5-File))
+  * A collection of 2D views along with 2D landmarks in at least one view (stored in the [xReg projection data format](https://github.com/rg2/xreg/wiki/Projection-Data-HDF5-File))
 
 The following information is optional input:
   * The projection index to be used for performing PnP initialization, this defaults to the first projection
@@ -29,4 +29,4 @@ Optionally, a path to an output debug file may be provided.
 
 A comprehensive listing of the program's usage may be obtained by passing `-h` or `--help`.
 
-An example of this program's usage is given in the walkthrough [here](https://github.com/rg2/jhmr-v2/wiki/Walkthrough%3A-Multiple-View-PAO-Fragment-Registration).
+An example of this program's usage is given in the walkthrough [here](https://github.com/rg2/xreg/wiki/Walkthrough%3A-Multiple-View-PAO-Fragment-Registration).

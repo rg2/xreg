@@ -16,4 +16,4 @@ The following landmarks must also be annotated in order to define the Anterior P
 
 A comprehensive listing of the program's usage may be obtained by passing `-h` or `--help`.
 
-Examples of this program's usage is provided in the walkthrough [here](https://github.com/rg2/jhmr-v2/wiki/Walkthrough%3A-PAO-Planning).
+Examples of this program's usage is provided in the walkthrough [here](https://github.com/rg2/xreg/wiki/Walkthrough%3A-PAO-Planning).

@@ -3,4 +3,4 @@ This tool allows periacetabular osteotomies to be modeled volumetrically, both s
 
 A comprehensive listing of the program's usage may be obtained by passing `-h` or `--help`.
 
-An example of this program's usage is provided in the walkthrough [here](https://github.com/rg2/jhmr-v2/wiki/Walkthrough%3A-Volumetric-Modeling-of-PAO-Adjustments).
+An example of this program's usage is provided in the walkthrough [here](https://github.com/rg2/xreg/wiki/Walkthrough%3A-Volumetric-Modeling-of-PAO-Adjustments).

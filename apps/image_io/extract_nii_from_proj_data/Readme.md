@@ -5,4 +5,4 @@ This is useful for loading a projection into 3D Slicer for annotation.
 A comprehensive listing of the program's usage may be obtained by passing `-h` or `--help`.
 
 ## Examples
-An example of this tool's usage is given in the walkthrough section on [Single-View Pelvis Registration](https://github.com/rg2/jhmr-v2/wiki/Walkthrough%3A-Single-View-Pelvis-Registration).
+An example of this tool's usage is given in the walkthrough section on [Single-View Pelvis Registration](https://github.com/rg2/xreg/wiki/Walkthrough%3A-Single-View-Pelvis-Registration).

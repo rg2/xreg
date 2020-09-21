@@ -7,4 +7,4 @@ Although a single volume is used as input, extensions are possible that would en
 
 A comprehensive listing of the program's usage may be obtained by passing `-h` or `--help`.
 
-Several demonstrations of this tool are given in the walkthrough [here](https://github.com/rg2/jhmr-v2/wiki/Walkthrough%3A-Simulated-Fluoroscopy).
+Several demonstrations of this tool are given in the walkthrough [here](https://github.com/rg2/xreg/wiki/Walkthrough%3A-Simulated-Fluoroscopy).

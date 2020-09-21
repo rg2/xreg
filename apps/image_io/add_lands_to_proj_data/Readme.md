@@ -6,4 +6,4 @@ A comprehensive listing of the program's usage may be obtained by passing `-h` o
 
 ## Examples
 Several examples of this tool are given by:
-  * [Single-View Pelvis Registration Walkthrough Section](https://github.com/rg2/jhmr-v2/wiki/Walkthrough%3A-Single-View-Pelvis-Registration)
+  * [Single-View Pelvis Registration Walkthrough Section](https://github.com/rg2/xreg/wiki/Walkthrough%3A-Single-View-Pelvis-Registration)

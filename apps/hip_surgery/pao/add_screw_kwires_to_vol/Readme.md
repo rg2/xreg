@@ -5,4 +5,4 @@ The insertion is performed volumetrically in order to enable realistic simulatio
 
 A comprehensive listing of the program's usage may be obtained by passing `-h` or `--help`.
 
-Several demonstrations of this tool are given in the walkthrough [here](https://github.com/rg2/jhmr-v2/wiki/Walkthrough%3A-Volumetric-Modeling-of-Screws-and-Wires-for-PAO).
+Several demonstrations of this tool are given in the walkthrough [here](https://github.com/rg2/xreg/wiki/Walkthrough%3A-Volumetric-Modeling-of-Screws-and-Wires-for-PAO).

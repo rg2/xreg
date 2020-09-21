@@ -3,4 +3,4 @@ This program provides some functionality for converting a collection of DICOM se
 Optionally, the data may also be resampled to user-specified pixel spacings.
 Pass `-h` or `--help` to print out a detailed usage description.
 
-Several examples of this tool are given in the walkthrough [here](https://github.com/rg2/jhmr-v2/wiki/Walkthrough%3A-DICOM-Conversion).
+Several examples of this tool are given in the walkthrough [here](https://github.com/rg2/xreg/wiki/Walkthrough%3A-DICOM-Conversion).
