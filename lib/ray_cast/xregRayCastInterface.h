@@ -590,6 +590,16 @@ protected:
   RayCastLineIntKernel kernel_id_ = kRAY_CAST_LINE_INT_SUM_KERNEL;
 };
 
+// This is a large number which is too large to represent a valid depth, and
+// therefore indicates that no object intersection was found and the depth
+// is not defined. This is smaller than, and used in place of,
+// std::numeric_limits<CoordScalar>::max() (for CoordScalar == float) as we
+// have found that some NVIDIA cards will convert a
+// std::numeric_limits<CoordScalar>::max() to a smaller value, which leads
+// to bugs and inconsistencies when mixing with CPU code that uses the
+// correct number.
+constexpr CoordScalar kRAY_CAST_MAX_DEPTH = 1.0e37;
+
 }  // xreg
 
 #endif

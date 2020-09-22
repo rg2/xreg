@@ -227,7 +227,7 @@ struct RayCastDepthFn
 
 xreg::RayCasterDepthCPU::RayCasterDepthCPU()
 {
-  this->default_bg_pixel_val_ = std::numeric_limits<PixelScalar2D>::max();
+  this->default_bg_pixel_val_ = kRAY_CAST_MAX_DEPTH;
 }
 
   

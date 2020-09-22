@@ -60,8 +60,6 @@ ConvertLabelVolToFloatMask(itk::Image<unsigned char,3>* lv)
 
 void ConvertDepthToInter(cv::Mat* depth_map)
 {
-  constexpr DepthScalar kMAX_DIST = std::numeric_limits<DepthScalar>::max();
-  
   const int nr = depth_map->rows;
   const int nc = depth_map->cols;
 
@@ -71,7 +69,7 @@ void ConvertDepthToInter(cv::Mat* depth_map)
 
     for (int c = 0; c < nc; ++c)
     {
-      cur_row[c] = (cur_row[c] < kMAX_DIST) ? 1 : 0;
+      cur_row[c] = (cur_row[c] < kRAY_CAST_MAX_DEPTH) ? 1 : 0;
     }
   }
 }
@@ -175,7 +173,7 @@ void xreg::Proj3DLabelsTo2D::run()
     depth_ray_caster->xform_cam_to_itk_phys(0) = obj_poses[non_bg_label];
     
     depth_ray_caster->compute(non_bg_label);
-  
+
     // +1 to skip bg channel  
     seg_channels[non_bg_label+1] = depth_ray_caster->proj_ocv(0).clone();
   }

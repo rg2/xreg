@@ -149,20 +149,20 @@ __kernel void xregDepthKernel(const RayCastArgs args,
 xreg::RayCasterDepthOCL::RayCasterDepthOCL()
   : RayCasterOCL()
 {
-  this->set_default_bg_pixel_val(std::numeric_limits<PixelScalar2D>::max());
+  this->set_default_bg_pixel_val(kRAY_CAST_MAX_DEPTH);
 }
 
 xreg::RayCasterDepthOCL::RayCasterDepthOCL(const boost::compute::device& dev)
   : RayCasterOCL(dev)
 {
-  this->set_default_bg_pixel_val(std::numeric_limits<PixelScalar2D>::max());
+  this->set_default_bg_pixel_val(kRAY_CAST_MAX_DEPTH);
 }
 
 xreg::RayCasterDepthOCL::RayCasterDepthOCL(const boost::compute::context& ctx,
                                            const boost::compute::command_queue& queue)
   : RayCasterOCL(ctx,queue)
 {
-  this->set_default_bg_pixel_val(std::numeric_limits<PixelScalar2D>::max());
+  this->set_default_bg_pixel_val(kRAY_CAST_MAX_DEPTH);
 }
 
 void xreg::RayCasterDepthOCL::compute(const size_type vol_idx)
