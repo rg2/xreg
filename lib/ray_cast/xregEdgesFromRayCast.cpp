@@ -161,8 +161,8 @@ void xreg::EdgesFromRayCast::operator()()
     }
     
     cv::Mat boundary_edges;
-    FindPixelsWithAdjacentMaxIntensity(boundary_ray_caster->proj_ocv(0),
-                                       &boundary_edges);
+    FindPixelsWithAdjacentIntensity(boundary_ray_caster->proj_ocv(0),
+                                    &boundary_edges, kRAY_CAST_MAX_DEPTH);
     
     cv::bitwise_or(edge_img, boundary_edges, edge_img);
   }

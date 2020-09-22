@@ -27,6 +27,7 @@
 #include "xregOpenCVUtils.h"
 #include "xregITKOpenCVUtils.h"
 #include "xregTBBUtils.h"
+#include "xregRayCastInterface.h"
 
 void xreg::ImgSimMetric2DBoundaryEdgesCPU::allocate_resources()
 {
@@ -93,7 +94,7 @@ void xreg::ImgSimMetric2DBoundaryEdgesCPU::compute()
                             this->mov_imgs_buf_ + (mov_idx * num_pix_per_proj)); 
 
      
-      FindPixelsWithAdjacentMaxIntensity(cur_mov_depth, &cur_mov_edges, true);
+      FindPixelsWithAdjacentIntensity(cur_mov_depth, &cur_mov_edges, kRAY_CAST_MAX_DEPTH, true);
 
       // Now compute the mean distance
       Scalar d = 0;

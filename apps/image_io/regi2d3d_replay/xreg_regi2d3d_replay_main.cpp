@@ -906,9 +906,9 @@ int main(int argc, char* argv[])
           {
             cv::Mat boundary_edges;
 
-            FindPixelsWithAdjacentMaxIntensity(ShallowCopyItkToOpenCV(
+            FindPixelsWithAdjacentIntensity(ShallowCopyItkToOpenCV(
                     depth_rends_for_boundary_edges[view_idx][proj_idx].GetPointer()),
-                                               &boundary_edges);
+                                               &boundary_edges, kRAY_CAST_MAX_DEPTH);
 
             // Debugging:
             //boundary_edges *= 255;
