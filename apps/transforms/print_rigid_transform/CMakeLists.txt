@@ -20,9 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_subdirectory(image_io)
-add_subdirectory(mesh)
-add_subdirectory(point_clouds)
-add_subdirectory(hip_surgery)
-add_subdirectory(transforms)
+set(EXE_NAME "${XREG_EXE_PREFIX}print-rigid-xform")
+
+add_executable(${EXE_NAME} xreg_print_rigid_transform_main.cpp)
+
+target_link_libraries(${EXE_NAME} PUBLIC ${XREG_EXE_LIBS_TO_LINK})
+
+install(TARGETS ${EXE_NAME})
 

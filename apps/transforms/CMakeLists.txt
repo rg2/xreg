@@ -20,9 +20,5 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_subdirectory(image_io)
-add_subdirectory(mesh)
-add_subdirectory(point_clouds)
-add_subdirectory(hip_surgery)
-add_subdirectory(transforms)
+add_subdirectory(print_rigid_transform)
 
