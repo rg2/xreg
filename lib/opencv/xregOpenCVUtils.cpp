@@ -1832,6 +1832,163 @@ cv::Mat xreg::FindPixelsWithMaxIntensity(const cv::Mat& img)
   return dst;
 }
 
+namespace  // un-named
+{
+
+template <class T>
+struct FindPixelsWithAdjacentIntensityComp
+{
+  bool operator()(const T& x, const T& y) const
+  {
+    return x == y;
+  }
+};
+
+template <>
+struct FindPixelsWithAdjacentIntensityComp<float>
+{
+  bool operator()(const float& x, const float& y) const
+  {
+    return std::abs(x - y) < 1.0e-8f;
+  }
+};
+
+template <>
+struct FindPixelsWithAdjacentIntensityComp<double>
+{
+  bool operator()(const double& x, const double& y) const
+  {
+    return std::abs(x - y) < 1.0e-12f;
+  }
+};
+
+template <class tPixelScalar>
+void FindPixelsWithAdjacentIntensityHelper(const cv::Mat& img, cv::Mat* edges,
+                                           const tPixelScalar val, const bool edges_pre_alloc)
+{
+  using PixelScalar = tPixelScalar;
+
+  FindPixelsWithAdjacentIntensityComp<PixelScalar> comp;
+  
+  const int nr = img.rows;
+  const int nc = img.cols;
+
+  if (!edges_pre_alloc)
+  {
+    *edges = cv::Mat_<unsigned char>(nr,nc);
+  }
+  
+  xregASSERT(edges->type() == CV_8U);
+
+  for (int r = 0; r < nr; ++r)
+  {
+    const PixelScalar* prev_src_row = (r > 0) ? &img.at<PixelScalar>(r-1, 0) : nullptr;
+    const PixelScalar* cur_src_row  = &img.at<PixelScalar>(r, 0);
+    const PixelScalar* next_src_row = (r < (nr-1)) ? &img.at<PixelScalar>(r+1, 0) : nullptr;
+
+    unsigned char* edge_row = &edges->at<unsigned char>(r, 0);
+
+    for (int c = 0; c < nc; ++c)
+    {
+      bool is_edge = false;
+
+      if (!comp(cur_src_row[c], val))
+      {
+        if (r > 0)
+        {
+          if (c > 0)
+          {
+            is_edge = comp(prev_src_row[c-1], val);
+          }
+
+          if (!is_edge && comp(prev_src_row[c], val))
+          {
+            is_edge = true;
+          }
+          
+          if ((c < (nc-1)) && !is_edge && comp(prev_src_row[c+1], val))
+          {
+            is_edge = true;
+          } 
+        }
+
+        if (!is_edge)
+        {
+          if (c > 0)
+          {
+            is_edge = comp(cur_src_row[c-1], val);
+          }
+
+          // we already tested the current pixel to not be equal to val
+          //if (!is_edge && comp(cur_src_row[c], val))
+          //{
+          //  is_edge = true;
+          //}
+          
+          if ((c < (nc-1)) && !is_edge && comp(cur_src_row[c+1], val))
+          {
+            is_edge = true;
+          } 
+         
+          if (!is_edge && (r < (nr-1)))
+          {
+            if (c > 0)
+            {
+              is_edge = comp(next_src_row[c-1], val);
+            }
+
+            if (!is_edge && comp(next_src_row[c], val))
+            {
+              is_edge = true;
+            }
+
+            if ((c < (nc-1)) && !is_edge && comp(next_src_row[c+1], val))
+            {
+              is_edge = true;
+            } 
+          }
+        }
+      }
+      
+      edge_row[c] = is_edge ? 1 : 0;
+    }
+  } 
+}
+
+}  // un-named
+
+void xreg::FindPixelsWithAdjacentIntensity(const cv::Mat& img, cv::Mat* edges,
+                                           const double val, const bool edges_pre_alloc)
+{
+  switch (img.type())
+  {
+  case CV_8U:
+    FindPixelsWithAdjacentIntensityHelper<unsigned char>(img, edges, static_cast<unsigned char>(val), edges_pre_alloc);
+    break;
+  case CV_8S:
+    FindPixelsWithAdjacentIntensityHelper<char>(img, edges, static_cast<char>(val), edges_pre_alloc);
+    break;
+  case CV_16U:
+    FindPixelsWithAdjacentIntensityHelper<unsigned short>(img, edges, static_cast<unsigned short>(val), edges_pre_alloc);
+    break;
+  case CV_16S:
+    FindPixelsWithAdjacentIntensityHelper<short>(img, edges, static_cast<short>(val), edges_pre_alloc);
+    break;
+  case CV_32S:
+    FindPixelsWithAdjacentIntensityHelper<int>(img, edges, static_cast<int>(val), edges_pre_alloc);
+    break;
+  case CV_32F:
+    FindPixelsWithAdjacentIntensityHelper<float>(img, edges, static_cast<float>(val), edges_pre_alloc);
+    break;
+  case CV_64F:
+    FindPixelsWithAdjacentIntensityHelper<double>(img, edges, val, edges_pre_alloc);
+    break;
+  default:
+    xregThrow("unsupported OpenCV Mat Type!");
+    break;
+  }
+}
+
 cv::Mat xreg::RemapGradImgToBGR(const cv::Mat& img)
 {
   cv::Mat dst;

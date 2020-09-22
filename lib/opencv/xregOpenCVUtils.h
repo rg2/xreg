@@ -158,6 +158,9 @@ cv::Mat FindPixelsWithLessThanMaxIntensity(const cv::Mat& img);
 
 cv::Mat FindPixelsWithMaxIntensity(const cv::Mat& img);
 
+void FindPixelsWithAdjacentIntensity(const cv::Mat& img, cv::Mat* edges,
+                                     const double val, const bool edges_pre_alloc = false);
+
 cv::Mat RemapGradImgToBGR(const cv::Mat& img);
 
 double FindMedian(const cv::Mat& img, void* tmp_sort_arr = nullptr);
