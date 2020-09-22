@@ -126,12 +126,8 @@ __kernel void xregDepthKernel(const RayCastArgs args,
     {
       if (read_imagef(vol_tex, sampler, cur_cont_vol_idx).x >= sur_coll_args.sur_coll_thresh)
       {
-        cur_cont_vol_idx.x;
-        cur_cont_vol_idx.y;
-        cur_cont_vol_idx.z;
-
-        const float3 coll_pt_wrt_cam = xregFrm4x4XformFloat3Vec(xform_itk_idx_to_cam,
-                                                                xregFloat4HmgToFloat3(cur_cont_vol_idx));
+        const float3 coll_pt_wrt_cam = xregFrm4x4XformFloat3Pt(xform_itk_idx_to_cam,
+                                                               xregFloat4HmgToFloat3(cur_cont_vol_idx));
 
         const float depth = xregFloat3Norm(xregFloat4HmgToFloat3(focal_pt_wrt_cam) - coll_pt_wrt_cam);
 
