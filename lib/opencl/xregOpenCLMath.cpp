@@ -210,21 +210,27 @@ float16 xregFrm4x4SE3Inv(const float16 h)
 {
   float16 h_inv;
  
-  // transpose for rotation inverse
+  // transpose for rotation inverse: R^-1 = R^T
+  
+  // row 1
   h_inv.s0 = h.s0;
-  h_inv.s1 = h.s3;
-  h_inv.s2 = h.s6;
-  h_inv.s3 = h.s1;
-  h_inv.s4 = h.s4;
-  h_inv.s5 = h.s7;
-  h_inv.s6 = h.s2;
-  h_inv.s7 = h.s5;
-  h_inv.s8 = h.s8;
+  h_inv.s1 = h.s4;
+  h_inv.s2 = h.s8;
+  
+  // row 2
+  h_inv.s4 = h.s1;
+  h_inv.s5 = h.s5;
+  h_inv.s6 = h.s9;
 
-  // translation inverse
-  h_inv.s9 = -((h.s0 * h.s9) + (h.s3 * h.sa) + (h.s6 * h.sb));
-  h_inv.sa = -((h.s1 * h.s9) + (h.s4 * h.sa) + (h.s7 * h.sb));
-  h_inv.sb = -((h.s2 * h.s9) + (h.s5 * h.sa) + (h.s8 * h.sb));
+  // row 3
+  h_inv.s8 = h.s2;
+  h_inv.s9 = h.s6;
+  h_inv.sa = h.sa;
+
+  // translation inverse: t^-1 = -R^T * t
+  h_inv.s3 = -((h_inv.s0 * h.s3) + (h_inv.s1 * h.s7) + (h_inv.s2 * h.sb));
+  h_inv.s7 = -((h_inv.s4 * h.s3) + (h_inv.s5 * h.s7) + (h_inv.s6 * h.sb));
+  h_inv.sb = -((h_inv.s8 * h.s3) + (h_inv.s9 * h.s7) + (h_inv.sa * h.sb));
 
   h_inv.sc = 0;
   h_inv.sd = 0;
@@ -332,6 +338,20 @@ float xregFloat16Inner(const float16 x, const float16 y)
          (x.s4 * y.s4) + (x.s5 * y.s5) + (x.s6 * y.s6) + (x.s7 * y.s7) +
          (x.s8 * y.s8) + (x.s9 * y.s9) + (x.sa * y.sa) + (x.sb * y.sb) +
          (x.sc * y.sc) + (x.sd * y.sd) + (x.se * y.se) + (x.sf * y.sf);
+}
+
+// Useful for debugging:
+
+void xregPrintMat4x4(const float16 x)
+{
+  printf("[ %+9.3f , %+9.3f , %+9.3f , %+9.3f ;\n"
+         "  %+9.3f , %+9.3f , %+9.3f , %+9.3f ;\n"
+         "  %+9.3f , %+9.3f , %+9.3f , %+9.3f ;\n"
+         "  %+9.3f , %+9.3f , %+9.3f , %+9.3f ]\n",
+         x.s0, x.s1, x.s2, x.s3,
+         x.s4, x.s5, x.s6, x.s7,
+         x.s8, x.s9, x.sa, x.sb,
+         x.sc, x.sd, x.se, x.sf);
 }
 
 );
