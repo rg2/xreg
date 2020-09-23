@@ -54,8 +54,11 @@ void xreg::ProjPreProc::operator()()
     auto& img   = output_proj.img;
     auto& lands = output_proj.landmarks;
 
-    this->dout() << "copying 2D intensity pixels..." << std::endl;
-    img = ITKImageDeepCopy(img.GetPointer());
+    if (img)
+    {
+      this->dout() << "copying 2D intensity pixels..." << std::endl;
+      img = ITKImageDeepCopy(img.GetPointer());
+    }
 
     if (params.crop_width > 0)
     {
@@ -70,7 +73,7 @@ void xreg::ProjPreProc::operator()()
       }
     }
 
-    if (!params.no_log_remap)
+    if (img && !params.no_log_remap)
     {
       this->dout() << "log remapping..." << std::endl;
       
@@ -84,7 +87,7 @@ void xreg::ProjPreProc::operator()()
 
     output_projs.push_back(output_proj);
 
-    if (params.auto_mask)
+    if (img && params.auto_mask)
     {
       this->dout() << "auto masking metal (naively!)..." << std::endl;
 

@@ -42,9 +42,11 @@ DownsampleProjDataHelper(const ProjData<tPixelScalar>& src_proj, const CoordScal
   ProjData<tPixelScalar> dst_proj;
  
   dst_proj.cam = DownsampleCameraModel(src_proj.cam, ds_factor); 
-  dst_proj.img = DownsampleImage(src_proj.img.GetPointer(), ds_factor);
-  
+
+  if (src_proj.img)
   {
+    dst_proj.img = DownsampleImage(src_proj.img.GetPointer(), ds_factor);
+    
     const auto ds_sz = dst_proj.img->GetLargestPossibleRegion().GetSize();
     xregASSERT(ds_sz[0] == dst_proj.cam.num_det_cols);
     xregASSERT(ds_sz[1] == dst_proj.cam.num_det_rows);
@@ -501,19 +503,24 @@ CropBoundaryPixelsHelper(const CameraModel& src_cam, const itk::Image<tPixelScal
                          const size_type boundary_width)
 {
   using PixelScalar = tPixelScalar;
-
-  const auto src_img_size = src_img->GetLargestPossibleRegion().GetSize();
-  xregASSERT((src_img_size[0] == src_cam.num_det_cols) && (src_img_size[1] == src_cam.num_det_rows));
-
-  auto dst_img = CropImage2DBoundary(src_img, boundary_width);
-
+  
   const auto dst_cam = UpdateCameraModelFor2DROI(src_cam, boundary_width, boundary_width,
-                                                 src_img_size[0] - boundary_width - 1,
-                                                 src_img_size[1] - boundary_width - 1); 
+                                                 src_cam.num_det_cols - boundary_width - 1,
+                                                 src_cam.num_det_rows - boundary_width - 1); 
 
-  const auto dst_img_size = dst_img->GetLargestPossibleRegion().GetSize();
-  xregASSERT(dst_img_size[0] == dst_cam.num_det_cols);
-  xregASSERT(dst_img_size[1] == dst_cam.num_det_rows);
+  typename itk::Image<PixelScalar,2>::Pointer dst_img;
+  
+  if (src_img)
+  {
+    const auto src_img_size = src_img->GetLargestPossibleRegion().GetSize();
+    xregASSERT((src_img_size[0] == src_cam.num_det_cols) && (src_img_size[1] == src_cam.num_det_rows));
+
+    dst_img = CropImage2DBoundary(src_img, boundary_width);
+    
+    const auto dst_img_size = dst_img->GetLargestPossibleRegion().GetSize();
+    xregASSERT(dst_img_size[0] == dst_cam.num_det_cols);
+    xregASSERT(dst_img_size[1] == dst_cam.num_det_rows);
+  }
 
   return std::make_tuple(dst_cam, dst_img);
 }
