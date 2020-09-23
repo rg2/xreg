@@ -36,13 +36,12 @@ using namespace xreg;
 template <class tScalar>
 void ProcessAndSave(itk::Image<tScalar,2>* img,
                     const std::string& path,
-                    const boost::optional<int>& rot_to_pat_up,
+                    const boost::optional<ProjDataRotToPatUp>& rot_to_pat_up,
                     const double ds_factor,
                     std::ostream& vout)
 {
-  using Img        = itk::Image<tScalar,2>;
-  using ImgPtr     = typename Img::Pointer;
-  using RotToPatUp = typename ProjData<tScalar>::RotToPatUp;
+  using Img    = itk::Image<tScalar,2>;
+  using ImgPtr = typename Img::Pointer;
 
   Img* img_to_save = img;
 
@@ -52,7 +51,7 @@ void ProcessAndSave(itk::Image<tScalar,2>* img,
   {
     vout << "    rotating to patient up..." << std::endl;
 
-    ModifyForPatUp(img_to_save, static_cast<RotToPatUp>(*rot_to_pat_up));
+    ModifyForPatUp(img_to_save, *rot_to_pat_up);
   }
 
   if (std::abs(ds_factor - 1.0) > 0.001)
@@ -181,11 +180,11 @@ int main(int argc, char* argv[])
 
       const auto& cur_meta = pd_metas[src_proj_idx];
 
-      boost::optional<int> rot_to_pat_up;
+      boost::optional<ProjDataRotToPatUp> rot_to_pat_up;
 
-      if (!ignore_pat_rot_up && cur_meta.rot_to_pat_up)
+      if (!ignore_pat_rot_up)
       {
-        rot_to_pat_up = static_cast<int>(*cur_meta.rot_to_pat_up);
+        rot_to_pat_up = cur_meta.rot_to_pat_up;
       }
 
       if (scalar_type == kPROJ_DATA_TYPE_FLOAT32)

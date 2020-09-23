@@ -455,19 +455,16 @@ using namespace xreg;
 
 template <class tPixelScalar>
 void ModifyForPatUpHelper(itk::Image<tPixelScalar,2>* img,
-                        const typename ProjData<tPixelScalar>::RotToPatUp rot_to_pat_up)
+                          const ProjDataRotToPatUp rot_to_pat_up)
 {
-  using PixelScalar = tPixelScalar;
-  using PD          = ProjData<PixelScalar>;
-
   cv::Mat img_ocv = ShallowCopyItkToOpenCV(img);
 
-  if (rot_to_pat_up == PD::kONE_EIGHTY)
+  if (rot_to_pat_up == ProjDataRotToPatUp::kONE_EIGHTY)
   {
     FlipImageRows(&img_ocv);
     FlipImageColumns(&img_ocv);
   }
-  else if (rot_to_pat_up == PD::kZERO)
+  else if (rot_to_pat_up == ProjDataRotToPatUp::kZERO)
   {
     // nothing to do
   }
@@ -479,17 +476,17 @@ void ModifyForPatUpHelper(itk::Image<tPixelScalar,2>* img,
 
 }  // un-named
 
-void xreg::ModifyForPatUp(ProjDataF32::Proj* img, const ProjDataF32::RotToPatUp rot_to_pat_up)
+void xreg::ModifyForPatUp(ProjDataF32::Proj* img, const ProjDataRotToPatUp rot_to_pat_up)
 {
   ModifyForPatUpHelper(img, rot_to_pat_up);
 }
 
-void xreg::ModifyForPatUp(ProjDataU16::Proj* img, const ProjDataU16::RotToPatUp rot_to_pat_up)
+void xreg::ModifyForPatUp(ProjDataU16::Proj* img, const ProjDataRotToPatUp rot_to_pat_up)
 {
   ModifyForPatUpHelper(img, rot_to_pat_up);
 }
 
-void xreg::ModifyForPatUp(ProjDataU8::Proj* img, const ProjDataU8::RotToPatUp rot_to_pat_up)
+void xreg::ModifyForPatUp(ProjDataU8::Proj* img, const ProjDataRotToPatUp rot_to_pat_up)
 {
   ModifyForPatUpHelper(img, rot_to_pat_up);
 }

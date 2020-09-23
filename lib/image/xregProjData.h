@@ -36,6 +36,14 @@ namespace xreg
 
 // Forward declarations:
 struct CIOSFusionDICOMInfo;
+  
+enum class ProjDataRotToPatUp
+{
+  kZERO = 0,
+  kNINETY = 90,
+  kONE_EIGHTY = 180,
+  kTWO_SEVENTY = 270
+};
 
 /// \brief Stores all relevant information for a single projection.
 ///
@@ -55,19 +63,11 @@ struct ProjData
   // name -> landmark continuous pixel indices
   LandMap2 landmarks;
 
-  enum RotToPatUp
-  {
-    kZERO = 0,
-    kNINETY = 90,
-    kONE_EIGHTY = 180,
-    kTWO_SEVENTY = 270
-  };
-
   // Indicates a rotation that is required to orient the patient "up,"
   // so that the superior portion is approximately located in the top
   // of the image and the inferior portion is approximately located in
   // the bottom of the image.
-  boost::optional<RotToPatUp> rot_to_pat_up;
+  boost::optional<ProjDataRotToPatUp> rot_to_pat_up;
 
   // Original metadata from the sensor for this image - does not need
   // to be set, e.g. for the case of simulated data
@@ -209,11 +209,11 @@ MakeImageU16FromCam(const CameraModel& cam);
 itk::Image<unsigned char,2>::Pointer
 MakeImageU8FromCam(const CameraModel& cam);
 
-void ModifyForPatUp(ProjDataF32::Proj* img, const ProjDataF32::RotToPatUp rot_to_pat_up);
+void ModifyForPatUp(ProjDataF32::Proj* img, const ProjDataRotToPatUp rot_to_pat_up);
 
-void ModifyForPatUp(ProjDataU16::Proj* img, const ProjDataU16::RotToPatUp rot_to_pat_up);
+void ModifyForPatUp(ProjDataU16::Proj* img, const ProjDataRotToPatUp rot_to_pat_up);
 
-void ModifyForPatUp(ProjDataU8::Proj* img, const ProjDataU8::RotToPatUp rot_to_pat_up);
+void ModifyForPatUp(ProjDataU8::Proj* img, const ProjDataRotToPatUp rot_to_pat_up);
 
 /// \brief Crops out boundary pixels using a constant sized border; updates the image and
 ///        the camera model.

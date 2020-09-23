@@ -387,7 +387,7 @@ ReadProjDataHelper(const H5::CommonFG& h5, const bool read_pixels)
     
     if (ObjectInGroupH5("rot-to-pat-up", proj_g))
     {
-      projs[i].rot_to_pat_up = static_cast<typename ProjDataType::RotToPatUp>(
+      projs[i].rot_to_pat_up = static_cast<ProjDataRotToPatUp>(
                                   ReadSingleScalarH5Int("rot-to-pat-up", proj_g));
     }
 

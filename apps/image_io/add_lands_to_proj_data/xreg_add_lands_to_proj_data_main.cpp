@@ -131,12 +131,12 @@ int main(int argc, char* argv[])
       {
         switch (*cur_proj_meta.rot_to_pat_up)
         {
-        case ProjDataF32::kZERO:
-        case ProjDataF32::kONE_EIGHTY:
+        case ProjDataRotToPatUp::kZERO:
+        case ProjDataRotToPatUp::kONE_EIGHTY:
           // nothing to change
           break;
-        case ProjDataF32::kNINETY:
-        case ProjDataF32::kTWO_SEVENTY:
+        case ProjDataRotToPatUp::kNINETY:
+        case ProjDataRotToPatUp::kTWO_SEVENTY:
           // rows and cols were swapped when annotating lands
           std::swap(spacing_for_phys_to_ind_x,spacing_for_phys_to_ind_y);
           break;
@@ -162,10 +162,10 @@ int main(int argc, char* argv[])
       {
         switch (*cur_proj_meta.rot_to_pat_up)
         {
-        case ProjDataF32::kZERO:
+        case ProjDataRotToPatUp::kZERO:
           vout << "    no rotation necessary for patient up." << std::endl;
           break;
-        case ProjDataF32::kONE_EIGHTY:
+        case ProjDataRotToPatUp::kONE_EIGHTY:
         {
           vout << "    rotating 180 degrees for patient up..." << std::endl;
 
@@ -178,8 +178,8 @@ int main(int argc, char* argv[])
 
           break;
         }
-        case ProjDataF32::kNINETY:
-        case ProjDataF32::kTWO_SEVENTY:
+        case ProjDataRotToPatUp::kNINETY:
+        case ProjDataRotToPatUp::kTWO_SEVENTY:
           // sorry we don't support these for now
         default:
           xregThrow("unsupported rotation field: %d", static_cast<int>(*cur_proj_meta.rot_to_pat_up));

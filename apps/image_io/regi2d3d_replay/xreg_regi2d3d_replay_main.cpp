@@ -434,12 +434,12 @@ int main(int argc, char* argv[])
 
         const auto rot_to_pat_up = *cur_pd.rot_to_pat_up;
         
-        if (rot_to_pat_up == ProjDataF32::kZERO)
+        if (rot_to_pat_up == ProjDataRotToPatUp::kZERO)
         {
           flip_rows = false;
           flip_cols = false;
         }
-        else if (rot_to_pat_up == ProjDataF32::kONE_EIGHTY)
+        else if (rot_to_pat_up == ProjDataRotToPatUp::kONE_EIGHTY)
         {
           flip_rows = true;
           flip_cols = true;
