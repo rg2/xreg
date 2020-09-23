@@ -209,6 +209,8 @@ public:
 
   ProjDataScalarType scalar_type_on_disk() const;
 
+  size_type num_projs_on_disk() const;
+
   const ProjDataF32List& proj_data_F32();
 
   const ProjDataU16List& proj_data_U16();

@@ -620,6 +620,11 @@ xreg::ProjDataScalarType xreg::DeferredProjReader::scalar_type_on_disk() const
   return scalar_type_on_disk_;
 }
 
+xreg::size_type xreg::DeferredProjReader::num_projs_on_disk() const
+{
+  return proj_data_F32_.size();
+}
+
 const xreg::ProjDataF32List&
 xreg::DeferredProjReader::proj_data_F32()
 {
