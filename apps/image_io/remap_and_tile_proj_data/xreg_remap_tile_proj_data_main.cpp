@@ -33,6 +33,7 @@
 #include "xregITKOpenCVUtils.h"
 #include "xregH5ProjDataIO.h"
 #include "xregCSVUtils.h"
+#include "xregITKResampleUtils.h"
 
 int main(int argc, char* argv[])
 {
@@ -68,7 +69,12 @@ int main(int argc, char* argv[])
   po.add("col", 'c', ProgOpts::kSTORE_TRUE, "col",
          "Dimension with control over width is columns, default is rows.")
     << false;
-  
+
+  po.add("seg-u8", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "seg-u8",
+         "Treat the input images as unsigned 8bpp label maps and use a built-in "
+         "LUT for conversion to color.")
+    << false;
+
   po.add("overlay-lands", 'o', ProgOpts::kSTORE_TRUE, "overlay-lands",
          "Overlay landmark locations onto the output images.")
     << false;
@@ -181,6 +187,8 @@ int main(int argc, char* argv[])
 
   const bool tile_as_col = po.get("col");
   
+  const bool do_seg_u8 = po.get("seg-u8");
+
   const bool no_pat_rot_up = po.get("no-pat-rot-up");
 
   const bool flip_rows_flag = po.get("flip-rows");
@@ -261,22 +269,18 @@ int main(int argc, char* argv[])
   }
 
   const double proj_ds_factor = po.get("ds-factor");
-
+  
+  const bool need_to_ds = std::abs(proj_ds_factor - 1.0) > 0.001;
+  
   const std::string proj_data_path = po.pos_args()[0];
   const std::string tiled_img_path = po.pos_args()[1];
-
-  vout << "reading projection data..." << std::endl;
-  auto pd = ReadProjDataH5F32FromDisk(proj_data_path);
   
-  if (std::abs(proj_ds_factor - 1.0) > 0.001)
-  {
-    vout << "  downsampling projection data..." << std::endl;
-    pd = DownsampleProjData(pd, proj_ds_factor);
-  }
-
-  const size_type num_src_projs = pd.size();
+  vout << "creating proj. reader object..." << std::endl;  
+  DeferredProjReader pd_reader(proj_data_path);
+      
+  const size_type num_src_projs = pd_reader.num_projs_on_disk();
   vout << "number of cameras/projections in file: " << num_src_projs << std::endl;
-
+  
   std::vector<long> projs_to_use;
   
   if (projs_str.empty())
@@ -291,37 +295,116 @@ int main(int argc, char* argv[])
 
   const size_type num_projs = projs_to_use.size();
   vout << "number of cameras/projections to use: " << num_projs << std::endl;
-
+ 
   if (num_projs)
   {
-    ImageUInt82DList remapped_projs(num_projs);
     OCVImgList ocv_imgs(num_projs);
+
+    std::vector<LandMap2> lands(num_projs);
+
+    // this will also be used to store common metadata, such as rot flags
+    // use an index according to the original file on disk
+    const ProjDataF32List pd_f32_meta = pd_reader.proj_data_F32();
+
+    vout << "reading projection data..." << std::endl;
+    {
+      if (!do_seg_u8)
+      {
+        vout << "  will read intensities as float32..." << std::endl;
+      }
+      else
+      {
+        vout << "  will read intensities as uint8 label map..." << std::endl;
+      }
+    
+      for (size_type proj_idx = 0; proj_idx < num_projs; ++proj_idx)
+      {
+        vout << "    reading proj. " << proj_idx;
+
+        const size_type src_proj_idx = static_cast<size_type>(projs_to_use[proj_idx]);
+        xregASSERT(src_proj_idx < num_src_projs);
+        
+        vout << " <-- " << src_proj_idx << " (from file)..." << std::endl;
+
+        if (!do_seg_u8)
+        {
+          ProjDataF32 pd;
+
+          pd.cam = pd_f32_meta[src_proj_idx].cam;
+          pd.landmarks = pd_f32_meta[src_proj_idx].landmarks;
+          pd.img = pd_reader.read_proj_F32(src_proj_idx);
+        
+          if (need_to_ds)
+          {
+            vout << "      downsampling..." << std::endl;
+            pd = DownsampleProjData(pd, proj_ds_factor);
+          }
+          
+          vout << "      remapping " << src_proj_idx << " to 8bpp..." << std::endl;
+          ocv_imgs[proj_idx] = ShallowCopyItkToOpenCV(
+                                  ITKImageRemap8bpp(pd.img.GetPointer()).GetPointer()).clone();
+
+          lands[proj_idx] = pd.landmarks;
+        }
+        else
+        {
+          ProjDataU8 pd;
+
+          pd.cam = pd_f32_meta[src_proj_idx].cam;
+          pd.landmarks = pd_f32_meta[src_proj_idx].landmarks;
+          pd.img = pd_reader.read_proj_U8(src_proj_idx);
+          
+          vout << "      remapping to RGB w/ LUT..." << std::endl;
+          auto img_rgb = RemapITKLabelMap(pd.img.GetPointer(), GenericAnatomyLUT());
+
+          if (need_to_ds)
+          {
+            vout << "      downsampling..." << std::endl;
+            auto rgb_chans = ITKSplitRGB(img_rgb.GetPointer());
+
+            for (int i = 0; i < 3; ++i)
+            {
+              rgb_chans[i] = DownsampleImage(rgb_chans[i].GetPointer(), proj_ds_factor);
+            }
+            
+            img_rgb = ITKCombineIntoRGB(rgb_chans[0].GetPointer(),
+                                        rgb_chans[1].GetPointer(),
+                                        rgb_chans[2].GetPointer());
+            
+            vout << "        updating landmarks..." << std::endl;
+            for (auto& lkv : pd.landmarks)
+            {
+              lkv.second *= proj_ds_factor;
+            }
+          }
+         
+          ocv_imgs[proj_idx] = CopyITKRGBToOpenCVBGR(img_rgb.GetPointer());
+
+          lands[proj_idx] = pd.landmarks;
+        }
+      }
+    }
 
     for (size_type proj_idx = 0; proj_idx < num_projs; ++proj_idx)
     {
-      const size_type src_proj_idx = static_cast<size_type>(projs_to_use[proj_idx]);
-      xregASSERT(src_proj_idx < num_src_projs);
-      
-      const auto& src_pd = pd[src_proj_idx];
-
-      vout << "remapping " << src_proj_idx << " to 8bpp..." << std::endl;
-      remapped_projs[proj_idx] = ITKImageRemap8bpp(src_pd.img.GetPointer());
-      ocv_imgs[proj_idx] = ShallowCopyItkToOpenCV(remapped_projs[proj_idx].GetPointer());
-
       if (overlay_lands)
       {
         cv::Mat& cur_img = ocv_imgs[proj_idx];
 
-        // convert to color so overlays are in color
-        cv::Mat bgr_img;
-        cv::cvtColor(cur_img, bgr_img, cv::COLOR_GRAY2BGR);
-        cur_img = bgr_img;
+        if (cur_img.channels() == 1)
+        {
+          // convert to color so overlays are in color
+          cv::Mat bgr_img;
+          cv::cvtColor(cur_img, bgr_img, cv::COLOR_GRAY2BGR);
+          cur_img = bgr_img;
+        }
+        xregASSERT(cur_img.channels() == 3);
 
         cv::Point tmp_pt;
 
         const size_type lands_to_show_idx = lands_to_show.empty() ? 0 : (proj_idx % lands_to_show.size());
 
-        for (const auto& lkv : src_pd.landmarks)
+        for (const auto& lkv : lands[proj_idx])
         {
           if (overlay_all_lands ||
               (lands_to_show[lands_to_show_idx].find(lkv.first) != lands_to_show[lands_to_show_idx].end()))
@@ -371,9 +454,11 @@ int main(int argc, char* argv[])
       bool flip_rows = flip_rows_flag;
       bool flip_cols = flip_cols_flag;
 
-      if (!no_pat_rot_up && src_pd.rot_to_pat_up)
+      const auto& src_pd_meta = pd_f32_meta[projs_to_use[proj_idx]];
+
+      if (!no_pat_rot_up && src_pd_meta.rot_to_pat_up)
       {
-        const auto& rot_to_pat_up = *src_pd.rot_to_pat_up;
+        const auto& rot_to_pat_up = *src_pd_meta.rot_to_pat_up;
 
         if (rot_to_pat_up == ProjDataF32::kZERO)
         {
