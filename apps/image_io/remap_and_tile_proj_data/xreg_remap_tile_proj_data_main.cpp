@@ -131,6 +131,19 @@ int main(int argc, char* argv[])
          "by \"overlay-shape\" is used.")
     << "";
 
+  po.add("overlay-land-radius", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_INT32, "overlay-land-radius",
+         "Radius of the landmark overlay shape, in pixels.")
+    << ProgOpts::int32(20);
+
+  po.add("overlay-land-thickness", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_INT32, "overlay-land-thickness",
+         "Thickness of the landmark overlay shape.")
+    << ProgOpts::int32(3);
+
+  po.add("overlay-ignore-ds", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "overlay-ignore-ds",
+         "Do not update the border thickness, landmark overlay radius, or or landmark thickness "
+         "parameters to account for any downsampling.")
+    << false;
+
   po.add("border-thickness", 'b', ProgOpts::kSTORE_INT32, "border-thickness",
          "Thickness of the rectangle borders drawn to separate projections. "
          "Thickness <= 0 does not draw a border.")
@@ -196,7 +209,7 @@ int main(int argc, char* argv[])
 
   const bool overlay_lands = po.get("overlay-lands");
 
-  const ProgOpts::int32 border_thickness = po.get("border-thickness");
+  int border_thickness = po.get("border-thickness").as_int32();
 
   const std::string projs_str = po.get("projs");
 
@@ -268,10 +281,27 @@ int main(int argc, char* argv[])
     }
   }
 
+  int overlay_land_radius = po.get("overlay-land-radius").as_int32();
+  int overlay_land_thick  = po.get("overlay-land-thickness").as_int32();
+
+  const bool overlay_ignore_ds = po.get("overlay-ignore-ds");
+
   const double proj_ds_factor = po.get("ds-factor");
   
   const bool need_to_ds = std::abs(proj_ds_factor - 1.0) > 0.001;
-  
+
+  if (need_to_ds && !overlay_ignore_ds)
+  {
+    overlay_land_radius = std::max(1l, std::lround(proj_ds_factor * overlay_land_radius));
+    
+    // non-linear adjustment of landmark overlay thickness
+    overlay_land_thick = std::max(1l,
+                                  std::lround(3 * (((((proj_ds_factor < 1) ? -1 : 1) * 0.75) *
+                                                    (proj_ds_factor - 1) * (proj_ds_factor - 1)) + 1)));
+
+    border_thickness = std::max(1l, std::lround(proj_ds_factor * border_thickness));
+  }
+
   const std::string proj_data_path = po.pos_args()[0];
   const std::string tiled_img_path = po.pos_args()[1];
   
@@ -417,10 +447,8 @@ int main(int argc, char* argv[])
             tmp_pt.x = std::lround(lkv.second(0));
             tmp_pt.y = std::lround(lkv.second(1));
         
-            int radius = 20;
+            int radius = overlay_land_radius;
             
-            constexpr int thickness = 3;
-
             std::string cur_overlay_shape_str = overlay_shape_str;
 
             const auto cur_shape_str_it = landmark_shape_name_lut.find(lkv.first);
@@ -433,7 +461,7 @@ int main(int argc, char* argv[])
 
             if ((marker_it == kMARKER_NAME_TO_ENUM.end()) || (cur_overlay_shape_str == "circle"))
             {
-              cv::circle(cur_img, tmp_pt, radius, overlay_color, thickness);
+              cv::circle(cur_img, tmp_pt, radius, overlay_color, overlay_land_thick);
             }
             else
             {
@@ -445,7 +473,7 @@ int main(int argc, char* argv[])
                 radius *= 2;
               }
 
-              cv::drawMarker(cur_img, tmp_pt, overlay_color, marker_it->second, radius, thickness);
+              cv::drawMarker(cur_img, tmp_pt, overlay_color, marker_it->second, radius, overlay_land_thick);
             }
           }
         }
