@@ -40,11 +40,23 @@ option(XREG_BUILD_APPS "Build xreg applications in addition to the library" ${XR
 option(XREG_INCLUDE_GIT_HASH_IN_VER_STR "Include the git hash in the version string that is embedded into the library" OFF)
 mark_as_advanced(XREG_INCLUDE_GIT_HASH_IN_VER_STR)
 
+if (NOT APPLE)
+  set (XREG_USE_SYSTEM_OPENCL_DEFAULT OFF)
+else ()
+  set (XREG_USE_SYSTEM_OPENCL_DEFAULT ON)
+endif ()
+
+option(XREG_USE_SYSTEM_OPENCL "Use a system install of OpenCL instead of the bundled loader" ${XREG_USE_SYSTEM_OPENCL_DEFAULT})
+mark_as_advanced(XREG_USE_SYSTEM_OPENCL)
+
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
-find_package(OpenCL REQUIRED)
+if (XREG_USE_SYSTEM_OPENCL)
+  find_package(OpenCL REQUIRED)
+  set (XREG_EXT_LIBS_TO_LINK OpenCL::OpenCL)
+endif ()
 
 find_path(VIENNACL_INC_DIR viennacl/matrix.hpp PATHS ${ViennaCL_DIR} ${ViennaCL_DIR}/..)
 if (${VIENNACL_INC_DIR} STREQUAL "VIENNACL_INC_DIR-NOTFOUND")
@@ -81,7 +93,7 @@ set(XREG_EXT_LIB_INC_DIRS ${Boost_INCLUDE_DIRS}
                           ${VTK_INCLUDE_DIRS}
                           ${VIENNACL_INC_DIR})
 
-set(XREG_EXT_LIBS_TO_LINK OpenCL::OpenCL
+set(XREG_EXT_LIBS_TO_LINK ${XREG_EXT_LIBS_TO_LINK}
                           fmt::fmt
                           ${ITK_LIBRARIES}
                           ${OpenCV_LIBS}
@@ -114,7 +126,16 @@ endif ()
 # library file tree is located within another project and added
 # via a call to add_subdirectory()
 if (XREG_TOP_LEVEL_PROJ)
-  install(TARGETS xreg cmaes EXPORT xreg-targets)
+  # Even though the cmaes target may be static library with a private
+  # relationship to xreg, CMake still requires it to be exported!
+  set (XREG_TARGETS_TO_EXPORT xreg cmaes)
+
+  if (NOT XREG_USE_SYSTEM_OPENCL)
+    set (XREG_TARGETS_TO_EXPORT ${XREG_TARGETS_TO_EXPORT} OpenCL)
+  endif ()
+
+
+  install(TARGETS ${XREG_TARGETS_TO_EXPORT} EXPORT xreg-targets)
 
   include(CMakePackageConfigHelpers)
 
@@ -124,9 +145,7 @@ if (XREG_TOP_LEVEL_PROJ)
 
   write_basic_package_version_file(${PROJECT_BINARY_DIR}/xregConfigVersion.cmake COMPATIBILITY AnyNewerVersion)
 
-  # Even though the cmaes target may be static library with a private
-  # relationship to xreg, CMake still requires it to be exported!
-  export(TARGETS xreg cmaes NAMESPACE xreg:: FILE ${PROJECT_BINARY_DIR}/xreg-targets.cmake)
+  export(TARGETS ${XREG_TARGETS_TO_EXPORT} NAMESPACE xreg:: FILE ${PROJECT_BINARY_DIR}/xreg-targets.cmake)
 
   install(FILES ${PROJECT_BINARY_DIR}/xregConfig.cmake ${PROJECT_BINARY_DIR}/xregConfigVersion.cmake
           DESTINATION lib/cmake)

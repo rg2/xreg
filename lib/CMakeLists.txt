@@ -20,6 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+set(XREG_THIRD_PARTY_DEPS cmaes)
+if (NOT XREG_USE_SYSTEM_OPENCL)
+  set(XREG_THIRD_PARTY_DEPS OpenCL ${XREG_THIRD_PARTY_DEPS})
+endif ()
+
 # set the library sub-components/directories here
 set(XREG_LIB_SUB_DIRS common
                       file_formats
@@ -65,8 +70,7 @@ foreach (XREG_CUR_LIB_DIR ${XREG_LIB_SUB_DIRS})
   target_include_directories(xreg_${XREG_CUR_LIB_DIR} SYSTEM PUBLIC ${XREG_EXT_LIB_INC_DIRS})
   
   target_link_libraries(xreg_${XREG_CUR_LIB_DIR}
-                        PUBLIC ${XREG_EXT_LIBS_TO_LINK}
-                        PRIVATE cmaes)
+                        PUBLIC ${XREG_EXT_LIBS_TO_LINK} ${XREG_THIRD_PARTY_DEPS})
   
   # add to the list of all of the object files created
   list(APPEND XREG_LIB_OBJS $<TARGET_OBJECTS:xreg_${XREG_CUR_LIB_DIR}>)
@@ -85,7 +89,7 @@ target_include_directories(xreg PUBLIC
                                   $<INSTALL_INTERFACE:include>)
 target_include_directories(xreg SYSTEM PUBLIC ${XREG_EXT_LIB_INC_DIRS})
 
-target_link_libraries(xreg PUBLIC ${XREG_EXT_LIBS_TO_LINK} PRIVATE cmaes)
+target_link_libraries(xreg PUBLIC ${XREG_EXT_LIBS_TO_LINK} ${XREG_THIRD_PARTY_DEPS})
 
 file(GLOB_RECURSE XREG_ALL_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 set_target_properties(xreg PROPERTIES PUBLIC_HEADER "${XREG_ALL_HEADERS}")

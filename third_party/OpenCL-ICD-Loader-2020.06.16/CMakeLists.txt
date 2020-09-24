@@ -32,12 +32,15 @@ find_package (Threads REQUIRED)
 # may be useful to simplify the build and distribution of the application. E.g.
 # in test farms, or in cases where the end-user system configs are known in
 # advance. Use it with discretion.
-option (BUILD_SHARED_LIBS "Build shared libs" ON)
+#option (BUILD_SHARED_LIBS "Build shared libs" ON)
+# RG: This will be forced at the call to add_library()
 
 # This option enables support for OpenCL 3.0 Provisional in the ICD loader.  It
 # is currently off by default while the specification is provisional, as it may
 # change.
-option (ENABLE_OPENCL30_PROVISIONAL "Enable 3.0 provisional entry points" OFF)
+#option (ENABLE_OPENCL30_PROVISIONAL "Enable 3.0 provisional entry points" OFF)
+# RG: we do not need this as an option
+set (ENABLE_OPENCL30_PROVISIONAL OFF)
 
 include(CheckFunctionExists)
 check_function_exists(secure_getenv HAVE_SECURE_GETENV)
@@ -104,18 +107,21 @@ else ()
         ${CMAKE_CURRENT_BINARY_DIR}/loader/linux/icd_exports.map)
 endif ()
 
-set (OPENCL_ICD_LOADER_HEADERS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/inc CACHE PATH "Path to OpenCL Headers")
+#set (OPENCL_ICD_LOADER_HEADERS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/inc CACHE PATH "Path to OpenCL Headers")
+# RG taking this out of the cache
+set (OPENCL_ICD_LOADER_HEADERS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../OpenCL-Headers-2020.06.16)
 
-add_library (OpenCL ${OPENCL_ICD_LOADER_SOURCES})
+add_library (OpenCL SHARED ${OPENCL_ICD_LOADER_SOURCES})
 set_target_properties (OpenCL PROPERTIES VERSION "1.2" SOVERSION "1")
 
 if (WIN32)
     target_link_libraries (OpenCL cfgmgr32.lib runtimeobject.lib)
 
-    option (OPENCL_ICD_LOADER_DISABLE_OPENCLON12 "Disable support for OpenCLOn12. Support for OpenCLOn12 should only be disabled when building an import lib to link with, and must be enabled when building an ICD loader for distribution!" OFF)
-    if (OPENCL_ICD_LOADER_DISABLE_OPENCLON12)
-        target_compile_definitions(OpenCL PRIVATE OPENCL_ICD_LOADER_DISABLE_OPENCLON12)
-    endif()
+    # RG: we need 1.2 to run on NVIDIA and MacOS - so remove this option
+    #option (OPENCL_ICD_LOADER_DISABLE_OPENCLON12 "Disable support for OpenCLOn12. Support for OpenCLOn12 should only be disabled when building an import lib to link with, and must be enabled when building an ICD loader for distribution!" OFF)
+    #if (OPENCL_ICD_LOADER_DISABLE_OPENCLON12)
+    #    target_compile_definitions(OpenCL PRIVATE OPENCL_ICD_LOADER_DISABLE_OPENCLON12)
+    #endif()
 
     if(NOT USE_DYNAMIC_VCXX_RUNTIME)
         string(REPLACE "/MD" "/MT" CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
@@ -136,22 +142,28 @@ else()
     endif ()
 endif ()
 
-include_directories (${OPENCL_ICD_LOADER_HEADERS_DIR})
+#include_directories (${OPENCL_ICD_LOADER_HEADERS_DIR}) # RG
 if (ENABLE_OPENCL30_PROVISIONAL)
   add_definitions (-DCL_TARGET_OPENCL_VERSION=300)
 else()
-  add_definitions (-DCL_TARGET_OPENCL_VERSION=220)
+  #RG add_definitions (-DCL_TARGET_OPENCL_VERSION=220)
+  target_compile_definitions (OpenCL PUBLIC CL_TARGET_OPENCL_VERSION=220)
 endif()
 
 target_include_directories (OpenCL PRIVATE ${CMAKE_CURRENT_BINARY_DIR} loader)
+target_include_directories (OpenCL PUBLIC
+                                    $<BUILD_INTERFACE:${OPENCL_ICD_LOADER_HEADERS_DIR}>
+                                    $<INSTALL_INTERFACE:include>) # RG
 target_link_libraries (OpenCL ${CMAKE_DL_LIBS})
 
-include (CTest)
-if (BUILD_TESTING)
-    add_subdirectory (test)
-endif()
+# RG: no testing
+#include (CTest)
+#if (BUILD_TESTING)
+#    add_subdirectory (test)
+#endif()
 
-install (TARGETS OpenCL
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+# RG: handle the install in the root CMakeLists
+#install (TARGETS OpenCL
+#    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+#    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+#    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
