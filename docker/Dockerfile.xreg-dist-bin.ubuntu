@@ -1,0 +1,21 @@
+# This Docker file is used to build the xReg distributable executables on linux
+
+ARG ubuntu_version=16.04
+
+FROM xreg-ubuntu-${ubuntu_version}
+
+ARG xreg_dist_str=xreg
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      python3     \
+      patchelf && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /
+
+COPY ./dist/make_linux_dist.py .
+
+RUN mkdir ${xreg_dist_str} && LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH" python3 make_linux_dist.py /usr/local ${xreg_dist_str}
+
+RUN tar czf ${xreg_dist_str}.tar.gz ${xreg_dist_str}
+
