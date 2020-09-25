@@ -33,8 +33,6 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   set (XREG_TOP_LEVEL_PROJ TRUE)
 endif ()
 
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake" ${CMAKE_MODULE_PATH})
-
 option(XREG_BUILD_APPS "Build xreg applications in addition to the library" ${XREG_TOP_LEVEL_PROJ})
 
 option(XREG_INCLUDE_GIT_HASH_IN_VER_STR "Include the git hash in the version string that is embedded into the library" OFF)
@@ -48,6 +46,23 @@ endif ()
 
 option(XREG_USE_SYSTEM_OPENCL "Use a system install of OpenCL instead of the bundled loader" ${XREG_USE_SYSTEM_OPENCL_DEFAULT})
 mark_as_advanced(XREG_USE_SYSTEM_OPENCL)
+
+if (APPLE OR WIN32)
+  set(XREG_USE_LEGACY_FIND_TBB_DEFAULT OFF)
+else ()
+  set(XREG_USE_LEGACY_FIND_TBB_DEFAULT ON)
+endif ()
+
+option(XREG_USE_LEGACY_FIND_TBB "Use a legacy FindTBB.cmake which works better for tbb installed on Ubuntu through the system package manager - it does not work on Windows w/ VS 2019" ${XREG_USE_LEGACY_FIND_TBB_DEFAULT})
+mark_as_advanced(XREG_USE_LEGACY_FIND_TBB)
+
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake" ${CMAKE_MODULE_PATH})
+if (XREG_USE_LEGACY_FIND_TBB)
+  set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/tbb" ${CMAKE_MODULE_PATH})
+  set(XREG_TBB_LIB tbb)
+else ()
+  set(XREG_TBB_LIB TBB::tbb)
+endif ()
 
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
@@ -64,7 +79,6 @@ if (${VIENNACL_INC_DIR} STREQUAL "VIENNACL_INC_DIR-NOTFOUND")
 endif ()
 
 find_package(TBB REQUIRED)
-#install(FILES $<TARGET_FILE:tbb> TYPE LIB)
 
 find_package(Boost REQUIRED)
 
@@ -97,7 +111,7 @@ set(XREG_EXT_LIBS_TO_LINK ${XREG_EXT_LIBS_TO_LINK}
                           fmt::fmt
                           ${ITK_LIBRARIES}
                           ${OpenCV_LIBS}
-                          tbb
+                          ${XREG_TBB_LIB}
                           ${VTK_LIBRARIES}
                           ${NLOPT_LIBRARIES})
 
