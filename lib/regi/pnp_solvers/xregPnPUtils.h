@@ -31,7 +31,7 @@ namespace xreg
 {
 
 // Forward declarations
-class CameraModel;
+struct CameraModel;
 
 FrameTransform PnPPOSITAndReprojCMAES(const CameraModel& cam,
                                       const LandMap3& pts_3d,
