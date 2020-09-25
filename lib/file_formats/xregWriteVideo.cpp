@@ -24,11 +24,18 @@
 
 #include "xregWriteVideo.h"
 
+#ifndef _WIN32
+
 #define BOOST_ERROR_CODE_HEADER_ONLY
 #include <boost/process.hpp>
 #undef BOOST_ERROR_CODE_HEADER_ONLY
 
 #include <fmt/format.h>
+
+#endif
+
+#include <opencv2/videoio.hpp>
+#include <opencv2/imgcodecs.hpp>
 
 #include "xregAssert.h"
 #include "xregFilesystemUtils.h"
@@ -40,6 +47,8 @@ void xreg::WriteImageFramesToVideo::write(const std::vector<cv::Mat>& frames)
     write(f);
   }
 }
+
+#ifndef _WIN32
 
 namespace xreg
 {
@@ -124,6 +133,8 @@ xreg::WriteImageFramesToVideoWithFFMPEG::~WriteImageFramesToVideoWithFFMPEG()
   }
 }
 
+#endif
+
 void xreg::WriteImageFramesToVideoWithOpenCV::open()
 { }
 
@@ -141,8 +152,8 @@ void xreg::WriteImageFramesToVideoWithOpenCV::write(const cv::Mat& frame)
       std::remove(dst_vid_path.c_str());
     }
 
-    writer.reset(new cv::VideoWriter(dst_vid_path, cv::VideoWriter::fourcc('a','v','c','1'),
-                                     fps, frame.size()));
+    writer = std::make_shared<cv::VideoWriter>(dst_vid_path, cv::VideoWriter::fourcc('a','v','c','1'),
+                                               fps, frame.size());
   
     xregASSERT(writer->isOpened());
  
@@ -156,6 +167,7 @@ std::unique_ptr<xreg::WriteImageFramesToVideo> xreg::GetWriteImageFramesToVideo(
 {
   std::unique_ptr<WriteImageFramesToVideo> writer;
 
+#ifndef _WIN32
   const std::string ffmpeg_path = FindExeOnSystemPath("ffmpeg");
 
   if (!ffmpeg_path.empty())
@@ -163,9 +175,12 @@ std::unique_ptr<xreg::WriteImageFramesToVideo> xreg::GetWriteImageFramesToVideo(
     writer.reset(new WriteImageFramesToVideoWithFFMPEG);
   }
   else
+#endif
   {
+#ifndef _WIN32
     std::cerr << "WARNING: could not find FFMPEG executable, falling back to OpenCV video writer!" << std::endl;
-    
+#endif
+
     writer.reset(new WriteImageFramesToVideoWithOpenCV);
   }
 
