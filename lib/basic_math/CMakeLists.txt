@@ -20,7 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_library(xreg_basic_math OBJECT xregPolyFit.cpp
+file(GLOB_RECURSE XREG_CUR_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+
+add_library(xreg_basic_math OBJECT ${XREG_CUR_LIB_HEADERS}
+                                   xregPolyFit.cpp
                                    xregDistInterface.cpp
                                    xregNormDist.cpp
                                    xregFoldNormDist.cpp

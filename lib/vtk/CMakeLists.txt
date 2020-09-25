@@ -20,7 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_library(xreg_vtk OBJECT xregVTKBasicUtils.cpp
+file(GLOB_RECURSE XREG_CUR_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+
+add_library(xreg_vtk OBJECT ${XREG_CUR_LIB_HEADERS}
+                            xregVTKBasicUtils.cpp
                             xregVTKITKUtils.cpp
                             xregVTKMeshUtils.cpp
                             xregVTK3DPlotter.cpp)
