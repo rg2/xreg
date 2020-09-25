@@ -115,6 +115,16 @@ inline H5::DataType LookupH5DataType<std::string>()
   return H5::StrType(H5::PredType::C_S1);
 }
 
+#ifdef _WIN32
+
+template <>
+inline H5::DataType LookupH5DataType<size_type>()
+{
+  return H5::PredType::NATIVE_ULONG;
+}
+
+#endif
+
 H5::DataType GetH5StringDataType();
 
 H5::DataType GetH5StringDataType(const std::string& s);
@@ -171,6 +181,14 @@ H5::DataSet WriteSingleScalarH5(const std::string& field_name,
 H5::DataSet WriteSingleScalarH5(const std::string& field_name,
                                 const bool& field_val,
                                 H5::CommonFG* h5);
+
+#ifdef _WIN32
+
+H5::DataSet WriteSingleScalarH5(const std::string& field_name,
+                                const size_type& field_val,
+                                H5::CommonFG* h5);
+
+#endif
 
 H5::DataSet CreateVectorH5UChar(const std::string& field_name,
                                 const unsigned long len,
@@ -283,10 +301,6 @@ H5::DataSet WriteVectorH5(const std::string& field_name,
                           const bool compress = true);
 
 #ifdef _WIN32
-
-H5::DataSet WriteSingleScalarH5(const std::string& field_name,
-                                const size_type& field_val,
-                                H5::CommonFG* h5);
 
 H5::DataSet WriteVectorH5(const std::string& field_name,
                           const std::vector<size_type>& v,
