@@ -72,12 +72,20 @@ foreach (XREG_CUR_LIB_DIR ${XREG_LIB_SUB_DIRS})
   target_link_libraries(xreg_${XREG_CUR_LIB_DIR}
                         PUBLIC ${XREG_EXT_LIBS_TO_LINK} ${XREG_THIRD_PARTY_DEPS})
   
+  if (WIN32)
+    target_compile_definitions(xreg_${XREG_CUR_LIB_DIR} PUBLIC BOOST_CHRONO_HEADER_ONLY)
+  endif ()  
+
   # add to the list of all of the object files created
   list(APPEND XREG_LIB_OBJS $<TARGET_OBJECTS:xreg_${XREG_CUR_LIB_DIR}>)
 endforeach()
 
 # combine the subcomponents into a single library
 add_library(xreg ${XREG_LIB_OBJS})
+
+if (WIN32)
+    target_compile_definitions(xreg PUBLIC BOOST_CHRONO_HEADER_ONLY)
+endif () 
 
 # IMPORTANT NOTE: Since we are providing a list of include directories,
 # the $<BUILD_INTERFACE:${XREG_LIB_INC_DIRS}> must be surrounded by quotes.
