@@ -24,6 +24,8 @@
 
 #include "xregImgSimMetric2DPatchCommon.h"
 
+#include <numeric>
+
 #include "xregITKOpenCVUtils.h"
 #include "xregSampleUtils.h"
 #include "xregAssert.h"

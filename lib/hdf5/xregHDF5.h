@@ -25,6 +25,8 @@
 #ifndef XREGHDF5_H_
 #define XREGHDF5_H_
 
+#include <array>
+
 #include <fmt/format.h>
 
 #include <H5Cpp.h>
@@ -280,6 +282,19 @@ H5::DataSet WriteVectorH5(const std::string& field_name,
                           H5::CommonFG* h5,
                           const bool compress = true);
 
+#ifdef _WIN32
+
+H5::DataSet WriteSingleScalarH5(const std::string& field_name,
+                                const size_type& field_val,
+                                H5::CommonFG* h5);
+
+H5::DataSet WriteVectorH5(const std::string& field_name,
+                          const std::vector<size_type>& v,
+                          H5::CommonFG* h5,
+                          const bool compress = true);
+
+#endif
+
 void WriteVectorElemH5(const unsigned char& x, const unsigned long i, H5::DataSet* h5);
 
 void WriteVectorElemH5(const char& x, const unsigned long i, H5::DataSet* h5);
@@ -533,6 +548,9 @@ ReadVectorH5Bool(const std::string& field_name, const H5::CommonFG& h5);
 
 std::vector<CoordScalar>
 ReadVectorH5CoordScalar(const std::string& field_name, const H5::CommonFG& h5);
+
+std::vector<size_type>
+ReadVectorH5SizeType(const std::string& field_name, const H5::CommonFG& h5);
 
 MatMxN ReadMatrixH5CoordScalar(const std::string& field_name, const H5::CommonFG& h5);
 

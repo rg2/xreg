@@ -26,6 +26,7 @@
 #define XREGIMGSIMMETRIC2DPATCHCOMMON_H_
 
 #include <random>
+#include <array>
 
 #include <opencv2/core/core.hpp>
 

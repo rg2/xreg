@@ -72,9 +72,11 @@ const char* xreg::kFILE_SEPS = &xreg::kPOSIX_FILE_SEP;
 #ifdef _WIN32
 typedef struct __stat64 stat_type;
 #define STAT_FN _stat64
+#define STAT_EXEC_MODE_FLAG S_IEXEC
 #else
 typedef struct stat stat_type;
 #define STAT_FN stat
+#define STAT_EXEC_MODE_FLAG S_IXUSR
 #endif
 
 bool xreg::IsHDF5FileExt(const std::string& path)
@@ -273,7 +275,7 @@ bool xreg::Path::is_exec() const
   stat_type s;
   if (STAT_FN(path_str_.c_str(), &s) == 0)
   {
-    b = (s.st_mode & (S_IFREG | S_IXUSR)) != 0;
+    b = (s.st_mode & (S_IFREG | STAT_EXEC_MODE_FLAG)) != 0;
   }
   else
   {

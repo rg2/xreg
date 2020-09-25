@@ -25,6 +25,8 @@
 #ifndef XREGSE3OPTVARS_H_
 #define XREGSE3OPTVARS_H_
 
+#include <array>
+
 #include "xregCommon.h"
 #include "xregPerspectiveXform.h"
 

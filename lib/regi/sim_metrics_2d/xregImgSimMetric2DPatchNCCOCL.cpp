@@ -286,7 +286,7 @@ void xreg::ImgSimMetric2DPatchNCCOCL::allocate_resources()
   {
     prog.build();
   }
-  catch (bc::opencl_error &e)
+  catch (bc::opencl_error &)
   {
     std::cerr << "OpenCL Kernel Compile Error (ImgSimMetric2DPatchNCCOCL):\n"
               << prog.build_log() << std::endl;

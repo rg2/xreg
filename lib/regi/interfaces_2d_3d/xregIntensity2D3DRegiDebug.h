@@ -40,7 +40,7 @@ class CommonFG;
 namespace xreg
 {
 
-class H5ReadWriteInterface;
+struct H5ReadWriteInterface;
 
 struct SingleRegiDebugResults
 {

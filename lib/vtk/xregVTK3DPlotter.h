@@ -45,9 +45,9 @@ class vtkPolyData;
 namespace xreg
 {
 
-class CameraModel;
-class TriMesh;
-class AASlab3;
+struct CameraModel;
+struct TriMesh;
+struct AASlab3;
 
 /// \brief Helper class for common plotting operations with VTK
 class VTK3DPlotter

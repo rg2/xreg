@@ -241,7 +241,7 @@ xreg::DebugRegiResultsMultiLevel xreg::ReadMultiLevel2D3DRegiDebugH5(const H5::C
         {
           vol_path_info.label_vol_path = ReadStringH5("label-vol-path", cur_vol_g);
 
-          vol_path_info.labels_used = ReadVectorH5ULong("labels-used", cur_vol_g);
+          vol_path_info.labels_used = ReadVectorH5SizeType("labels-used", cur_vol_g);
         }
 
         vol_path_info.paths_on_disk = ReadSingleScalarH5Bool("paths-on-disk", cur_vol_g);
@@ -272,7 +272,7 @@ xreg::DebugRegiResultsMultiLevel xreg::ReadMultiLevel2D3DRegiDebugH5(const H5::C
 
       if (ObjectInGroupH5("projs-used", pd_g))
       {
-        pd_path_info.projs_used = ReadVectorH5ULong("projs-used", pd_g);
+        pd_path_info.projs_used = ReadVectorH5SizeType("projs-used", pd_g);
       }
 
       pd_path_info.paths_on_disk = ReadSingleScalarH5Bool("paths-on-disk", pd_g);

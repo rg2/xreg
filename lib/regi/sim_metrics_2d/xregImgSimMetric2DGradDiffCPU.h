@@ -25,6 +25,8 @@
 #ifndef XREGIMGSIMMETRIC2DGRADDIFFCPU_H_
 #define XREGIMGSIMMETRIC2DGRADDIFFCPU_H_
 
+#include <array>
+
 #include "xregImgSimMetric2DGradImgCPU.h"
 
 namespace xreg

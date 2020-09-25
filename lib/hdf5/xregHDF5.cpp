@@ -365,6 +365,25 @@ H5::DataSet xreg::WriteVectorH5(const std::string& field_name,
   return WriteVectorH5(field_name, tmp, h5, compress);
 }
 
+#ifdef _WIN32
+
+H5::DataSet xreg::WriteSingleScalarH5(const std::string& field_name,
+                                      const size_type& field_val,
+                                      H5::CommonFG* h5)
+{
+  return detail::WriteSingleScalarH5Helper<size_type>(field_name, field_val, h5);
+}
+
+H5::DataSet xreg::WriteVectorH5(const std::string& field_name,
+                                const std::vector<size_type>& v,
+                                H5::CommonFG* h5,
+                                const bool compress)
+{
+  return detail::WriteVectorH5Helper<size_type>(field_name, v, h5, compress);
+}
+
+#endif
+
 void xreg::WriteVectorElemH5(const unsigned char& x, const unsigned long i, H5::DataSet* h5)
 {
   detail::WriteVectorElemH5Helper<unsigned char>(x, i, h5);
@@ -837,6 +856,12 @@ std::vector<xreg::CoordScalar>
 xreg::ReadVectorH5CoordScalar(const std::string& field_name, const H5::CommonFG& h5)
 {
   return detail::ReadVectorH5Helper<CoordScalar>(field_name, h5);
+}
+
+std::vector<xreg::size_type>
+xreg::ReadVectorH5SizeType(const std::string& field_name, const H5::CommonFG& h5)
+{
+  return detail::ReadVectorH5Helper<size_type>(field_name, h5);
 }
 
 xreg::MatMxN xreg::ReadMatrixH5CoordScalar(const std::string& field_name, const H5::CommonFG& h5)

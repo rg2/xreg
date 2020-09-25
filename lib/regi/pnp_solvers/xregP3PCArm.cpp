@@ -24,6 +24,8 @@
 
 #include "xregP3PCArm.h"
 
+#include <array>
+
 #include "xregAssert.h"
 #include "xregPairedPointRegi3D3D.h"
 #include "xregRigidUtils.h"
