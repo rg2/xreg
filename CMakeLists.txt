@@ -146,6 +146,7 @@ if (XREG_TOP_LEVEL_PROJ)
 
   if (NOT XREG_USE_SYSTEM_OPENCL)
     set (XREG_TARGETS_TO_EXPORT ${XREG_TARGETS_TO_EXPORT} OpenCL)
+    install(DIRECTORY third_party/OpenCL-Headers-2020.06.16/CL DESTINATION include)
   endif ()
 
 
