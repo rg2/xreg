@@ -1,0 +1,8 @@
+#!/bin/sh
+
+apt-get update && apt-get install -y --no-install-recommends \
+      python3     \
+      patchelf && \
+    rm -rf /var/lib/apt/lists/*
+
+

@@ -1,20 +1,16 @@
 # This Docker file is used to build an image with all of the dependencies needed to
-# build the xReg library and should be tagged something like xreg-deps-ubuntu-${ubuntu_version}
+# build the xReg library and should be tagged something like xreg-deps-${os_name}-${os_version}
+# (e.g. xreg-deps-ubuntu-16.04)
 
-ARG ubuntu_version=16.04
+# choose either ubuntu or centos
+ARG os_name=ubuntu
 
-FROM ubuntu:${ubuntu_version} as dev-base
+# for ubuntu choose 16.04, 18.04, or 20.04
+# for centos choose 7 or 8
+ARG os_version=16.04
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      build-essential \
-      ca-certificates \
-      cmake \
-      wget \
-      libtbb2 \
-      libtbb-dev \
-      libssl-dev \
-      git && \
-    rm -rf /var/lib/apt/lists/*
+# e.g. by running Dockerfile.ubuntu_dev_base or Dockerfile.centos_dev_base
+FROM xreg-dev-base-${os_name}-${os_version} as xreg-dev-base-cust-deps
 
 WORKDIR /
 
@@ -23,19 +19,15 @@ RUN mkdir ffmpeg_dl && cd ffmpeg_dl && \
     tar xf ffmpeg-release-amd64-static.tar.xz && \
     mkdir -p /usr/local/bin && \
     mv ffmpeg-4.3.1-amd64-static/ffmpeg /usr/local/bin && \
-    mv ffmpeg-4.3.1-amd64-static/ffprobe /usr/local/bin && \
     cd / && rm -rf ffmpeg_dl
 
-FROM dev-base as dev-base-new-cmake-ninja
-
-WORKDIR /
-
-# Need newer version of cmake for ninja build
-RUN mkdir cmake_build && cd cmake_build && \
-    wget https://github.com/Kitware/CMake/releases/download/v3.18.2/cmake-3.18.2.tar.gz && \
-    tar xf cmake-3.18.2.tar.gz && cd cmake-3.18.2 && mkdir build && cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && cmake --build . --target install && \
-    cd / && rm -rf cmake_build
+# Get a more recent version of TBB than what is probably in the package manager
+# At least one that works better w/ CMake
+RUN mkdir tbb_dl && cd tbb_dl && \
+    wget https://github.com/intel/tbb/releases/download/2018_U1/tbb2018_20170919oss_lin.tgz && \
+    tar xf tbb2018_20170919oss_lin.tgz && \
+    mv tbb2018_20170919oss /opt && cd /opt && ln -s tbb2018_20170919oss tbb && \
+    cd / && rm -rf tbb_dl
 
 # building ninja as it is able to build quicker than make
 RUN mkdir ninja_build && cd ninja_build && \
@@ -44,7 +36,7 @@ RUN mkdir ninja_build && cd ninja_build && \
     cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && cmake --build . --target install && \
     cd / && rm -rf ninja_build
 
-FROM dev-base-new-cmake-ninja as xreg-deps
+FROM xreg-dev-base-cust-deps as xreg-deps
 
 WORKDIR /
 
@@ -96,21 +88,6 @@ RUN mkdir nlopt_build && cd nlopt_build && \
     cmake --build . && cmake --build . --target install && \
     cd / && rm -rf nlopt_build
 
-# build VTK 7.1.1
-RUN mkdir vtk_build && cd vtk_build && \
-    wget https://www.vtk.org/files/release/7.1/VTK-7.1.1.tar.gz && \
-    tar xf VTK-7.1.1.tar.gz && cd VTK-7.1.1 && \
-    mkdir build && cd build && \
-    cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
-          -DCMAKE_CXX_STANDARD:STRING="11" \
-          -DVTK_Group_Imaging:BOOL=ON -DVTK_Group_Views:BOOL=ON \
-          -DBUILD_TESTING:BOOL=OFF -DVTK_USE_CXX11_FEATURES:BOOL=ON \
-          -DVTK_SMP_IMPLEMENTATION_TYPE:STRING="TBB" \
-          -DVTK_RENDERING_BACKEND=None -DVTK_Group_Rendering:BOOL=OFF \
-         .. && \
-    cmake --build . && cmake --build . --target install && \
-    cd / && rm -rf vtk_build
-
 # build ITK 4.13.2
 RUN mkdir itk_build && cd itk_build && \
     wget https://github.com/InsightSoftwareConsortium/ITK/releases/download/v4.13.2/InsightToolkit-4.13.2.tar.gz && \
@@ -134,7 +111,7 @@ RUN mkdir opencv_build && cd opencv_build && \
                    -DCMAKE_CXX_STANDARD:STRING="11" \
                    -DBUILD_TESTS:BOOL=OFF -DBUILD_EXAMPLES:BOOL=OFF \
                    -DBUILD_DOCS:BOOL=OFF -DBUILD_WITH_DEBUG_INFO:BOOL=OFF \
-                   -DWITH_TBB:BOOL=ON -DBUILD_TBB:BOOL=OFF \
+                   -DWITH_TBB:BOOL=ON -DBUILD_TBB:BOOL=OFF -DTBB_INCLUDE_DIRS:PATH="/opt/tbb/include" \
                    -DWITH_IPP:BOOL=OFF -DWITH_VTK:BOOL=OFF \
                    -DWITH_CUBLAS:BOOL=OFF -DWITH_CUDA:BOOL=OFF \
                    -DWITH_CUFFT:BOOL=OFF -DWITH_OPENCL:BOOL=OFF \
@@ -143,4 +120,19 @@ RUN mkdir opencv_build && cd opencv_build && \
          .. && \
     cmake --build . && cmake --build . --target install && \
     cd / && rm -rf opencv_build
+
+# build VTK 7.1.1
+RUN mkdir vtk_build && cd vtk_build && \
+    wget https://www.vtk.org/files/release/7.1/VTK-7.1.1.tar.gz && \
+    tar xf VTK-7.1.1.tar.gz && cd VTK-7.1.1 && \
+    mkdir build && cd build && \
+    TBB_ROOT="/opt/tbb" \
+    cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
+          -DCMAKE_CXX_STANDARD:STRING="11" \
+          -DVTK_Group_Imaging:BOOL=ON -DVTK_Group_Views:BOOL=ON \
+          -DBUILD_TESTING:BOOL=OFF -DVTK_USE_CXX11_FEATURES:BOOL=ON \
+          -DVTK_SMP_IMPLEMENTATION_TYPE:STRING="TBB" \
+         .. && \
+    cmake --build . && cmake --build . --target install && \
+    cd / && rm -rf vtk_build
 
