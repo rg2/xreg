@@ -413,6 +413,14 @@ void xreg::VTK3DPlotter::show()
     ren_->GetActiveCamera()->OrthogonalizeViewUp();
   }
 
+  if (!render_offscreen_)
+  {
+    // This call must happen before ren_win_->Render() (at least with VTK 7.1.1)
+    // otherwise the program will crash on Linux (at least Ubuntu 16.04)
+    // See http://vtk.1045678.n5.nabble.com/Display-Error-under-Ubuntu-16-04-td5740948.html
+    iren_->SetRenderWindow(ren_win_.GetPointer());
+  }
+
   ren_win_->Render();
   // Now other render window properties may be set, e.g. window title.
 
@@ -426,8 +434,6 @@ void xreg::VTK3DPlotter::show()
     }
     ren_win_->SetWindowName(win_title_str_.c_str());
     ++WindowCount();
-
-    iren_->SetRenderWindow(ren_win_.GetPointer());
 
     if (inter_on_)
     {
