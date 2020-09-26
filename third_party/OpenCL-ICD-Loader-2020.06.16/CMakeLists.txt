@@ -153,7 +153,7 @@ endif()
 target_include_directories (OpenCL PRIVATE ${CMAKE_CURRENT_BINARY_DIR} loader)
 target_include_directories (OpenCL PUBLIC
                                     $<BUILD_INTERFACE:${OPENCL_ICD_LOADER_HEADERS_DIR}>
-                                    $<INSTALL_INTERFACE:include>) # RG
+                                    $<INSTALL_INTERFACE:${XREG_INC_INSTALL_DIR}>) # RG
 target_link_libraries (OpenCL ${CMAKE_DL_LIBS})
 
 # RG: no testing

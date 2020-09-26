@@ -68,6 +68,10 @@ set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
+include(GNUInstallDirs)
+
+set (XREG_INC_INSTALL_DIR "${CMAKE_INSTALL_INCLUDEDIR}/xreg")
+
 if (XREG_USE_SYSTEM_OPENCL)
   find_package(OpenCL REQUIRED)
   set (XREG_EXT_LIBS_TO_LINK OpenCL::OpenCL)
@@ -146,25 +150,31 @@ if (XREG_TOP_LEVEL_PROJ)
 
   if (NOT XREG_USE_SYSTEM_OPENCL)
     set (XREG_TARGETS_TO_EXPORT ${XREG_TARGETS_TO_EXPORT} OpenCL)
-    install(DIRECTORY third_party/OpenCL-Headers-2020.06.16/CL DESTINATION include)
+    install(DIRECTORY third_party/OpenCL-Headers-2020.06.16/CL DESTINATION ${XREG_INC_INSTALL_DIR})
   endif ()
 
 
-  install(TARGETS ${XREG_TARGETS_TO_EXPORT} EXPORT xreg-targets)
+  install(TARGETS ${XREG_TARGETS_TO_EXPORT} EXPORT xreg-targets
+          RUNTIME       DESTINATION ${CMAKE_INSTALL_BINDIR}
+          LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+          ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+          PUBLIC_HEADER DESTINATION ${XREG_INC_INSTALL_DIR})
 
   include(CMakePackageConfigHelpers)
 
+  set(XREG_CMAKE_CONFIG_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/xreg)
+
   configure_package_config_file(cmake/xregConfig.cmake.in
                                 ${PROJECT_BINARY_DIR}/xregConfig.cmake
-                                INSTALL_DESTINATION lib/cmake)
+                                INSTALL_DESTINATION ${XREG_CMAKE_CONFIG_INSTALL_DIR})
 
   write_basic_package_version_file(${PROJECT_BINARY_DIR}/xregConfigVersion.cmake COMPATIBILITY AnyNewerVersion)
 
   export(TARGETS ${XREG_TARGETS_TO_EXPORT} NAMESPACE xreg:: FILE ${PROJECT_BINARY_DIR}/xreg-targets.cmake)
 
   install(FILES ${PROJECT_BINARY_DIR}/xregConfig.cmake ${PROJECT_BINARY_DIR}/xregConfigVersion.cmake
-          DESTINATION lib/cmake)
+          DESTINATION ${XREG_CMAKE_CONFIG_INSTALL_DIR})
 
-  install(EXPORT xreg-targets NAMESPACE xreg:: DESTINATION lib/cmake)
+  install(EXPORT xreg-targets NAMESPACE xreg:: DESTINATION ${XREG_CMAKE_CONFIG_INSTALL_DIR})
 endif ()
 

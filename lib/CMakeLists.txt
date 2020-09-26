@@ -94,7 +94,7 @@ endif ()
 # e.g. "$<BUILD_INTERFACE:${XREG_LIB_INC_DIRS}>"
 target_include_directories(xreg PUBLIC
                                   "$<BUILD_INTERFACE:${XREG_LIB_INC_DIRS}>"
-                                  $<INSTALL_INTERFACE:include>)
+                                  $<INSTALL_INTERFACE:${XREG_INC_INSTALL_DIR}>)
 target_include_directories(xreg SYSTEM PUBLIC ${XREG_EXT_LIB_INC_DIRS})
 
 target_link_libraries(xreg PUBLIC ${XREG_EXT_LIBS_TO_LINK} ${XREG_THIRD_PARTY_DEPS})
