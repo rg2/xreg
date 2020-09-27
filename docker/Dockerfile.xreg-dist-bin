@@ -1,0 +1,39 @@
+# This Docker file is used to build the xReg distributable executables on linux
+# Use a tag like xreg-dist-${os_name}-${os_version} (e.g. xreg-dist-centos-7)
+
+# choose either ubuntu or centos
+ARG os_name=ubuntu
+
+# for ubuntu choose 16.04, 18.04, or 20.04
+# for centos choose 7 or 8
+ARG os_version=16.04
+
+FROM xreg-${os_name}-${os_version}
+
+# need to repeat these due to scope
+ARG os_name
+ARG os_version
+
+# name of the dist. directory
+ARG xreg_dist_str=xreg
+
+WORKDIR /
+
+COPY ./dist/make_linux_dist.py .
+
+COPY ./dist/${os_name}_dist_pkgs xreg_dist_pkgs
+
+RUN ./xreg_dist_pkgs
+
+ENV XREG_NAME=${xreg_dist_str}-${os_name}-${os_version}
+
+RUN mkdir ${XREG_NAME} && \
+    LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64:/opt/tbb/lib/intel64/gcc4.7:$LD_LIBRARY_PATH" \
+    python3 make_linux_dist.py /usr/local ${XREG_NAME}
+
+COPY ./dist/dist_readme/README.txt ${XREG_NAME}
+
+COPY ./LICENSE ${XREG_NAME}
+
+RUN tar czf ${XREG_NAME}.tar.gz ${XREG_NAME}
+

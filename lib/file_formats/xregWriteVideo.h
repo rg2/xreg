@@ -28,7 +28,15 @@
 #include <vector>
 #include <memory>
 
-#include <opencv2/opencv.hpp>
+#include <opencv2/core/mat.hpp>
+
+// forward declaration
+namespace cv
+{
+
+class VideoWriter;
+
+}  // cv
 
 namespace xreg
 {
@@ -50,6 +58,10 @@ public:
 
   virtual ~WriteImageFramesToVideo() = default;
 };
+
+// boost::process cannot be used header-only for our purposes on Windows.
+// Therefore, the ffmpeg video writer will not be included.
+#ifndef _WIN32
 
 namespace detail
 {
@@ -88,6 +100,8 @@ private:
   std::string ffmpeg_path;
 };
 
+#endif
+
 class WriteImageFramesToVideoWithOpenCV : public WriteImageFramesToVideo
 {
 public:
@@ -98,7 +112,8 @@ public:
   void write(const cv::Mat& frame) override;
 
 private:
-  std::unique_ptr<cv::VideoWriter> writer;
+  // Using shared_ptr instead of unique_ptr to allow for foward declartion cv::VideoWriter
+  std::shared_ptr<cv::VideoWriter> writer;
 };
 
 std::unique_ptr<WriteImageFramesToVideo> GetWriteImageFramesToVideo();

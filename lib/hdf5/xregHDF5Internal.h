@@ -60,7 +60,7 @@ H5::DataSet CreateVectorH5Helper(const std::string& field_name,
   if (compress)
   {
     // Maximum ~1 MB chunk size (fits in default chunk cache)
-    const hsize_t chunk_dims = std::min(len, size_type((1024 * 1024 * 1) / sizeof(Scalar)));
+    const hsize_t chunk_dims = std::min(static_cast<size_type>(len), size_type((1024 * 1024 * 1) / sizeof(Scalar)));
     props.setChunk(1, &chunk_dims);
     props.setDeflate(9);
   }
@@ -510,10 +510,8 @@ ReadNDImageH5Helper(const H5::CommonFG& h5)
 
   constexpr unsigned int kDIM = tN;
 
-  using Img    = itk::Image<PixelScalar,kDIM>;
-  using ImgPtr = typename Img::Pointer;
-
-  using CoordScalar = typename Img::SpacingValueType;
+  using Img            = itk::Image<PixelScalar,kDIM>;
+  using ImgCoordScalar = typename Img::SpacingValueType;
 
   const auto dir_mat   = ReadMatrixH5Float("dir-mat", h5);
   const auto origin_pt = ReadMatrixH5Float("origin",  h5);
@@ -528,7 +526,7 @@ ReadNDImageH5Helper(const H5::CommonFG& h5)
   std::array<hsize_t,kDIM> dims;
   data_space.getSimpleExtentDims(dims.data());
 
-  ImgPtr img = Img::New();
+  auto img = Img::New();
 
   SetITKDirectionMatrix(img.GetPointer(), dir_mat);
   SetITKOriginPoint(img.GetPointer(), origin_pt);
@@ -536,7 +534,7 @@ ReadNDImageH5Helper(const H5::CommonFG& h5)
   typename Img::SpacingType itk_spacing;
   for (unsigned int i = 0; i < kDIM; ++i)
   {
-    itk_spacing[i] = spacing(i);
+    itk_spacing[i] = static_cast<ImgCoordScalar>(spacing(i));
   }
   img->SetSpacing(itk_spacing);
 

@@ -20,7 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_library(xreg_itk OBJECT xregITKBasicImageUtils.cpp
+file(GLOB_RECURSE XREG_CUR_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+
+add_library(xreg_itk OBJECT ${XREG_CUR_LIB_HEADERS}
+                            xregITKBasicImageUtils.cpp
                             xregITKIOUtils.cpp
                             xregITKRemapUtils.cpp
                             xregITKCropPadUtils.cpp

@@ -38,7 +38,7 @@ class SE3OptVars;
 class CamSourceObjPoseOptVars;
 class ImgSimMetric2DCombineMean;
 class Regi2D3DPenaltyFn;
-class SingleRegiDebugResults;
+struct SingleRegiDebugResults;
 
 /// \brief General class for intensity-based 2D/3D registration.
 ///

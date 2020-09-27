@@ -27,6 +27,8 @@
 
 #include "xregCommon.h"
 
+#include <array>
+
 namespace xreg
 {
 

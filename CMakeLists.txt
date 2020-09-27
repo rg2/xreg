@@ -23,7 +23,7 @@
 cmake_minimum_required(VERSION 3.13.0 FATAL_ERROR)
 
 # Version format is YYYY.MM.DD for a release and YYYY.MM.DD.1 for devel after the release
-project(xreg VERSION 2020.0.0.1)
+project(xreg VERSION 2020.09.26.0)
 
 set (CMAKE_CXX_STANDARD "11" CACHE STRING "C++ Standard (needs at least 11)")
 mark_as_advanced(CMAKE_CXX_STANDARD)
@@ -33,18 +33,49 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   set (XREG_TOP_LEVEL_PROJ TRUE)
 endif ()
 
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake" ${CMAKE_MODULE_PATH})
-
 option(XREG_BUILD_APPS "Build xreg applications in addition to the library" ${XREG_TOP_LEVEL_PROJ})
 
 option(XREG_INCLUDE_GIT_HASH_IN_VER_STR "Include the git hash in the version string that is embedded into the library" OFF)
 mark_as_advanced(XREG_INCLUDE_GIT_HASH_IN_VER_STR)
 
+if (NOT APPLE)
+  set (XREG_USE_SYSTEM_OPENCL_DEFAULT OFF)
+else ()
+  set (XREG_USE_SYSTEM_OPENCL_DEFAULT ON)
+endif ()
+
+option(XREG_USE_SYSTEM_OPENCL "Use a system install of OpenCL instead of the bundled loader" ${XREG_USE_SYSTEM_OPENCL_DEFAULT})
+mark_as_advanced(XREG_USE_SYSTEM_OPENCL)
+
+if (APPLE OR WIN32)
+  set(XREG_USE_LEGACY_FIND_TBB_DEFAULT OFF)
+else ()
+  set(XREG_USE_LEGACY_FIND_TBB_DEFAULT ON)
+endif ()
+
+option(XREG_USE_LEGACY_FIND_TBB "Use a legacy FindTBB.cmake which works better for tbb installed on Ubuntu through the system package manager - it does not work on Windows w/ VS 2019" ${XREG_USE_LEGACY_FIND_TBB_DEFAULT})
+mark_as_advanced(XREG_USE_LEGACY_FIND_TBB)
+
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake" ${CMAKE_MODULE_PATH})
+if (XREG_USE_LEGACY_FIND_TBB)
+  set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/tbb" ${CMAKE_MODULE_PATH})
+  set(XREG_TBB_LIB tbb)
+else ()
+  set(XREG_TBB_LIB TBB::tbb)
+endif ()
+
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
-find_package(OpenCL REQUIRED)
+include(GNUInstallDirs)
+
+set (XREG_INC_INSTALL_DIR "${CMAKE_INSTALL_INCLUDEDIR}/xreg")
+
+if (XREG_USE_SYSTEM_OPENCL)
+  find_package(OpenCL REQUIRED)
+  set (XREG_EXT_LIBS_TO_LINK OpenCL::OpenCL)
+endif ()
 
 find_path(VIENNACL_INC_DIR viennacl/matrix.hpp PATHS ${ViennaCL_DIR} ${ViennaCL_DIR}/..)
 if (${VIENNACL_INC_DIR} STREQUAL "VIENNACL_INC_DIR-NOTFOUND")
@@ -52,7 +83,6 @@ if (${VIENNACL_INC_DIR} STREQUAL "VIENNACL_INC_DIR-NOTFOUND")
 endif ()
 
 find_package(TBB REQUIRED)
-#install(FILES $<TARGET_FILE:tbb> TYPE LIB)
 
 find_package(Boost REQUIRED)
 
@@ -81,11 +111,11 @@ set(XREG_EXT_LIB_INC_DIRS ${Boost_INCLUDE_DIRS}
                           ${VTK_INCLUDE_DIRS}
                           ${VIENNACL_INC_DIR})
 
-set(XREG_EXT_LIBS_TO_LINK OpenCL::OpenCL
+set(XREG_EXT_LIBS_TO_LINK ${XREG_EXT_LIBS_TO_LINK}
                           fmt::fmt
                           ${ITK_LIBRARIES}
                           ${OpenCV_LIBS}
-                          tbb
+                          ${XREG_TBB_LIB}
                           ${VTK_LIBRARIES}
                           ${NLOPT_LIBRARIES})
 
@@ -114,23 +144,41 @@ endif ()
 # library file tree is located within another project and added
 # via a call to add_subdirectory()
 if (XREG_TOP_LEVEL_PROJ)
-  install(TARGETS xreg cmaes EXPORT xreg-targets)
+  # Even though the cmaes target may be static library with a private
+  # relationship to xreg, CMake still requires it to be exported!
+  set (XREG_TARGETS_TO_EXPORT xreg cmaes)
+
+  if (NOT XREG_USE_SYSTEM_OPENCL)
+    set (XREG_TARGETS_TO_EXPORT ${XREG_TARGETS_TO_EXPORT} OpenCL)
+    install(DIRECTORY third_party/OpenCL-Headers-2020.06.16/CL DESTINATION ${XREG_INC_INSTALL_DIR})
+  endif ()
+
+
+  install(TARGETS ${XREG_TARGETS_TO_EXPORT} EXPORT xreg-targets
+          RUNTIME       DESTINATION ${CMAKE_INSTALL_BINDIR}
+          LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+          ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+          PUBLIC_HEADER DESTINATION ${XREG_INC_INSTALL_DIR})
 
   include(CMakePackageConfigHelpers)
 
+  set(XREG_CMAKE_CONFIG_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/xreg)
+
   configure_package_config_file(cmake/xregConfig.cmake.in
                                 ${PROJECT_BINARY_DIR}/xregConfig.cmake
-                                INSTALL_DESTINATION lib/cmake)
+                                INSTALL_DESTINATION ${XREG_CMAKE_CONFIG_INSTALL_DIR})
 
   write_basic_package_version_file(${PROJECT_BINARY_DIR}/xregConfigVersion.cmake COMPATIBILITY AnyNewerVersion)
 
-  # Even though the cmaes target may be static library with a private
-  # relationship to xreg, CMake still requires it to be exported!
-  export(TARGETS xreg cmaes NAMESPACE xreg:: FILE ${PROJECT_BINARY_DIR}/xreg-targets.cmake)
+  export(TARGETS ${XREG_TARGETS_TO_EXPORT} NAMESPACE xreg:: FILE ${PROJECT_BINARY_DIR}/xreg-targets.cmake)
 
   install(FILES ${PROJECT_BINARY_DIR}/xregConfig.cmake ${PROJECT_BINARY_DIR}/xregConfigVersion.cmake
-          DESTINATION lib/cmake)
+          DESTINATION ${XREG_CMAKE_CONFIG_INSTALL_DIR})
 
-  install(EXPORT xreg-targets NAMESPACE xreg:: DESTINATION lib/cmake)
+  install(EXPORT xreg-targets NAMESPACE xreg:: DESTINATION ${XREG_CMAKE_CONFIG_INSTALL_DIR})
+  
+  if (WIN32)
+    install(FILES dist/setup-xreg-vars.bat DESTINATION ${CMAKE_INSTALL_BINDIR})
+  endif ()
 endif ()
 

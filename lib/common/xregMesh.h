@@ -30,6 +30,8 @@
 #ifndef XREGMESH_H_
 #define XREGMESH_H_
 
+#include <array>
+
 #include <boost/container/flat_set.hpp>
 
 #include "xregCommon.h"

@@ -102,7 +102,7 @@ void xreg::ImgSimMetric2DSSDOCL::allocate_resources()
   {
     prog.build();
   }
-  catch (bc::opencl_error &e)
+  catch (bc::opencl_error &)
   {
     std::cerr << "OpenCL Kernel Compile Error (ImgSimMetric2DSSDOCL):\n"
               << prog.build_log() << std::endl;

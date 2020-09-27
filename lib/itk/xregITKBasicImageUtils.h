@@ -196,11 +196,13 @@ Eigen::Matrix<CoordScalar,N,N> GetITKDirectionMatrix(const itk::Image<tPixel,N>*
 ///
 template <class tPixel, unsigned N>
 void SetITKDirectionMatrix(itk::Image<tPixel,N>* img,
-                           const Eigen::Matrix<CoordScalar,int(N),int(N)>& mat)
+                           const MatMxN& mat)
 {
   using ImageType            = itk::Image<tPixel,N>;
   using ImageDirectionType   = typename ImageType::DirectionType;
   using ImageCoordScalarType = typename ImageType::PointValueType;
+
+  xregASSERT((mat.rows() == static_cast<int>(N)) && (mat.rows() == mat.cols()));
 
   ImageDirectionType img_dir;
 
@@ -238,9 +240,9 @@ Eigen::Matrix<CoordScalar,N,1> GetITKOriginPoint(const itk::Image<tPixel,N>* img
 namespace detail
 {
 
-template <class tPixel, unsigned int N, int N1, int N2>
+template <class tPixel, unsigned int N, int N1, int N2, int N3, int N4, int N5>
 void SetITKOriginPointHelper(itk::Image<tPixel,N>* img,
-                             const Eigen::Matrix<CoordScalar,N1,N2>& orig_pt)
+                             const Eigen::Matrix<CoordScalar,N1,N2,N3,N4,N5>& orig_pt)
 {
   using ImageType            = itk::Image<tPixel,N>;
   using ImagePointType       = typename ImageType::PointType;

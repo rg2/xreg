@@ -207,7 +207,7 @@ xreg::SingleRegiDebugResults xreg::ReadSingleRegiDebugResultsH5(const H5::Common
 
   if (ObjectInGroupH5("projs-used", h5))
   {
-    regi_results.projs_used = ReadVectorH5ULong("projs-used", h5);
+    regi_results.projs_used = ReadVectorH5SizeType("projs-used", h5);
   }
 
   const size_type num_vols = ReadSingleScalarH5ULong("num-objs", h5);
@@ -282,7 +282,7 @@ xreg::SingleRegiDebugResults xreg::ReadSingleRegiDebugResultsH5(const H5::Common
    
     if (ObjectInGroupH5("vols", static_vol_g))
     {
-      regi_results.static_vols = ReadVectorH5ULong("vols", static_vol_g);
+      regi_results.static_vols = ReadVectorH5SizeType("vols", static_vol_g);
       
       const size_type num_static_vols = regi_results.static_vols.size();
       

@@ -7,9 +7,6 @@
 # stop after the first failed command
 set -e
 
-mkdir build
-cd build
-
 NEED_TO_DOWNLOAD=true
 NEED_TO_BUILD_THIRD_PARTY=true
 NEED_TO_START_XREG=true
@@ -19,7 +16,17 @@ DO_GUI=true
 #BUILD_CONFIG="Debug"
 BUILD_CONFIG="Release"
 
-BUILD_ROOT=`pwd`
+# directory of the xReg repo, assuming this script was invoked while in that directory
+XREG_DIR="`pwd`"
+XREG_BUILD_DIR="$XREG_DIR/build"
+
+# Set this to a directory outside of the xReg repo in which to download and build dependencies 
+DEPS_DIR="$XREG_DIR/../xreg_deps"
+# get rid of the repository prefix in the path:
+DEPS_DIR="$(cd "$(dirname "$DEPS_DIR")"; pwd)/$(basename "$DEPS_DIR")"
+
+mkdir -p $DEPS_DIR
+cd $DEPS_DIR
 
 if [ "$NEED_TO_DOWNLOAD" = true ]; then
   echo "Downloading third party libraries..."
@@ -124,24 +131,24 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
   rm $OPENCV_FILE
 fi
 
-TBB_INC_DIR="$BUILD_ROOT/tbb2018_20170919oss/include"
-TBB_DIR="$BUILD_ROOT/tbb2018_20170919oss/cmake"
+TBB_INC_DIR="$DEPS_DIR/tbb2018_20170919oss/include"
+TBB_DIR="$DEPS_DIR/tbb2018_20170919oss/cmake"
 
-BOOST_DIR="$BUILD_ROOT/`ls | grep "boost_*"`"
+BOOST_DIR="$DEPS_DIR/`ls | grep "boost_*"`"
 
-EIGEN_DIR="$BUILD_ROOT/`ls | grep "eigen-*"`"
+EIGEN_DIR="$DEPS_DIR/`ls | grep "eigen-*"`"
 
-VIENNACL_DIR="$BUILD_ROOT/`ls | grep "viennacl-dev-release-*"`"
+VIENNACL_DIR="$DEPS_DIR/`ls | grep "viennacl-dev-release-*"`"
 
-FMT_DIR="$BUILD_ROOT/`ls | grep "fmt-*"`"
+FMT_DIR="$DEPS_DIR/`ls | grep "fmt-*"`"
 
-NLOPT_DIR="$BUILD_ROOT/`ls | grep "nlopt-*"`"
+NLOPT_DIR="$DEPS_DIR/`ls | grep "nlopt-*"`"
 
-VTK_DIR="$BUILD_ROOT/`ls | grep "VTK-*"`"
+VTK_DIR="$DEPS_DIR/`ls | grep "VTK-*"`"
 
-ITK_DIR="$BUILD_ROOT/`ls | grep "InsightToolkit-*"`"
+ITK_DIR="$DEPS_DIR/`ls | grep "InsightToolkit-*"`"
 
-OPENCV_DIR="$BUILD_ROOT/`ls | grep "opencv-*"`"
+OPENCV_DIR="$DEPS_DIR/`ls | grep "opencv-*"`"
 
 if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
   echo "Building third-party libraries..."
@@ -260,6 +267,9 @@ fi
 # START: XREG BUILD:
 
 if [ "$NEED_TO_START_XREG" = true ]; then
+  
+  mkdir $XREG_BUILD_DIR
+  cd $XREG_BUILD_DIR
 
   cmake -G Ninja .. \
     -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
