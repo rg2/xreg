@@ -176,5 +176,9 @@ if (XREG_TOP_LEVEL_PROJ)
           DESTINATION ${XREG_CMAKE_CONFIG_INSTALL_DIR})
 
   install(EXPORT xreg-targets NAMESPACE xreg:: DESTINATION ${XREG_CMAKE_CONFIG_INSTALL_DIR})
+  
+  if (WIN32)
+    install(FILES dist/setup-xreg-vars.bat DESTINATION ${CMAKE_INSTALL_BINDIR})
+  endif ()
 endif ()
 
