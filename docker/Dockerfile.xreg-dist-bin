@@ -25,8 +25,15 @@ COPY ./dist/${os_name}_dist_pkgs xreg_dist_pkgs
 
 RUN ./xreg_dist_pkgs
 
-RUN export XREG_NAME="${xreg_dist_str}-${os_name}-${os_version}" && mkdir $XREG_NAME && \
+ENV XREG_NAME=${xreg_dist_str}-${os_name}-${os_version}
+
+RUN mkdir ${XREG_NAME} && \
     LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64:/opt/tbb/lib/intel64/gcc4.7:$LD_LIBRARY_PATH" \
-    python3 make_linux_dist.py /usr/local $XREG_NAME && \
-    tar czf $XREG_NAME.tar.gz $XREG_NAME
+    python3 make_linux_dist.py /usr/local ${XREG_NAME}
+
+COPY ./dist/dist_readme/README.txt ${XREG_NAME}
+
+COPY ./LICENSE ${XREG_NAME}
+
+RUN tar czf ${XREG_NAME}.tar.gz ${XREG_NAME}
 
