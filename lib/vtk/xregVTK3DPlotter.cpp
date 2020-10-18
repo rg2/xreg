@@ -54,6 +54,7 @@
 #include <vtkPointData.h>
 #include <vtkLookupTable.h>
 #include <vtkFloatArray.h>
+#include <vtkTexture.h>
 
 #include <vtkWindowToImageFilter.h>
 #include <vtkPNGWriter.h>
