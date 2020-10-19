@@ -319,8 +319,9 @@ private:
 
   std::string win_title_str_;
 
-  size_type win_num_rows_ = kDEFAULT_WIN_NUM_ROWS;
-  size_type win_num_cols_ = kDEFAULT_WIN_NUM_COLS;
+  // These values are set to default in the ctor.
+  size_type win_num_rows_;
+  size_type win_num_cols_;
 
   bool do_full_screen_ = false;
 
