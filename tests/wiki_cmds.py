@@ -22,6 +22,10 @@
 
 # Functional testing by running the example commands from the wiki. Success or
 # failure is determined by manual inspection of the output results/data.
+#
+# NOTE: As this script will launch GUI tools to help determine test results,
+# the script must be run in an environment with a sufficient display. Some X11
+# forwarding configurations may NOT work.
 
 import sys
 import os.path
@@ -116,7 +120,7 @@ if __name__ == '__main__':
 
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-DICOM-Conversion
-    if False:
+    if True:
         print('DICOM conversion/resampling...')
         
         download_file('https://services.cancerimagingarchive.net/services/v4/TCIA/query/getImage?SeriesInstanceUID=61.7.167248355135476067044532759811631626828', 'ABD_LYMPH_001.zip', True)
@@ -129,7 +133,7 @@ if __name__ == '__main__':
 
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Volume-Cropping
-    if False:
+    if True:
         print('Volume cropping...')
         download_file('https://github.com/rg2/xreg/wiki/walkthrough/volume_cropping/R.acsv')
 
@@ -139,7 +143,7 @@ if __name__ == '__main__':
     
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Mesh-Creation
-    if False:
+    if True:
         print('Mesh creation using intensity threshold...')
 
         run_cmd('xreg-create-mesh -i --lower 150 pelvis.nii.gz pelvis_thresh_sur.ply')
@@ -148,7 +152,7 @@ if __name__ == '__main__':
 
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Mesh-Creation
-    if False:
+    if True:
         print('Mesh creation using segmentation...')
 
         download_file('https://raw.githubusercontent.com/wiki/rg2/xreg/walkthrough/bone_segmentation/pelvis_seg.nii.gz')
@@ -159,7 +163,7 @@ if __name__ == '__main__':
 
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-PAO-Planning
-    if False:
+    if True:
         print('PAO fragment creation...')
 
         download_file('https://github.com/rg2/xreg/wiki/walkthrough/pao_planning/pelvis_app_lands.fcsv')
@@ -171,7 +175,7 @@ if __name__ == '__main__':
 
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-PAO-Planning
-    if False:
+    if True:
         print('PAO random fragment creation...')
 
         run_cmd('xreg-pao-create-frag pelvis_seg.nii.gz pelvis_app_lands.fcsv pao_cut_defs.h5 left - pao_cuts_seg_batch pao_cut_defs_batch --batch 5 --add-noise-planes --use-normal-dist-plane-noise')
@@ -180,7 +184,7 @@ if __name__ == '__main__':
     
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Simulated-PAO-Adjustments
-    if False:
+    if True:
         print('Simulated PAO adjustments/movements...')
 
         run_cmd('xreg-pao-sample-frag-moves pao_cuts_seg.nii.gz pelvis_app_lands.fcsv left 10 test_pao --frag-rot-mean-x 10 --frag-rot-std-x 10 --frag-rot-mean-y 3 --frag-rot-std-y 3 --frag-rot-mean-z 12.5 --frag-rot-std-z 12.5 --trans-mean-x 2.5 --trans-std-x 5 --trans-mean-y -2 --trans-std-y 2 --trans-mean-z 2 --trans-std-z 3 --femur-rot-mean-x 10 --femur-rot-std-x 10 --femur-rot-mean-y 0 --femur-rot-std-y 5 --femur-rot-mean-z 0 --femur-rot-std-z 2 --morph-open-size 5 --uniform-sampling')
@@ -189,7 +193,7 @@ if __name__ == '__main__':
 
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Volumetric-Modeling-of-PAO-Adjustments
-    if False:
+    if True:
         print('PAO volume modeling of adjusted fragment...')
 
         run_cmd('xreg-pao-create-repo-vol pelvis.nii.gz pao_cuts_seg.nii.gz pelvis_app_lands.fcsv left test_pao_frag_0.h5 test_pao_femur_0.h5 pao_vol.nii.gz')
@@ -198,7 +202,7 @@ if __name__ == '__main__':
 
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Volumetric-Modeling-of-Screws-and-Wires-for-PAO
-    if False:
+    if True:
         print('Volume modeling of K-wires...')
 
         download_file('https://raw.githubusercontent.com/wiki/rg2/xreg/walkthrough/volumetric_modeling_screws_kwire/pelvis_left_insertion_labels.nii.gz')
@@ -209,7 +213,7 @@ if __name__ == '__main__':
     
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Volumetric-Modeling-of-Screws-and-Wires-for-PAO
-    if False:
+    if True:
         print('Volume modeling of screws...')
 
         run_cmd('xreg-pao-add-screw-kwires-to-vol --super-sample 2 pao_vol.nii.gz pao_cuts_seg.nii.gz pelvis_app_lands.fcsv left test_pao_frag_0.h5 pelvis_left_insertion_labels.nii.gz pao_vol_with_screws.nii.gz --p-two 0 --p-wire 0')
@@ -218,7 +222,7 @@ if __name__ == '__main__':
 
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Simulated-Fluoroscopy
-    if False:
+    if True:
         print('Simulated fluoroscopy...')
 
         run_cmd('xreg-pao-create-synth-fluoro pao_vol_with_kwire.nii.gz pelvis_app_lands.fcsv left 5 example1_1_pd example1_1_pose')
@@ -231,5 +235,62 @@ if __name__ == '__main__':
 
         run_cmd('xreg-remap-tile-proj-data example1_1_pd_003.h5 example1_1_pd_003.png -d 0.25 -b 1')
         
-        wait_prompt('Check example1_1_pd_003.png in an image viewer')
+        wait_prompt('Check example1_1_pd_003.png in an image viewer.')
+   
+    #################################################################
+    # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Point-Cloud-to-Surface-Registration
+    if True:
+        print('3D/3D ICP registration...')
+
+        download_file('https://github.com/rg2/xreg/wiki/walkthrough/point_cloud_to_surface_regi/pelvis_preop_lands.fcsv')
+        download_file('https://github.com/rg2/xreg/wiki/walkthrough/point_cloud_to_surface_regi/pelvis_intraop_lands.fcsv')
+        download_file('https://github.com/rg2/xreg/wiki/walkthrough/point_cloud_to_surface_regi/pelvis_intraop_point_cloud.fcsv')
+        
+        wait_prompt('The next visualization will show the pelvis and intraop. point cloud BEFORE registration.')
+        run_cmd('xreg-pao-draw-bones --no-frag --no-femurs --pelvis-mesh pelvis_sur.ply pelvis_seg.nii.gz pelvis_app_lands.fcsv left --other-fcsv pelvis_intraop_point_cloud.fcsv')
+
+        run_cmd('xreg-sur-regi pelvis_sur.ply pelvis_intraop_point_cloud.fcsv pelvis_regi.h5 --mesh-lands pelvis_preop_lands.fcsv --pts-lands pelvis_intraop_lands.fcsv')
+        
+        run_cmd('xreg-xform-fcsv pelvis_intraop_point_cloud.fcsv pelvis_regi.h5 pelvis_intraop_point_cloud_regi.fcsv')
+        
+        wait_prompt('The next visualization will show the pelvis and intraop. point cloud AFTER registration.')
+        run_cmd('xreg-pao-draw-bones --no-frag --no-femurs --pelvis-mesh pelvis_sur.ply pelvis_seg.nii.gz pelvis_app_lands.fcsv left --other-fcsv pelvis_intraop_point_cloud_regi.fcsv')
     
+    #################################################################
+    # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Single-View-Pelvis-Registration
+    if True:
+        print('2D/3D registration - single object, single view...')
+  
+        download_file('https://raw.githubusercontent.com/wiki/rg2/xreg/walkthrough/simulated_fluoroscopy/example1_1_pd_003.h5', 'example1_1_pd_003_for_regi.h5')
+        download_file('https://github.com/rg2/xreg/wiki/walkthrough/single_view_pelvis_regi/pelvis_regi_2d_3d_lands.fcsv')
+        download_file('https://github.com/rg2/xreg/wiki/walkthrough/single_view_pelvis_regi/example1_1_pd_003_proj_0_lands.fcsv')
+
+        run_cmd('xreg-proj-data-extract-nii example1_1_pd_003_for_regi.h5 example1_1_pd_003_proj 0')
+       
+        run_cmd('xreg-add-lands-to-proj-data example1_1_pd_003_for_regi.h5 example1_1_pd_003_proj_0_lands.fcsv')
+
+        run_cmd('xreg-remap-tile-proj-data example1_1_pd_003_for_regi.h5 -o -p 0 -d 0.25 example1_1_pd_003_proj_0_w_lands.png')
+        
+        wait_prompt('Check example1_1_pd_003_proj_0_w_lands.png in an image viewer.')
+
+        run_cmd('xreg-hip-surg-pelvis-single-view-regi-2d-3d pelvis.nii.gz pelvis_regi_2d_3d_lands.fcsv example1_1_pd_003_for_regi.h5 regi_pose_example1_1_pd_003_proj0.h5 regi_debug_example1_1_pd_003_proj0_w_seg.h5 -s pelvis_seg.nii.gz')
+        
+        run_cmd('xreg-draw-xray-scene example1_1_pd_003_for_regi.h5 -p 0 pelvis_sur.ply regi_pose_example1_1_pd_003_proj0.h5 -i --bg-color 1 1 1 --mesh-color-bone')
+
+        run_cmd('xreg-regi2d3d-replay regi_debug_example1_1_pd_003_proj0_w_seg.h5 --video-fps 10 --proj-ds 0.5')
+
+        wait_prompt('Inspect edges.mp4 and mov.mp4 in a video player.')
+
+    #################################################################
+    # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Multiple-View-PAO-Fragment-Registration
+    if True:
+        print('2D/3D registration - multi. objects, multi. views...')
+
+        run_cmd('xreg-pao-frag-mult-view-regi-2d-3d pelvis.nii.gz pao_cuts_seg.nii.gz left pelvis_app_lands.fcsv pelvis_regi_2d_3d_lands.fcsv example1_1_pd_003_for_regi.h5 regi_pose_pelvis.h5 regi_pose_femur.h5 regi_pose_frag.h5 rel_pose_femur.h5 rel_pose_frag.h5 multi_obj_multi_view_debug.h5')
+
+        run_cmd('xreg-pao-draw-bones pao_cuts_seg.nii.gz pelvis_app_lands.fcsv left --femur-frag-xform rel_pose_frag.h5 --femur-only-xform rel_pose_femur.h5 --femur-not-rel-to-frag --cam-view ap --bg-color 1 1 1')
+
+        run_cmd('xreg-regi2d3d-replay --video-fps 10 --proj-ds 0.5 multi_obj_multi_view_debug.h5')
+        
+        wait_prompt('Inspect edges.mp4 and mov.mp4 in a video player.')
+
