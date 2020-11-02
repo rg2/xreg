@@ -100,7 +100,7 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   rm $NLOPT_FILE
 
-  VTK_URL="https://www.vtk.org/files/release/7.1/VTK-7.1.1.zip"
+  VTK_URL="https://www.vtk.org/files/release/8.2/VTK-8.2.0.zip"
 
   wget $VTK_URL
 
@@ -199,7 +199,6 @@ cd $NLOPT_DIR
     -DVTK_Group_Imaging:BOOL=ON \
     -DVTK_Group_Views:BOOL=ON \
     -DBUILD_TESTING:BOOL=OFF \
-    -DVTK_USE_CXX11_FEATURES:BOOL=ON \
     -DVTK_SMP_IMPLEMENTATION_TYPE:STRING="TBB" $VTK_NO_RENDER_FLAGS
 
   ninja
