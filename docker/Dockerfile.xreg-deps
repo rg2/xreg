@@ -121,16 +121,16 @@ RUN mkdir opencv_build && cd opencv_build && \
     cmake --build . && cmake --build . --target install && \
     cd / && rm -rf opencv_build
 
-# build VTK 7.1.1
+# build VTK 8.2.0
 RUN mkdir vtk_build && cd vtk_build && \
-    wget https://www.vtk.org/files/release/7.1/VTK-7.1.1.tar.gz && \
-    tar xf VTK-7.1.1.tar.gz && cd VTK-7.1.1 && \
+    wget https://www.vtk.org/files/release/8.2/VTK-8.2.0.tar.gz && \
+    tar xf VTK-8.2.0.tar.gz && cd VTK-8.2.0 && \
     mkdir build && cd build && \
     TBB_ROOT="/opt/tbb" \
     cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
           -DCMAKE_CXX_STANDARD:STRING="11" \
           -DVTK_Group_Imaging:BOOL=ON -DVTK_Group_Views:BOOL=ON \
-          -DBUILD_TESTING:BOOL=OFF -DVTK_USE_CXX11_FEATURES:BOOL=ON \
+          -DBUILD_TESTING:BOOL=OFF \
           -DVTK_SMP_IMPLEMENTATION_TYPE:STRING="TBB" \
          .. && \
     cmake --build . && cmake --build . --target install && \
