@@ -348,12 +348,12 @@ void xreg::Intensity2D3DRegiExhaustive::write_debug()
 void xreg::Intensity2D3DRegiExhaustive::init_opt()
 { }
 
-void xreg::Intensity2D3DRegiExhaustive::OptAux::read(const H5::CommonFG& h5)
+void xreg::Intensity2D3DRegiExhaustive::OptAux::read(const H5::Group& h5)
 {
   xregThrow("Exhaustive Intensity Regi 2D/3D OptAux::read() not implemented!");
 }
 
-void xreg::Intensity2D3DRegiExhaustive::OptAux::write(H5::CommonFG* h5)
+void xreg::Intensity2D3DRegiExhaustive::OptAux::write(H5::Group* h5)
 {
   H5::Group aux_g = h5->createGroup("opt-aux");
 

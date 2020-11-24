@@ -536,7 +536,7 @@ void xreg::UpdateLandmarkMapForCIOSFusion(const CIOSFusionDICOMInfo& meta,
 }
 
 
-void xreg::WriteCIOSMetaH5(const CIOSFusionDICOMInfo& meta, H5::CommonFG* h5)
+void xreg::WriteCIOSMetaH5(const CIOSFusionDICOMInfo& meta, H5::Group* h5)
 {
   WriteSingleScalarH5("study-time",       meta.study_time,       h5);
   WriteSingleScalarH5("series-time",      meta.series_time,      h5);
@@ -591,7 +591,7 @@ void xreg::WriteCIOSMetaH5(const CIOSFusionDICOMInfo& meta, H5::CommonFG* h5)
   WriteSingleScalarH5("window-width",  meta.window_width,  h5);
 }
 
-xreg::CIOSFusionDICOMInfo xreg::ReadCIOSMetaH5(const H5::CommonFG& h5)
+xreg::CIOSFusionDICOMInfo xreg::ReadCIOSMetaH5(const H5::Group& h5)
 {
   auto read_optional_double = [&h5] (const std::string& n)
   {

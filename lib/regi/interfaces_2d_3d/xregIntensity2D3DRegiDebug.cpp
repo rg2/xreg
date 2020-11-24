@@ -56,7 +56,7 @@ void xreg::SingleRegiDebugResults::init(SE3OptVarsPtr se3, const IndexList& glob
   sims.reserve(init_num_iters_capacity);
 }
 
-void xreg::WriteSingleRegiDebugResultsH5(const SingleRegiDebugResults& results, H5::CommonFG* h5)
+void xreg::WriteSingleRegiDebugResultsH5(const SingleRegiDebugResults& results, H5::Group* h5)
 {
   H5::Group se3_g = h5->createGroup("se3-parameterization");
   WriteSE3OptVarsH5(*results.se3_params, &se3_g);
@@ -198,7 +198,7 @@ void xreg::WriteSingleRegiDebugResultsH5(const SingleRegiDebugResults& results, 
   }
 }
 
-xreg::SingleRegiDebugResults xreg::ReadSingleRegiDebugResultsH5(const H5::CommonFG& h5)
+xreg::SingleRegiDebugResults xreg::ReadSingleRegiDebugResultsH5(const H5::Group& h5)
 {
   SingleRegiDebugResults regi_results;
       

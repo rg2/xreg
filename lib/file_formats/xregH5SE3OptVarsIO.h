@@ -31,7 +31,7 @@
 namespace H5
 {
 
-class CommonFG;
+class Group;
 
 }  // H5
 
@@ -52,31 +52,31 @@ class SO3OptVarsOnlyX;
 class SO3OptVarsOnlyY;
 class SO3OptVarsOnlyZ;
 
-std::shared_ptr<SE3OptVars> ReadSE3OptVarsH5(const H5::CommonFG& h5);
+std::shared_ptr<SE3OptVars> ReadSE3OptVarsH5(const H5::Group& h5);
 
-void WriteSE3OptVarsH5(const SE3OptVars& opt_vars, H5::CommonFG* h5);
+void WriteSE3OptVarsH5(const SE3OptVars& opt_vars, H5::Group* h5);
 
-void WriteSE3OptVarsH5(const SE3OptVarsEuler& opt_vars, H5::CommonFG* h5);
+void WriteSE3OptVarsH5(const SE3OptVarsEuler& opt_vars, H5::Group* h5);
 
-void WriteSE3OptVarsH5(const SE3OptVarsLieAlg& opt_vars, H5::CommonFG* h5);
+void WriteSE3OptVarsH5(const SE3OptVarsLieAlg& opt_vars, H5::Group* h5);
 
-void WriteSE3OptVarsH5(const SE3OptVarsTransOnly& opt_vars, H5::CommonFG* h5);
+void WriteSE3OptVarsH5(const SE3OptVarsTransOnly& opt_vars, H5::Group* h5);
 
-void WriteSE3OptVarsH5(const SE3OptVarsTransXOnly& opt_vars, H5::CommonFG* h5);
+void WriteSE3OptVarsH5(const SE3OptVarsTransXOnly& opt_vars, H5::Group* h5);
 
-void WriteSE3OptVarsH5(const SE3OptVarsTransYOnly& opt_vars, H5::CommonFG* h5);
+void WriteSE3OptVarsH5(const SE3OptVarsTransYOnly& opt_vars, H5::Group* h5);
 
-void WriteSE3OptVarsH5(const SE3OptVarsTransZOnly& opt_vars, H5::CommonFG* h5);
+void WriteSE3OptVarsH5(const SE3OptVarsTransZOnly& opt_vars, H5::Group* h5);
 
-void WriteSE3OptVarsH5(const SO3OptVarsLieAlg& opt_vars, H5::CommonFG* h5);
+void WriteSE3OptVarsH5(const SO3OptVarsLieAlg& opt_vars, H5::Group* h5);
 
-void WriteSE3OptVarsH5(const SO3OptVarsEuler& opt_vars, H5::CommonFG* h5);
+void WriteSE3OptVarsH5(const SO3OptVarsEuler& opt_vars, H5::Group* h5);
 
-void WriteSE3OptVarsH5(const SO3OptVarsOnlyX& opt_vars, H5::CommonFG* h5);
+void WriteSE3OptVarsH5(const SO3OptVarsOnlyX& opt_vars, H5::Group* h5);
 
-void WriteSE3OptVarsH5(const SO3OptVarsOnlyY& opt_vars, H5::CommonFG* h5);
+void WriteSE3OptVarsH5(const SO3OptVarsOnlyY& opt_vars, H5::Group* h5);
 
-void WriteSE3OptVarsH5(const SO3OptVarsOnlyZ& opt_vars, H5::CommonFG* h5);
+void WriteSE3OptVarsH5(const SO3OptVarsOnlyZ& opt_vars, H5::Group* h5);
 
 }  // xreg
 

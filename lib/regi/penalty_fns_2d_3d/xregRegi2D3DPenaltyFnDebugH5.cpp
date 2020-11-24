@@ -29,7 +29,7 @@
 #include "xregRegi2D3DPenaltyFnLandReproj.h"
 
 std::shared_ptr<xreg::H5ReadWriteInterface>
-xreg::MakePenFnDebugObjH5(const H5::CommonFG& h5)
+xreg::MakePenFnDebugObjH5(const H5::Group& h5)
 {
   std::shared_ptr<H5ReadWriteInterface> debug_info;
 

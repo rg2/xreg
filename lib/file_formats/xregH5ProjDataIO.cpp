@@ -38,7 +38,7 @@ using namespace xreg;
 
 const char* kXREG_PROJ_DATA_ATTR_STR = "proj-data";
 
-void AddProjDataLandsHelper(const LandMap2& lands, H5::CommonFG* h5,
+void AddProjDataLandsHelper(const LandMap2& lands, H5::Group* h5,
                             const bool delete_existing = false)
 {
   if (delete_existing && ObjectInGroupH5("landmarks", *h5))
@@ -59,7 +59,7 @@ void AddProjDataLandsHelper(const LandMap2& lands, H5::CommonFG* h5,
 
 template <class tPixelScalar>
 void WriteProjDataH5Helper(const std::vector<ProjData<tPixelScalar>>& proj_data,
-                           H5::CommonFG* h5,
+                           H5::Group* h5,
                            const bool compress)
 {
   SetStringAttr("xreg-type", kXREG_PROJ_DATA_ATTR_STR, h5);
@@ -104,14 +104,14 @@ void WriteProjDataH5Helper(const std::vector<ProjData<tPixelScalar>>& proj_data,
 
 template <class tPixelScalar>
 void WriteProjDataH5Helper(const std::vector<CamImgPair<tPixelScalar>>& cam_img_pairs,
-                           H5::CommonFG* h5, const bool compress)
+                           H5::Group* h5, const bool compress)
 {
   WriteProjDataH5Helper(CamImgPairsToProjData(cam_img_pairs), h5, compress);
 }
 
 }  // un-named
 
-void xreg::CopyProjDataH5(const H5::CommonFG& src_proj_h5, H5::CommonFG* dst_proj_h5)
+void xreg::CopyProjDataH5(const H5::Group& src_proj_h5, H5::Group* dst_proj_h5)
 {
   const auto* src_proj_g = dynamic_cast<const H5::IdComponent*>(&src_proj_h5);
   xregASSERT(src_proj_g);
@@ -139,7 +139,7 @@ void xreg::CopyProjDataH5(const H5::CommonFG& src_proj_h5, H5::CommonFG* dst_pro
   }
 }
 
-void xreg::ReadProjDataFromH5AndWriteToDisk(const H5::CommonFG& h5, const std::string& dst_disk_path)
+void xreg::ReadProjDataFromH5AndWriteToDisk(const H5::Group& h5, const std::string& dst_disk_path)
 {
   H5::H5File dst_h5(dst_disk_path, H5F_ACC_TRUNC);
  
@@ -150,84 +150,84 @@ void xreg::ReadProjDataFromH5AndWriteToDisk(const H5::CommonFG& h5, const std::s
 }
 
 void xreg::WriteProjDataH5(const ProjDataF32List& proj_data,
-                           H5::CommonFG* h5,
+                           H5::Group* h5,
                            const bool compress)
 {
   WriteProjDataH5Helper(proj_data, h5, compress);
 }
 
 void xreg::WriteProjDataH5(const ProjDataU16List& proj_data,
-                           H5::CommonFG* h5,
+                           H5::Group* h5,
                            const bool compress)
 {
   WriteProjDataH5Helper(proj_data, h5, compress);
 }
 
 void xreg::WriteProjDataH5(const ProjDataU8List& proj_data,
-                           H5::CommonFG* h5,
+                           H5::Group* h5,
                            const bool compress)
 {
   WriteProjDataH5Helper(proj_data, h5, compress);
 }
 
 void xreg::WriteProjDataH5(const ProjDataF32& proj_data,
-                           H5::CommonFG* h5,
+                           H5::Group* h5,
                            const bool compress)
 {
   WriteProjDataH5(ProjDataF32List(1, proj_data), h5, compress);
 }
 
 void xreg::WriteProjDataH5(const ProjDataU16& proj_data,
-                           H5::CommonFG* h5,
+                           H5::Group* h5,
                            const bool compress)
 {
   WriteProjDataH5(ProjDataU16List(1, proj_data), h5, compress);
 }
 
 void xreg::WriteProjDataH5(const ProjDataU8& proj_data,
-                           H5::CommonFG* h5,
+                           H5::Group* h5,
                            const bool compress)
 {
   WriteProjDataH5(ProjDataU8List(1, proj_data), h5, compress);
 }
 
 void xreg::WriteProjDataH5(const CamImgPairF32List& cam_img_pairs,
-                           H5::CommonFG* h5,
+                           H5::Group* h5,
                            const bool compress)
 {
   WriteProjDataH5Helper<float>(cam_img_pairs, h5, compress);
 }
 
 void xreg::WriteProjDataH5(const CamImgPairU16List& cam_img_pairs,
-                           H5::CommonFG* h5,
+                           H5::Group* h5,
                            const bool compress)
 {
   WriteProjDataH5Helper<unsigned short>(cam_img_pairs, h5, compress);
 }
 
 void xreg::WriteProjDataH5(const CamImgPairU8List& cam_img_pairs,
-                           H5::CommonFG* h5,
+                           H5::Group* h5,
                            const bool compress)
 {
   WriteProjDataH5Helper<unsigned char>(cam_img_pairs, h5, compress);
 }
 
 void xreg::WriteProjDataH5(const CamImgPairF32& cam_img_pair,
-                           H5::CommonFG* h5,
+                           H5::Group* h5,
                            const bool compress)
 {
   WriteProjDataH5Helper<float>(CamImgPairF32List(1, cam_img_pair), h5, compress);
 }
 
 void xreg::WriteProjDataH5(const CamImgPairU16& cam_img_pair,
-                           H5::CommonFG* h5,
+                           H5::Group* h5,
                            const bool compress)
 {
   WriteProjDataH5Helper<unsigned short>(CamImgPairU16List(1, cam_img_pair), h5, compress);
 }
 
 void xreg::WriteProjDataH5(const CamImgPairU8& cam_img_pair,
-                           H5::CommonFG* h5,
+                           H5::Group* h5,
                            const bool compress)
 {
   WriteProjDataH5Helper<unsigned char>(CamImgPairU8List(1, cam_img_pair), h5, compress);
@@ -340,7 +340,7 @@ using namespace xreg;
 
 template <class tPixelScalar>
 std::vector<ProjData<tPixelScalar>>
-ReadProjDataHelper(const H5::CommonFG& h5, const bool read_pixels)
+ReadProjDataHelper(const H5::Group& h5, const bool read_pixels)
 {
   using PixelScalar  = tPixelScalar;
   using ProjDataType = ProjData<PixelScalar>;
@@ -406,7 +406,7 @@ ReadProjDataHelper(const H5::CommonFG& h5, const bool read_pixels)
 
 template <class tPixelScalar>
 typename itk::Image<tPixelScalar,2>::Pointer
-ReadSingleImgFromProjDataHelper(const H5::CommonFG& h5, const size_type proj_idx)
+ReadSingleImgFromProjDataHelper(const H5::Group& h5, const size_type proj_idx)
 {
   const size_type num_projs = ReadSingleScalarH5ULong("num-projs", h5);
 
@@ -431,37 +431,37 @@ ReadSingleImgFromProjDataFromDiskHelper(const std::string& path, const size_type
 
 }  // un-named
 
-xreg::ProjDataF32List xreg::ReadProjDataH5F32(const H5::CommonFG& h5, const bool read_pixels)
+xreg::ProjDataF32List xreg::ReadProjDataH5F32(const H5::Group& h5, const bool read_pixels)
 {
   return ReadProjDataHelper<float>(h5, read_pixels);
 }
 
-xreg::ProjDataU16List xreg::ReadProjDataH5U16(const H5::CommonFG& h5, const bool read_pixels)
+xreg::ProjDataU16List xreg::ReadProjDataH5U16(const H5::Group& h5, const bool read_pixels)
 {
   return ReadProjDataHelper<unsigned short>(h5, read_pixels);
 }
 
-xreg::ProjDataU8List xreg::ReadProjDataH5U8(const H5::CommonFG& h5, const bool read_pixels)
+xreg::ProjDataU8List xreg::ReadProjDataH5U8(const H5::Group& h5, const bool read_pixels)
 {
   return ReadProjDataHelper<unsigned char>(h5, read_pixels);
 }
 
-xreg::ProjDataF32::ProjPtr xreg::ReadSingleImgFromProjDataH5F32(const H5::CommonFG& h5, const size_type proj_idx)
+xreg::ProjDataF32::ProjPtr xreg::ReadSingleImgFromProjDataH5F32(const H5::Group& h5, const size_type proj_idx)
 {
   return ReadSingleImgFromProjDataHelper<float>(h5, proj_idx);
 }
 
-xreg::ProjDataU16::ProjPtr xreg::ReadSingleImgFromProjDataH5U16(const H5::CommonFG& h5, const size_type proj_idx)
+xreg::ProjDataU16::ProjPtr xreg::ReadSingleImgFromProjDataH5U16(const H5::Group& h5, const size_type proj_idx)
 {
   return ReadSingleImgFromProjDataHelper<unsigned short>(h5, proj_idx);
 }
 
-xreg::ProjDataU8::ProjPtr xreg::ReadSingleImgFromProjDataH5U8(const H5::CommonFG& h5, const size_type proj_idx)
+xreg::ProjDataU8::ProjPtr xreg::ReadSingleImgFromProjDataH5U8(const H5::Group& h5, const size_type proj_idx)
 {
   return ReadSingleImgFromProjDataHelper<unsigned char>(h5, proj_idx);
 }
 
-std::vector<xreg::CameraModel> xreg::ReadCamModelsFromProjData(const H5::CommonFG& h5)
+std::vector<xreg::CameraModel> xreg::ReadCamModelsFromProjData(const H5::Group& h5)
 {
   return ExtractCamModels(ReadProjDataH5F32(h5, false));
 }
@@ -504,7 +504,7 @@ std::vector<CameraModel> xreg::ReadCamModelsFromProjDataFromDisk(const std::stri
   return ExtractCamModels(ReadProjDataH5F32FromDisk(path, false));
 }
 
-xreg::ProjDataScalarType xreg::GetProjDataScalarTypeH5(const H5::CommonFG& h5)
+xreg::ProjDataScalarType xreg::GetProjDataScalarTypeH5(const H5::Group& h5)
 {
   const size_type num_projs = ReadSingleScalarH5ULong("num-projs", h5);
   xregASSERT(num_projs > 0);
@@ -662,7 +662,7 @@ xreg::DeferredProjReader::read_proj_U8(const size_type proj_idx)
 }
 
 void xreg::AddLandsToProjDataH5(const LandMap2& lands, const size_type proj_idx,
-                                H5::CommonFG* h5,
+                                H5::Group* h5,
                                 const bool delete_existing)
 {
   const size_type num_projs = ReadSingleScalarH5ULong("num-projs", *h5);

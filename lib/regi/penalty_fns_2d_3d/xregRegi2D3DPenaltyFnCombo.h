@@ -54,9 +54,9 @@ public:
   {
     std::vector<std::shared_ptr<DebugInfo>> pen_fns_debug_infos;
     
-    void write(H5::CommonFG* h5) override;
+    void write(H5::Group* h5) override;
 
-    void read(const H5::CommonFG& h5) override;
+    void read(const H5::Group& h5) override;
   };
   
   std::shared_ptr<DebugInfo> debug_info() override;

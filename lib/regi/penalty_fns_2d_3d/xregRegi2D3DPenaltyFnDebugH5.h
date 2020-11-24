@@ -31,7 +31,7 @@
 namespace H5
 {
 
-class CommonFG;
+class Group;
 
 }  // H5
 
@@ -42,7 +42,7 @@ namespace xreg
 struct H5ReadWriteInterface;
 
 std::shared_ptr<H5ReadWriteInterface>
-MakePenFnDebugObjH5(const H5::CommonFG& h5);
+MakePenFnDebugObjH5(const H5::Group& h5);
 
 }  // xreg
 

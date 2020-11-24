@@ -33,7 +33,7 @@
 namespace H5
 {
 
-class CommonFG;
+class Group;
 
 }  // H5
 
@@ -46,7 +46,7 @@ namespace xreg
 /// is provided, then exceptions will be thrown if the appropriate
 /// entries are not found.
 std::tuple<PAOCutPlanes,boost::optional<PAOCutDispInfo>,boost::optional<PAOCutSlabs>>
-ReadPAOCutPlanesH5(const H5::CommonFG& h5);
+ReadPAOCutPlanesH5(const H5::Group& h5);
 
 /// \brief Read cut planes from a file in HDF5 format.
 ///
@@ -60,7 +60,7 @@ ReadPAOCutPlanesH5File(const std::string& path);
 ///
 /// The display information is optional.
 void WritePAOCutPlanesH5(const PAOCutPlanes& cut_defs,
-                         H5::CommonFG* h5,
+                         H5::Group* h5,
                          const PAOCutDispInfo* cut_disp = nullptr,
                          const PAOCutSlabs* cut_slabs = nullptr,
                          const bool compress = true);

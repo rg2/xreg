@@ -33,7 +33,7 @@
 namespace H5
 {
 
-class CommonFG;
+class Group;
 
 }  // H5
 
@@ -136,9 +136,9 @@ struct SingleRegiDebugResults
             const size_type init_num_iters_capacity = 1000);
 };
 
-void WriteSingleRegiDebugResultsH5(const SingleRegiDebugResults& results, H5::CommonFG* h5);
+void WriteSingleRegiDebugResultsH5(const SingleRegiDebugResults& results, H5::Group* h5);
 
-SingleRegiDebugResults ReadSingleRegiDebugResultsH5(const H5::CommonFG& h5);
+SingleRegiDebugResults ReadSingleRegiDebugResultsH5(const H5::Group& h5);
 
 }  // xreg
 

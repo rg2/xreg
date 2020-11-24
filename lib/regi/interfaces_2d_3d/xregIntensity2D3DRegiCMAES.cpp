@@ -429,12 +429,12 @@ void xreg::Intensity2D3DRegiCMAES::compute_drrs_at_mean()
   this->debug_compute_drrs_single_proj_per_view(xform_list, &debug_cur_mean_drrs_, true, cams);
 }
 
-void xreg::Intensity2D3DRegiCMAES::OptAux::read(const H5::CommonFG& h5)
+void xreg::Intensity2D3DRegiCMAES::OptAux::read(const H5::Group& h5)
 {
   xregThrow("Intens. 2D/3D Regi. CMA-ES OptAux::read() unsuported!");
 }
 
-void xreg::Intensity2D3DRegiCMAES::OptAux::write(H5::CommonFG* h5)
+void xreg::Intensity2D3DRegiCMAES::OptAux::write(H5::Group* h5)
 {
   H5::Group aux_g = h5->createGroup("opt-aux");
 

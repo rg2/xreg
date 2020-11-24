@@ -35,7 +35,7 @@
 // Forward declaration
 namespace H5
 {
-class CommonFG;
+class Group;
 }
 // End Forward declaration
 
@@ -160,9 +160,9 @@ void UpdateLandmarkMapForCIOSFusion(const CIOSFusionDICOMInfo& meta,
                                     LandMap3* pts,
                                     const bool no_rot_or_flip = false);
 
-void WriteCIOSMetaH5(const CIOSFusionDICOMInfo& meta, H5::CommonFG* h5);
+void WriteCIOSMetaH5(const CIOSFusionDICOMInfo& meta, H5::Group* h5);
 
-CIOSFusionDICOMInfo ReadCIOSMetaH5(const H5::CommonFG& h5);
+CIOSFusionDICOMInfo ReadCIOSMetaH5(const H5::Group& h5);
 
 }  // xreg
 

@@ -26,7 +26,7 @@
 
 #include "xregHDF5.h"
 
-xreg::TriMesh xreg::ReadMeshH5(const H5::CommonFG& h5)
+xreg::TriMesh xreg::ReadMeshH5(const H5::Group& h5)
 {
   TriMesh mesh;
 
@@ -48,7 +48,7 @@ xreg::TriMesh xreg::ReadMeshH5File(const std::string& path)
   return ReadMeshH5(H5::H5File(path, H5F_ACC_RDONLY));
 }
 
-void xreg::WriteMeshH5(const TriMesh& mesh, H5::CommonFG* h5, const bool compress)
+void xreg::WriteMeshH5(const TriMesh& mesh, H5::Group* h5, const bool compress)
 {
   WriteListOfPointsAsMatrixH5("vertices", mesh.vertices, h5, compress);
   WriteListOfArraysToMatrixH5("faces", mesh.faces, h5, compress);

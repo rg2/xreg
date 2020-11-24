@@ -27,7 +27,7 @@
 #include "xregSE3OptVars.h"
 #include "xregHDF5.h"
 
-std::shared_ptr<xreg::SE3OptVars> xreg::ReadSE3OptVarsH5(const H5::CommonFG& h5)
+std::shared_ptr<xreg::SE3OptVars> xreg::ReadSE3OptVarsH5(const H5::Group& h5)
 {
   std::shared_ptr<SE3OptVars> se3_vars;
 
@@ -97,7 +97,7 @@ std::shared_ptr<xreg::SE3OptVars> xreg::ReadSE3OptVarsH5(const H5::CommonFG& h5)
   return se3_vars;
 }
 
-void xreg::WriteSE3OptVarsH5(const SE3OptVars& opt_vars, H5::CommonFG* h5)
+void xreg::WriteSE3OptVarsH5(const SE3OptVars& opt_vars, H5::Group* h5)
 {
   WriteSingleScalarH5("num-params", opt_vars.num_params(), h5);
 
@@ -194,7 +194,7 @@ void xreg::WriteSE3OptVarsH5(const SE3OptVars& opt_vars, H5::CommonFG* h5)
   }
 }
 
-void xreg::WriteSE3OptVarsH5(const SE3OptVarsEuler& opt_vars, H5::CommonFG* h5)
+void xreg::WriteSE3OptVarsH5(const SE3OptVarsEuler& opt_vars, H5::Group* h5)
 {
   WriteStringH5("parameterization", "se3-euler", h5, false);
   WriteSingleScalarH5("rot-x-order", opt_vars.rot_x_order(), h5);
@@ -205,12 +205,12 @@ void xreg::WriteSE3OptVarsH5(const SE3OptVarsEuler& opt_vars, H5::CommonFG* h5)
   WriteSingleScalarH5("trans-z-order", opt_vars.trans_z_order(), h5);
 }
 
-void xreg::WriteSE3OptVarsH5(const SE3OptVarsLieAlg& opt_vars, H5::CommonFG* h5)
+void xreg::WriteSE3OptVarsH5(const SE3OptVarsLieAlg& opt_vars, H5::Group* h5)
 {
   WriteStringH5("parameterization", "se3-lie-alg", h5, false);
 }
 
-void xreg::WriteSE3OptVarsH5(const SE3OptVarsTransOnly& opt_vars, H5::CommonFG* h5)
+void xreg::WriteSE3OptVarsH5(const SE3OptVarsTransOnly& opt_vars, H5::Group* h5)
 {
   WriteStringH5("parameterization", "translation-only", h5, false);
   WriteSingleScalarH5("trans-x", opt_vars.use_x(), h5);
@@ -218,27 +218,27 @@ void xreg::WriteSE3OptVarsH5(const SE3OptVarsTransOnly& opt_vars, H5::CommonFG* 
   WriteSingleScalarH5("trans-z", opt_vars.use_z(), h5);
 }
 
-void xreg::WriteSE3OptVarsH5(const SE3OptVarsTransXOnly& opt_vars, H5::CommonFG* h5)
+void xreg::WriteSE3OptVarsH5(const SE3OptVarsTransXOnly& opt_vars, H5::Group* h5)
 {
   WriteStringH5("parameterization", "trans-x-only", h5, false);
 }
 
-void xreg::WriteSE3OptVarsH5(const SE3OptVarsTransYOnly& opt_vars, H5::CommonFG* h5)
+void xreg::WriteSE3OptVarsH5(const SE3OptVarsTransYOnly& opt_vars, H5::Group* h5)
 {
   WriteStringH5("parameterization", "trans-y-only", h5, false);
 }
 
-void xreg::WriteSE3OptVarsH5(const SE3OptVarsTransZOnly& opt_vars, H5::CommonFG* h5)
+void xreg::WriteSE3OptVarsH5(const SE3OptVarsTransZOnly& opt_vars, H5::Group* h5)
 {
   WriteStringH5("parameterization", "trans-z-only", h5, false);
 }
 
-void xreg::WriteSE3OptVarsH5(const SO3OptVarsLieAlg& opt_vars, H5::CommonFG* h5)
+void xreg::WriteSE3OptVarsH5(const SO3OptVarsLieAlg& opt_vars, H5::Group* h5)
 {
   WriteStringH5("parameterization", "so3-lie-alg", h5, false);
 }
 
-void xreg::WriteSE3OptVarsH5(const SO3OptVarsEuler& opt_vars, H5::CommonFG* h5)
+void xreg::WriteSE3OptVarsH5(const SO3OptVarsEuler& opt_vars, H5::Group* h5)
 {
   WriteStringH5("parameterization", "rot-only-euler", h5, false);
   WriteSingleScalarH5("rot-x-order", opt_vars.rot_x_order(), h5);
@@ -246,17 +246,17 @@ void xreg::WriteSE3OptVarsH5(const SO3OptVarsEuler& opt_vars, H5::CommonFG* h5)
   WriteSingleScalarH5("rot-z-order", opt_vars.rot_z_order(), h5);
 }
 
-void xreg::WriteSE3OptVarsH5(const SO3OptVarsOnlyX& opt_vars, H5::CommonFG* h5)
+void xreg::WriteSE3OptVarsH5(const SO3OptVarsOnlyX& opt_vars, H5::Group* h5)
 {
   WriteStringH5("parameterization", "rot-x-only", h5, false);
 }
 
-void xreg::WriteSE3OptVarsH5(const SO3OptVarsOnlyY& opt_vars, H5::CommonFG* h5)
+void xreg::WriteSE3OptVarsH5(const SO3OptVarsOnlyY& opt_vars, H5::Group* h5)
 {
   WriteStringH5("parameterization", "rot-y-only", h5, false);
 }
 
-void xreg::WriteSE3OptVarsH5(const SO3OptVarsOnlyZ& opt_vars, H5::CommonFG* h5)
+void xreg::WriteSE3OptVarsH5(const SO3OptVarsOnlyZ& opt_vars, H5::Group* h5)
 {
   WriteStringH5("parameterization", "rot-z-only", h5, false);
 }

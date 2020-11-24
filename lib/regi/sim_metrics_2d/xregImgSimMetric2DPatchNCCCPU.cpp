@@ -440,7 +440,7 @@ void xreg::ImgSimMetric2DPatchNCCCPU::process_mask()
   }
 }
     
-void xreg::ImgSimMetric2DPatchNCCCPU::SimAux::write(H5::CommonFG* h5)
+void xreg::ImgSimMetric2DPatchNCCCPU::SimAux::write(H5::Group* h5)
 {
   WriteStringH5("sim-aux-type", "patch-ncc-aux", h5, false);
 
@@ -484,7 +484,7 @@ void xreg::ImgSimMetric2DPatchNCCCPU::SimAux::write(H5::CommonFG* h5)
   }
 }
 
-void xreg::ImgSimMetric2DPatchNCCCPU::SimAux::read(const H5::CommonFG& h5)
+void xreg::ImgSimMetric2DPatchNCCCPU::SimAux::read(const H5::Group& h5)
 {
   patch_infos_per_compute_call.clear();
   patch_indices_per_compute_call.clear();

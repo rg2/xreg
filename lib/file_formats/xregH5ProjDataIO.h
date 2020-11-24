@@ -31,67 +31,67 @@
 namespace H5
 {
 
-class CommonFG;
+class Group;
 
 }  // H5
 
 namespace xreg
 {
 
-void CopyProjDataH5(const H5::CommonFG& src_proj_h5, H5::CommonFG* dst_proj_h5);
+void CopyProjDataH5(const H5::Group& src_proj_h5, H5::Group* dst_proj_h5);
 
-void ReadProjDataFromH5AndWriteToDisk(const H5::CommonFG& h5, const std::string& dst_disk_path);
+void ReadProjDataFromH5AndWriteToDisk(const H5::Group& h5, const std::string& dst_disk_path);
 
 //////////////////////////////////////////////////
 // Write to HDF5 Data Structures
 //////////////////////////////////////////////////
 
 void WriteProjDataH5(const ProjDataF32List& proj_data,
-                     H5::CommonFG* h5,
+                     H5::Group* h5,
                      const bool compress = true);
 
 void WriteProjDataH5(const ProjDataU16List& proj_data,
-                     H5::CommonFG* h5,
+                     H5::Group* h5,
                      const bool compress = true);
 
 void WriteProjDataH5(const ProjDataU8List& proj_data,
-                     H5::CommonFG* h5,
+                     H5::Group* h5,
                      const bool compress = true);
 
 void WriteProjDataH5(const ProjDataF32& proj_data,
-                     H5::CommonFG* h5,
+                     H5::Group* h5,
                      const bool compress = true);
 
 void WriteProjDataH5(const ProjDataU16& proj_data,
-                     H5::CommonFG* h5,
+                     H5::Group* h5,
                      const bool compress = true);
 
 void WriteProjDataH5(const ProjDataU8& proj_data,
-                     H5::CommonFG* h5,
+                     H5::Group* h5,
                      const bool compress = true);
 
 void WriteProjDataH5(const CamImgPairF32List& cam_img_pairs,
-                     H5::CommonFG* h5,
+                     H5::Group* h5,
                      const bool compress = true);
 
 void WriteProjDataH5(const CamImgPairU16List& cam_img_pairs,
-                     H5::CommonFG* h5,
+                     H5::Group* h5,
                      const bool compress = true);
 
 void WriteProjDataH5(const CamImgPairU8List& cam_img_pairs,
-                     H5::CommonFG* h5,
+                     H5::Group* h5,
                      const bool compress = true);
 
 void WriteProjDataH5(const CamImgPairF32& cam_img_pair,
-                     H5::CommonFG* h5,
+                     H5::Group* h5,
                      const bool compress = true);
 
 void WriteProjDataH5(const CamImgPairU16& cam_img_pair,
-                     H5::CommonFG* h5,
+                     H5::Group* h5,
                      const bool compress = true);
 
 void WriteProjDataH5(const CamImgPairU8& cam_img_pair,
-                     H5::CommonFG* h5,
+                     H5::Group* h5,
                      const bool compress = true);
 
 //////////////////////////////////////////////////
@@ -151,19 +151,19 @@ void WriteProjDataH5ToDisk(const CamImgPairU8& cam_img_pair,
 //////////////////////////////////////////////////
 
 
-ProjDataF32List ReadProjDataH5F32(const H5::CommonFG& h5, const bool read_pixels = true);
+ProjDataF32List ReadProjDataH5F32(const H5::Group& h5, const bool read_pixels = true);
 
-ProjDataU16List ReadProjDataH5U16(const H5::CommonFG& h5, const bool read_pixels = true);
+ProjDataU16List ReadProjDataH5U16(const H5::Group& h5, const bool read_pixels = true);
 
-ProjDataU8List ReadProjDataH5U8(const H5::CommonFG& h5, const bool read_pixels = true);
+ProjDataU8List ReadProjDataH5U8(const H5::Group& h5, const bool read_pixels = true);
 
-ProjDataF32::ProjPtr ReadSingleImgFromProjDataH5F32(const H5::CommonFG& h5, const size_type proj_idx);
+ProjDataF32::ProjPtr ReadSingleImgFromProjDataH5F32(const H5::Group& h5, const size_type proj_idx);
 
-ProjDataU16::ProjPtr ReadSingleImgFromProjDataH5U16(const H5::CommonFG& h5, const size_type proj_idx);
+ProjDataU16::ProjPtr ReadSingleImgFromProjDataH5U16(const H5::Group& h5, const size_type proj_idx);
 
-ProjDataU8::ProjPtr ReadSingleImgFromProjDataH5U8(const H5::CommonFG& h5, const size_type proj_idx);
+ProjDataU8::ProjPtr ReadSingleImgFromProjDataH5U8(const H5::Group& h5, const size_type proj_idx);
 
-std::vector<CameraModel> ReadCamModelsFromProjData(const H5::CommonFG& h5);
+std::vector<CameraModel> ReadCamModelsFromProjData(const H5::Group& h5);
 
 //////////////////////////////////////////////////
 // Read from HDF5 Files
@@ -192,7 +192,7 @@ enum ProjDataScalarType
   kPROJ_DATA_TYPE_UINT8
 };
 
-ProjDataScalarType GetProjDataScalarTypeH5(const H5::CommonFG& h5);
+ProjDataScalarType GetProjDataScalarTypeH5(const H5::Group& h5);
 
 ProjDataScalarType GetProjDataScalarTypeFromDisk(const std::string& path);
 
@@ -237,7 +237,7 @@ private:
 };
 
 void AddLandsToProjDataH5(const LandMap2& lands, const size_type proj_idx,
-                          H5::CommonFG* h5,
+                          H5::Group* h5,
                           const bool delete_existing = false);
 
 }  // xreg

@@ -109,7 +109,7 @@ struct WriteDebugProjDataInfo : boost::static_visitor<void>
 
 }  // un-named
 
-void xreg::WriteMultiLevel2D3DRegiDebugH5(const DebugRegiResultsMultiLevel& results, H5::CommonFG* h5)
+void xreg::WriteMultiLevel2D3DRegiDebugH5(const DebugRegiResultsMultiLevel& results, H5::Group* h5)
 {
   if (!results.vols.empty())
   {
@@ -213,7 +213,7 @@ void xreg::WriteMultiLevel2D3DRegiDebugToDisk(const DebugRegiResultsMultiLevel& 
   h5.close();
 }
 
-xreg::DebugRegiResultsMultiLevel xreg::ReadMultiLevel2D3DRegiDebugH5(const H5::CommonFG& h5)
+xreg::DebugRegiResultsMultiLevel xreg::ReadMultiLevel2D3DRegiDebugH5(const H5::Group& h5)
 {
   DebugRegiResultsMultiLevel results;
  
@@ -376,7 +376,7 @@ struct ReadVolDataFromDebug
   using VolList     = RayCaster::VolList;
   using VolListPair = std::tuple<VolList,VolList>;
 
-  const H5::CommonFG* h5;
+  const H5::Group* h5;
   
   bool hu_to_lin_att;
 
@@ -477,7 +477,7 @@ struct ReadVolDataFromDebug
 
 struct ReadProjDataFromDebug : boost::static_visitor<ProjDataF32List>
 {
-  const H5::CommonFG* h5;
+  const H5::Group* h5;
 
   ProjDataF32List operator()(const ProjDataF32List& pd)
   {
@@ -524,7 +524,7 @@ std::tuple<xreg::RayCaster::VolList,
            xreg::RayCaster::VolList>
 xreg::VolDataFromDebug(const DebugRegiResultsMultiLevel& results,
                        const bool do_hu_to_lin_att,
-                       const H5::CommonFG* h5)
+                       const H5::Group* h5)
 {
   ReadVolDataFromDebug vol_data_visitor;
   vol_data_visitor.h5 = h5;
@@ -553,7 +553,7 @@ xreg::VolDataFromDebug(const DebugRegiResultsMultiLevel& results,
 }
 
 xreg::ProjDataF32List xreg::ProjDataFromDebug(const DebugRegiResultsMultiLevel& results,
-                                              const H5::CommonFG* h5)
+                                              const H5::Group* h5)
 {
   ReadProjDataFromDebug r;
   r.h5 = h5;
