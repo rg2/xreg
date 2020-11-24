@@ -110,7 +110,7 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   rm $VTK_FILE
 
-  ITK_URL="https://github.com/InsightSoftwareConsortium/ITK/releases/download/v4.13.2/InsightToolkit-4.13.2.zip"
+  ITK_URL="https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.1.1/InsightToolkit-5.1.1.zip"
 
   ITK_FILE=`basename $ITK_URL`
 
@@ -217,8 +217,7 @@ cd $NLOPT_DIR
       -DBUILD_EXAMPLES:BOOL=OFF \
       -DITK_USE_GPU:BOOL=OFF \
       -DModule_ITKReview:BOOL=ON \
-      -DModule_LabelErodeDilate:BOOL=ON \
-      -DVCL_INCLUDE_CXX_0X:BOOL=ON
+      -DModule_LabelErodeDilate:BOOL=ON
 
   ninja
 
