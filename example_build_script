@@ -50,7 +50,7 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   rm $TBB_FILE
 
-  BOOST_URL="https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.zip"
+  BOOST_URL="https://dl.bintray.com/boostorg/release/1.74.0/source/boost_1_74_0.zip"
 
   BOOST_FILE=`basename $BOOST_URL`
 

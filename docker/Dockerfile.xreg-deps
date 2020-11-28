@@ -40,10 +40,10 @@ FROM xreg-dev-base-cust-deps as xreg-deps
 
 WORKDIR /
 
-# bring in boost 1.65 header only
+# bring in boost 1.74 header only
 RUN mkdir boost_dl && cd boost_dl && \
-    wget https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.gz && \
-    tar xf boost_1_65_1.tar.gz && cd boost_1_65_1 && mv boost /usr/local/include && \
+    wget https://dl.bintray.com/boostorg/release/1.74.0/source/boost_1_74_0.tar.gz && \
+    tar xf boost_1_74_0.tar.gz && cd boost_1_74_0 && mv boost /usr/local/include && \
     cd / && rm -rf boost_dl
 
 # bring in eigen 3.3.4 header only
@@ -88,7 +88,7 @@ RUN mkdir nlopt_build && cd nlopt_build && \
     cmake --build . && cmake --build . --target install && \
     cd / && rm -rf nlopt_build
 
-# build ITK 4.13.2
+# build ITK 5.1.1
 RUN mkdir itk_build && cd itk_build && \
     wget https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.1.1/InsightToolkit-5.1.1.tar.gz && \
     tar xf InsightToolkit-5.1.1.tar.gz && cd InsightToolkit-5.1.1 && \
