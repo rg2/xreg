@@ -120,7 +120,7 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   rm $ITK_FILE
   
-  OPENCV_URL="https://github.com/opencv/opencv/archive/3.2.0.zip"
+  OPENCV_URL="https://github.com/opencv/opencv/archive/3.4.12.zip"
 
   OPENCV_FILE=`basename $OPENCV_URL`
 
@@ -244,8 +244,7 @@ cd $NLOPT_DIR
         -DBUILD_EXAMPLES:BOOL=OFF \
         -DBUILD_DOCS:BOOL=OFF \
         -DBUILD_WITH_DEBUG_INFO:BOOL=OFF \
-        -DWITH_TBB:BOOL=ON \
-        -DTBB_INCLUDE_DIRS:PATH="${TBB_INC_DIR}" \
+        -DWITH_TBB:BOOL=OFF \
         -DBUILD_TBB:BOOL=OFF \
         -DWITH_IPP:BOOL=OFF \
         -DWITH_VTK:BOOL=OFF \

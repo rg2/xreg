@@ -102,10 +102,10 @@ RUN mkdir itk_build && cd itk_build && \
     cmake --build . && cmake --build . --target install && \
     cd / && rm -rf itk_build
 
-# build OpenCV 3.2.0
+# build OpenCV 3.4.12
 RUN mkdir opencv_build && cd opencv_build && \
-    wget https://github.com/opencv/opencv/archive/3.2.0.tar.gz && \
-    tar xf 3.2.0.tar.gz && cd opencv-3.2.0 && \
+    wget https://github.com/opencv/opencv/archive/3.4.12.tar.gz && \
+    tar xf 3.4.12.tar.gz && cd opencv-3.4.12 && \
     mkdir build && cd build && \
     cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
                    -DCMAKE_CXX_STANDARD:STRING="11" \
