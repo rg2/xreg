@@ -5,7 +5,11 @@ ARG os_version=16.04
 
 FROM ubuntu:${os_version}
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# DEBIAN_FRONTEND=noninteractive is needed to avoid an interactive prompt
+# to set the timezone with 20.04 images.
+
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && apt-get install -y --no-install-recommends \
       build-essential \
       ca-certificates \
       cmake \
