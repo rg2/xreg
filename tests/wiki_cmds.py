@@ -112,7 +112,8 @@ if __name__ == '__main__':
             sys.exit(1)
 
         print('updating PATH...')
-        os.environ['PATH'] = '{}:{}'.format(xreg_bin_dir, os.environ['PATH'])
+        path_list_sep = ';' if platform.system() == 'Windows' else ':'
+        os.environ['PATH'] = '{}{}{}'.format(xreg_bin_dir, path_list_sep, os.environ['PATH'])
     else:
         print('using existing PATH to resolve xReg executables...')
 
