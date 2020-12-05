@@ -118,9 +118,9 @@ inline H5::DataType LookupH5DataType<std::string>()
 #ifdef _WIN32
 
 template <>
-inline H5::DataType LookupH5DataType<size_type>()
+inline H5::DataType LookupH5DataType<unsigned long long>()
 {
-  return H5::PredType::NATIVE_ULONG;
+  return H5::PredType::NATIVE_ULLONG;
 }
 
 #endif
