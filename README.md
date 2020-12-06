@@ -164,23 +164,26 @@ Although the following capabilities currently only exist in an internal version 
 
 ## Dependencies
 * C++ 11 compatible compiler
+  * Tested with various flavors of gcc and Apple clang, and Visual Studio 2019
 * External libraries (compatible versions are listed):
-  * OpenCL (1.x) (typically provided with your graphics drivers or CUDA SDK)
-  * [Intel Threading Building Blocks (TBB)](https://github.com/oneapi-src/oneTBB) (20170919oss)
-  * [Boost](https://www.boost.org) (header only) (1.65)
+  * [Intel Threading Building Blocks (TBB)](https://github.com/oneapi-src/oneTBB) (20170919oss, v2020.3)
+  * [Boost](https://www.boost.org) (header only) (1.74)
   * [Eigen3](http://eigen.tuxfamily.org) (3.3.4)
   * [fmt](https://fmt.dev) (5.3.0)
   * [NLOpt](https://github.com/stevengj/nlopt) (2.5.0)
-  * [ITK](https://itk.org) (4.13.2)
-  * [VTK](https://vtk.org) (7.1.1)
-  * [OpenCV](https://opencv.org) (3.2.0)
+  * [ITK](https://itk.org) (5.1.1)
+  * [VTK](https://vtk.org) (8.2.0)
+  * [OpenCV](https://opencv.org) (3.4.12)
   * [ViennaCL](http://viennacl.sourceforge.net) (1.7.1)
+  * Highly recomended for GPU acceleration: OpenCL (1.x)
+    * Only needed at runtime on Windows and Linux and is typically provided with your graphics drivers or CUDA SDK
+    * Included with MacOS
   * Optional: [ffmpeg](https://ffmpeg.org) is used for writing videos when it is found in the system path. The OpenCV video writer is used if ffmpeg is not available.
 
 ## Building
 A standard CMake configure/generate process is used.
-It is recommended to generate Ninja build files for fast and efficient compilation. 
-An example script for building all dependencies (except OpenCL) and the xReg repository is also provided [here](example_build_script).
+It is recommended to generate Ninja build files for fast compilation. 
+Example scripts for building all dependencies and the xReg repository are provided for [POSIX systems](example_build_script) (e.g. MacOS and Linux) and [Windows](example_build_script_win.cmd).
 The [docker](docker) directory demonstrates how Docker may be used to build the software.
 
 ## License and Attribution
