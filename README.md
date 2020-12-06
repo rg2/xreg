@@ -48,7 +48,13 @@ Although the following capabilities currently only exist in an internal version 
 * Python bindings, conda integration
 * And more...
 
-## Dependencies
+## Building
+A standard CMake configure/generate process is used.
+It is recommended to generate Ninja build files for fast compilation. 
+Example scripts for building all dependencies and the xReg repository are provided for [POSIX systems](example_build_script) (e.g. MacOS and Linux) and [Windows](example_build_script_win.cmd).
+The [docker](docker) directory demonstrates how Docker may be used to build the software.
+
+### Dependencies
 * C++ 11 compatible compiler
   * Tested with various flavors of gcc and Apple clang, and Visual Studio 2019
 * External libraries (compatible versions are listed):
@@ -65,12 +71,6 @@ Although the following capabilities currently only exist in an internal version 
     * Only needed at runtime on Windows and Linux and is typically provided with your graphics drivers or CUDA SDK
     * Included with MacOS
   * Optional: [ffmpeg](https://ffmpeg.org) is used for writing videos when it is found in the system path. The OpenCV video writer is used if ffmpeg is not available.
-
-## Building
-A standard CMake configure/generate process is used.
-It is recommended to generate Ninja build files for fast compilation. 
-Example scripts for building all dependencies and the xReg repository are provided for [POSIX systems](example_build_script) (e.g. MacOS and Linux) and [Windows](example_build_script_win.cmd).
-The [docker](docker) directory demonstrates how Docker may be used to build the software.
 
 ## License and Attribution
 The software is available for use under the [MIT License](LICENSE).
