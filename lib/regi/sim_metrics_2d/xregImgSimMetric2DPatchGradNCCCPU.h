@@ -84,9 +84,9 @@ public:
     std::shared_ptr<H5ReadWriteInterface> sim_aux_x;
     std::shared_ptr<H5ReadWriteInterface> sim_aux_y;
     
-    void write(H5::CommonFG* h5) override;
+    void write(H5::Group* h5) override;
     
-    void read(const H5::CommonFG& h5) override;
+    void read(const H5::Group& h5) override;
   };
 
 protected:

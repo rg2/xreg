@@ -408,7 +408,7 @@ void xreg::ImgSimMetric2DPatchGradNCCCPU::process_mask()
   // need to be computed
 }
     
-void xreg::ImgSimMetric2DPatchGradNCCCPU::SimAux::write(H5::CommonFG* h5)
+void xreg::ImgSimMetric2DPatchGradNCCCPU::SimAux::write(H5::Group* h5)
 {
   WriteStringH5("sim-aux-type", "patch-grad-ncc-aux", h5, false);
   
@@ -419,7 +419,7 @@ void xreg::ImgSimMetric2DPatchGradNCCCPU::SimAux::write(H5::CommonFG* h5)
   sim_aux_y->write(&yg);
 }
 
-void xreg::ImgSimMetric2DPatchGradNCCCPU::SimAux::read(const H5::CommonFG& h5)
+void xreg::ImgSimMetric2DPatchGradNCCCPU::SimAux::read(const H5::Group& h5)
 {
   sim_aux_x = std::make_shared<PatchNCCSimAux>();
   sim_aux_x->read(h5.openGroup("x"));

@@ -2125,7 +2125,7 @@ namespace  // un-named
 template <class tPixelScalar>
 void WriteImgsAsMultiChannelH5Helper(const std::vector<cv::Mat>& imgs,
                                      const std::string& h5_dataset_name,
-                                     H5::CommonFG* h5,
+                                     H5::Group* h5,
                                      const bool compress)
 {
   using PixelScalar = tPixelScalar;
@@ -2179,7 +2179,7 @@ void WriteImgsAsMultiChannelH5Helper(const std::vector<cv::Mat>& imgs,
 
 void xreg::WriteImgsAsMultiChannelH5(const std::vector<cv::Mat>& imgs,
                                      const std::string& h5_dataset_name,
-                                     H5::CommonFG* h5,
+                                     H5::Group* h5,
                                      const bool compress)
 {
   const size_type num_imgs = imgs.size();

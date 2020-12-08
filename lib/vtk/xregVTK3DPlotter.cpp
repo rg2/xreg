@@ -54,6 +54,7 @@
 #include <vtkPointData.h>
 #include <vtkLookupTable.h>
 #include <vtkFloatArray.h>
+#include <vtkTexture.h>
 
 #include <vtkWindowToImageFilter.h>
 #include <vtkPNGWriter.h>
@@ -69,6 +70,7 @@
 #include "xregPerspectiveXform.h"
 #include "xregAssert.h"
 #include "xregSpatialPrimitives.h"
+#include "xregScreenInfo.h"
 
 namespace
 {
@@ -343,6 +345,11 @@ private:
 
 xreg::VTK3DPlotter::VTK3DPlotter()
 {
+  const double scale = HiDPIScaling();
+
+  win_num_rows_ = std::lround(kDEFAULT_WIN_NUM_ROWS * scale);
+  win_num_cols_ = std::lround(kDEFAULT_WIN_NUM_COLS * scale);
+
   ren_win_->AddRenderer(ren_.GetPointer());
 
   ren_->AddViewProp(cube_axes_actor_.GetPointer());
@@ -479,8 +486,10 @@ void xreg::VTK3DPlotter::set_title(const std::string& s)
 
 void xreg::VTK3DPlotter::set_size(const size_type num_rows, const size_type num_cols)
 {
-  win_num_rows_ = num_rows;
-  win_num_cols_ = num_cols;
+  const double scale = HiDPIScaling();
+
+  win_num_rows_ = std::lround(scale * num_rows);
+  win_num_cols_ = std::lround(scale * num_cols);
 }
   
 void xreg::VTK3DPlotter::set_full_screen(const bool fs)

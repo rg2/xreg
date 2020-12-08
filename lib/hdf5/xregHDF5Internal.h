@@ -35,7 +35,7 @@ namespace detail
 template <class tScalar>
 H5::DataSet WriteSingleScalarH5Helper(const std::string& field_name,
                                       const tScalar& field_val,
-                                      H5::CommonFG* h5)
+                                      H5::Group* h5)
 {
   const auto data_type = LookupH5DataType<tScalar>();
 
@@ -49,7 +49,7 @@ H5::DataSet WriteSingleScalarH5Helper(const std::string& field_name,
 template <class T>
 H5::DataSet CreateVectorH5Helper(const std::string& field_name,
                                  const unsigned long len,
-                                 H5::CommonFG* h5,
+                                 H5::Group* h5,
                                  const bool compress)
 {
   using Scalar = typename std::conditional<std::is_same<bool,T>::value,unsigned char,T>::type;
@@ -76,7 +76,7 @@ H5::DataSet CreateVectorH5Helper(const std::string& field_name,
 template <class T, class A>
 H5::DataSet WriteVectorH5Helper(const std::string& field_name,
                                 const std::vector<T,A>& v,
-                                H5::CommonFG* h5,
+                                H5::Group* h5,
                                 const bool compress)
 {
   using Scalar = T;
@@ -106,7 +106,7 @@ template <class tScalar>
 H5::DataSet CreateMatrixH5Helper(const std::string& field_name,
                                  const unsigned long num_rows,
                                  const unsigned long num_cols,
-                                 H5::CommonFG* h5,
+                                 H5::Group* h5,
                                  const bool compress)
 {
   using Scalar = tScalar;
@@ -138,7 +138,7 @@ H5::DataSet CreateMatrixH5Helper(const std::string& field_name,
 template <class tScalar, int tRows, int tCols, int tOpts, int tMaxRows, int tMaxCols>
 H5::DataSet WriteMatrixH5Helper(const std::string& field_name,
                                 const Eigen::Matrix<tScalar,tRows,tCols,tOpts,tMaxRows,tMaxCols>& mat,
-                                H5::CommonFG* h5,
+                                H5::Group* h5,
                                 const bool compress)
 {
   using Scalar = tScalar;
@@ -207,7 +207,7 @@ void WriteMatrixRowH5Helper(const tScalar* row_buf, const unsigned long row_idx,
 
 template <class tScalar, unsigned int tN>
 void WriteNDImageH5Helper(const itk::Image<tScalar,tN>* img, 
-                          H5::CommonFG* h5,
+                          H5::Group* h5,
                           const bool compress)
 {
   using PixelScalar = tScalar;
@@ -301,7 +301,7 @@ void WriteNDImageH5Helper(const itk::Image<tScalar,tN>* img,
 }
 
 template <class tMapIt>
-void WriteLandmarksMapH5Helper(tMapIt map_begin, tMapIt map_end, H5::CommonFG* h5)
+void WriteLandmarksMapH5Helper(tMapIt map_begin, tMapIt map_end, H5::Group* h5)
 {
   using MapIt = tMapIt;
 
@@ -314,7 +314,7 @@ void WriteLandmarksMapH5Helper(tMapIt map_begin, tMapIt map_end, H5::CommonFG* h
 }
 
 template <class tKey, class tVal>
-void WriteLandmarksMapH5Helper(const std::unordered_map<tKey,tVal>& m, H5::CommonFG* h5)
+void WriteLandmarksMapH5Helper(const std::unordered_map<tKey,tVal>& m, H5::Group* h5)
 {
   WriteLandmarksMapH5Helper(m.begin(), m.end(), h5);
 }
@@ -322,7 +322,7 @@ void WriteLandmarksMapH5Helper(const std::unordered_map<tKey,tVal>& m, H5::Commo
 template <class tScalar, int tRows, int tCols, int tOpts, int tMaxRows, int tMaxCols, class A>
 H5::DataSet WriteListOfPointsAsMatrixH5Helper(const std::string& field_name,
                           const std::vector<Eigen::Matrix<tScalar,tRows,tCols,tOpts,tMaxRows,tMaxCols>,A>& pts,
-                          H5::CommonFG* h5,
+                          H5::Group* h5,
                           const bool compress)
 {
   using Pt  = Eigen::Matrix<tScalar,tRows,tCols,tOpts,tMaxRows,tMaxCols>;
@@ -350,7 +350,7 @@ H5::DataSet WriteListOfPointsAsMatrixH5Helper(const std::string& field_name,
 template <class tScalar, unsigned long tDim>
 H5::DataSet WriteListOfArraysAsMatrixH5Helper(const std::string& field_name,
                                               const std::vector<std::array<tScalar,tDim>>& arrays,
-                                              H5::CommonFG* h5,
+                                              H5::Group* h5,
                                               const bool compress)
 {
   constexpr int kDIM = tDim;
@@ -378,7 +378,7 @@ H5::DataSet WriteListOfArraysAsMatrixH5Helper(const std::string& field_name,
 
 template <class tLabelScalar, unsigned int tN>
 void WriteSegNDImageH5Helper(const itk::Image<tLabelScalar,tN>* img, 
-                             H5::CommonFG* h5,
+                             H5::Group* h5,
                              const std::unordered_map<tLabelScalar,std::string>& seg_labels_def,
                              const bool compress)
 {
@@ -408,7 +408,7 @@ void WriteSegNDImageH5Helper(const itk::Image<tLabelScalar,tN>* img,
 }
 
 template <class tKey, class tVal>
-void WriteMapAsArraysHelper(const std::unordered_map<tKey,tVal>& m, H5::CommonFG* h5,
+void WriteMapAsArraysHelper(const std::unordered_map<tKey,tVal>& m, H5::Group* h5,
                             const std::string& keys_g_name = "keys",
                             const std::string& vals_g_name = "vals",
                             const bool compress = true)
@@ -442,7 +442,7 @@ void WriteMapAsArraysHelper(const std::unordered_map<tKey,tVal>& m, H5::CommonFG
 
 template <class tScalar>
 tScalar ReadSingleScalarH5Helper(const std::string& field_name,
-                                 const H5::CommonFG& h5)
+                                 const H5::Group& h5)
 {
   using Scalar = tScalar;
 
@@ -456,7 +456,7 @@ tScalar ReadSingleScalarH5Helper(const std::string& field_name,
 
 template <class T>
 std::vector<T> ReadVectorH5Helper(const std::string& field_name,
-                                  const H5::CommonFG& h5)
+                                  const H5::Group& h5)
 {
   using Scalar = T;
   using Vec    = std::vector<Scalar>;
@@ -478,7 +478,7 @@ std::vector<T> ReadVectorH5Helper(const std::string& field_name,
 
 template <class tScalar>
 Eigen::Matrix<tScalar,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor|Eigen::AutoAlign>
-ReadMatrixH5Helper(const std::string& field_name, const H5::CommonFG& h5)
+ReadMatrixH5Helper(const std::string& field_name, const H5::Group& h5)
 {
   using Scalar = tScalar;
   using Mat    = Eigen::Matrix<Scalar,Eigen::Dynamic,Eigen::Dynamic,
@@ -504,7 +504,7 @@ ReadMatrixH5Helper(const std::string& field_name, const H5::CommonFG& h5)
 
 template <class tScalar, unsigned int tN>
 typename itk::Image<tScalar,tN>::Pointer
-ReadNDImageH5Helper(const H5::CommonFG& h5)
+ReadNDImageH5Helper(const H5::Group& h5)
 {
   using PixelScalar = tScalar;
 
@@ -555,7 +555,7 @@ ReadNDImageH5Helper(const H5::CommonFG& h5)
 
 template <class tPt>
 std::unordered_map<std::string,tPt>
-ReadLandmarksMapH5Helper(const H5::CommonFG& h5)
+ReadLandmarksMapH5Helper(const H5::Group& h5)
 {
   using Pt = tPt;
   using LandsMap = std::unordered_map<std::string,Pt>;
@@ -582,7 +582,7 @@ ReadLandmarksMapH5Helper(const H5::CommonFG& h5)
 }
 
 template <class tPt>
-std::vector<tPt> ReadLandsAsPtCloudH5Helper(const H5::CommonFG& h5)
+std::vector<tPt> ReadLandsAsPtCloudH5Helper(const H5::Group& h5)
 {
   using Pt     = tPt;
   using PtList = std::vector<Pt>;
@@ -607,7 +607,7 @@ std::vector<tPt> ReadLandsAsPtCloudH5Helper(const H5::CommonFG& h5)
 
 template <class tScalar, int tDim = Eigen::Dynamic>
 std::vector<Eigen::Matrix<tScalar,tDim,1>>
-ReadListOfPointsFromMatrixH5Helper(const std::string& field_name, const H5::CommonFG& h5)
+ReadListOfPointsFromMatrixH5Helper(const std::string& field_name, const H5::Group& h5)
 {
   using Scalar = tScalar;
 
@@ -638,7 +638,7 @@ ReadListOfPointsFromMatrixH5Helper(const std::string& field_name, const H5::Comm
 
 template <class tScalar, unsigned long tDim>
 std::vector<std::array<tScalar,tDim>>
-ReadListOfArraysFromMatrixH5Helper(const std::string& field_name, const H5::CommonFG& h5)
+ReadListOfArraysFromMatrixH5Helper(const std::string& field_name, const H5::Group& h5)
 {
   using Scalar = tScalar;
 

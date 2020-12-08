@@ -185,7 +185,7 @@ std::shared_ptr<xreg::Regi2D3DPenaltyFn::DebugInfo> xreg::Regi2D3DPenaltyFnLandR
   return debug_info_;
 }
     
-void xreg::Regi2D3DPenaltyFnLandReproj::LandDebugInfo::write(H5::CommonFG* h5)
+void xreg::Regi2D3DPenaltyFnLandReproj::LandDebugInfo::write(H5::Group* h5)
 {
   WriteStringH5("pen-fn-name", "lands-reproj", h5);
 
@@ -205,7 +205,7 @@ void xreg::Regi2D3DPenaltyFnLandReproj::LandDebugInfo::write(H5::CommonFG* h5)
   }
 }
     
-void xreg::Regi2D3DPenaltyFnLandReproj::LandDebugInfo::read(const H5::CommonFG& h5)
+void xreg::Regi2D3DPenaltyFnLandReproj::LandDebugInfo::read(const H5::Group& h5)
 {
   vol_idx = ReadSingleScalarH5ULong("vol-index", h5);
 

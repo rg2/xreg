@@ -44,6 +44,8 @@
 #include <vtkPLYWriter.h>
 #include <vtkPLYReader.h>
 
+#include <vtkVersionMacros.h>
+
 #include "xregVTKBasicUtils.h"
 #include "xregVTKITKUtils.h"
 #include "xregITKBasicImageUtils.h"
@@ -100,8 +102,15 @@ xreg::TriMesh xreg::ConvertVTKPolyDataToTriMesh(vtkPolyData* poly_data)
 
     tri_cells->InitTraversal();
 
-    vtkIdType  tmp_num_pts = 0;
-    vtkIdType* cur_inds    = 0;
+    vtkIdType tmp_num_pts = 0;
+
+#if VTK_MAJOR_VERSION >= 9
+    using CurIndsPtr = vtkIdType const*;
+#else
+    using CurIndsPtr = vtkIdType*;
+#endif
+
+    CurIndsPtr cur_inds = nullptr;
 
     vtkFloatArray* normals_array = vtkFloatArray::SafeDownCast(poly_data->GetCellData()->GetNormals());
     const bool have_normals = normals_array != 0;

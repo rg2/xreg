@@ -59,9 +59,9 @@ public:
     std::vector<PatchInfoList>  patch_infos_per_compute_call;
     std::vector<PatchIndexList> patch_indices_per_compute_call;
 
-    void write(H5::CommonFG* h5) override;
+    void write(H5::Group* h5) override;
   
-    void read(const H5::CommonFG& h5) override;
+    void read(const H5::Group& h5) override;
   };
 
   bool use_fixed_img_patch_variances_as_wgts() const;

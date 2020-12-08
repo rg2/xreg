@@ -102,6 +102,12 @@ if __name__ == '__main__':
     lib_search_roots.append(xreg_install_prefix)
     lib_search_roots = [os.path.abspath(os.path.realpath(p)) for p in lib_search_roots]
 
+    # use the entries in DYLD_LIBRARY_PATH when available
+    if 'DYLD_LIBRARY_PATH' in os.environ:
+        for dyld_path in os.environ['DYLD_LIBRARY_PATH'].split(':'):
+            if dyld_path:
+                lib_search_roots.append(dyld_path)
+
     dst_bin_path = '{}/bin'.format(xreg_dist_prefix)
     dst_lib_path = '{}/lib'.format(xreg_dist_prefix)
 

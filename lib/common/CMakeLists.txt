@@ -22,18 +22,26 @@
 
 file(GLOB_RECURSE XREG_CUR_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 
-add_library(xreg_common OBJECT ${XREG_CUR_LIB_HEADERS}
-                               xregAssert.cpp
-                               xregStringUtils.cpp
-                               xregFilesystemUtils.cpp
-                               xregSampleUtils.cpp
-                               xregEndianUtils.cpp
-                               xregExceptionUtils.cpp
-                               xregStreams.cpp
-                               xregProgOptUtils.cpp
-                               xregObjWithOStream.cpp
-                               xregLandmarkMapUtils.cpp
-                               xregMesh.cpp
-                               xregStdStreamUtils.cpp
-                               xregTimer.cpp)
+set (COMMON_LIB_SRCS ${XREG_CUR_LIB_HEADERS}
+                     xregAssert.cpp
+                     xregStringUtils.cpp
+                     xregFilesystemUtils.cpp
+                     xregSampleUtils.cpp
+                     xregEndianUtils.cpp
+                     xregExceptionUtils.cpp
+                     xregStreams.cpp
+                     xregProgOptUtils.cpp
+                     xregObjWithOStream.cpp
+                     xregLandmarkMapUtils.cpp
+                     xregMesh.cpp
+                     xregStdStreamUtils.cpp
+                     xregTimer.cpp)
+
+if (APPLE)
+  set(COMMON_LIB_SRCS ${COMMON_LIB_SRCS} xregScreenInfoMacOS.mm)
+else ()
+  set(COMMON_LIB_SRCS ${COMMON_LIB_SRCS} xregScreenInfo.cpp)
+endif ()
+
+add_library(xreg_common OBJECT ${COMMON_LIB_SRCS})
 

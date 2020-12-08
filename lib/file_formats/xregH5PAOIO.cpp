@@ -27,7 +27,7 @@
 #include "xregHDF5.h"
 
 std::tuple<xreg::PAOCutPlanes,boost::optional<xreg::PAOCutDispInfo>,boost::optional<xreg::PAOCutSlabs>>
-xreg::ReadPAOCutPlanesH5(const H5::CommonFG& h5)
+xreg::ReadPAOCutPlanesH5(const H5::Group& h5)
 {
   PAOCutPlanes cut_defs;
 
@@ -118,7 +118,7 @@ xreg::ReadPAOCutPlanesH5File(const std::string& path)
 }
 
 void xreg::WritePAOCutPlanesH5(const PAOCutPlanes& cut_defs,
-                               H5::CommonFG* h5,
+                               H5::Group* h5,
                                const PAOCutDispInfo* cut_disp,
                                const PAOCutSlabs* cut_slabs,
                                const bool compress)

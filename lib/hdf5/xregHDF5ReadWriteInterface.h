@@ -29,7 +29,7 @@
 namespace H5
 {
 
-class CommonFG;
+class Group;
 
 }  // H5
 
@@ -38,9 +38,9 @@ namespace xreg
 
 struct H5ReadWriteInterface
 {
-  virtual void write(H5::CommonFG* h5) = 0;
+  virtual void write(H5::Group* h5) = 0;
 
-  virtual void read(const H5::CommonFG& h5) = 0;
+  virtual void read(const H5::Group& h5) = 0;
 };
 
 }  // xreg

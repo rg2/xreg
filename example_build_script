@@ -50,7 +50,7 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   rm $TBB_FILE
 
-  BOOST_URL="https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.zip"
+  BOOST_URL="https://dl.bintray.com/boostorg/release/1.74.0/source/boost_1_74_0.zip"
 
   BOOST_FILE=`basename $BOOST_URL`
 
@@ -100,7 +100,7 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   rm $NLOPT_FILE
 
-  VTK_URL="https://www.vtk.org/files/release/7.1/VTK-7.1.1.zip"
+  VTK_URL="https://www.vtk.org/files/release/8.2/VTK-8.2.0.zip"
 
   wget $VTK_URL
 
@@ -110,7 +110,7 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   rm $VTK_FILE
 
-  ITK_URL="https://github.com/InsightSoftwareConsortium/ITK/releases/download/v4.13.2/InsightToolkit-4.13.2.zip"
+  ITK_URL="https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.1.1/InsightToolkit-5.1.1.zip"
 
   ITK_FILE=`basename $ITK_URL`
 
@@ -120,7 +120,7 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   rm $ITK_FILE
   
-  OPENCV_URL="https://github.com/opencv/opencv/archive/3.2.0.zip"
+  OPENCV_URL="https://github.com/opencv/opencv/archive/3.4.12.zip"
 
   OPENCV_FILE=`basename $OPENCV_URL`
 
@@ -199,7 +199,6 @@ cd $NLOPT_DIR
     -DVTK_Group_Imaging:BOOL=ON \
     -DVTK_Group_Views:BOOL=ON \
     -DBUILD_TESTING:BOOL=OFF \
-    -DVTK_USE_CXX11_FEATURES:BOOL=ON \
     -DVTK_SMP_IMPLEMENTATION_TYPE:STRING="TBB" $VTK_NO_RENDER_FLAGS
 
   ninja
@@ -218,8 +217,7 @@ cd $NLOPT_DIR
       -DBUILD_EXAMPLES:BOOL=OFF \
       -DITK_USE_GPU:BOOL=OFF \
       -DModule_ITKReview:BOOL=ON \
-      -DModule_LabelErodeDilate:BOOL=ON \
-      -DVCL_INCLUDE_CXX_0X:BOOL=ON
+      -DModule_LabelErodeDilate:BOOL=ON
 
   ninja
 
@@ -246,8 +244,7 @@ cd $NLOPT_DIR
         -DBUILD_EXAMPLES:BOOL=OFF \
         -DBUILD_DOCS:BOOL=OFF \
         -DBUILD_WITH_DEBUG_INFO:BOOL=OFF \
-        -DWITH_TBB:BOOL=ON \
-        -DTBB_INCLUDE_DIRS:PATH="${TBB_INC_DIR}" \
+        -DWITH_TBB:BOOL=OFF \
         -DBUILD_TBB:BOOL=OFF \
         -DWITH_IPP:BOOL=OFF \
         -DWITH_VTK:BOOL=OFF \

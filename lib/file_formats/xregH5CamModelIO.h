@@ -31,18 +31,18 @@
 namespace H5
 {
 
-class CommonFG;
+class Group;
 
 }  // H5
 
 namespace xreg
 {
 
-void WriteCamModelH5(const CameraModel& cam, H5::CommonFG* h5);
+void WriteCamModelH5(const CameraModel& cam, H5::Group* h5);
 
 void WriteCamModelH5ToDisk(const CameraModel& cam, const std::string& dst_path);
 
-CameraModel ReadCamModelH5(const H5::CommonFG& h5);
+CameraModel ReadCamModelH5(const H5::Group& h5);
 
 CameraModel ReadCamModelH5FromDisk(const std::string& src_path);
 

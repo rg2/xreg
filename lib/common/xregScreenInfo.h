@@ -22,50 +22,15 @@
  * SOFTWARE.
  */
 
-#include "xregH5MeshIO.h"
+#ifndef XREGSCREENINFO_H_
+#define XREGSCREENINFO_H_
 
-#include "xregHDF5.h"
-
-xreg::TriMesh xreg::ReadMeshH5(const H5::Group& h5)
+namespace xreg
 {
-  TriMesh mesh;
 
-  mesh.vertices = ReadListOfPointsFromMatrixH5Pt3("vertices", h5);
-  
-  mesh.faces = ReadListOfArraysFromMatrixH5Sizes3("faces", h5);
+double HiDPIScaling();
 
-  if (ObjectInGroupH5("face-normals", h5))
-  {
-    mesh.normals = ReadListOfPointsFromMatrixH5Pt3("face-normals", h5);
-    mesh.normals_valid = true;
-  }
+}  // xreg
 
-  return mesh;
-}
-
-xreg::TriMesh xreg::ReadMeshH5File(const std::string& path)
-{
-  return ReadMeshH5(H5::H5File(path, H5F_ACC_RDONLY));
-}
-
-void xreg::WriteMeshH5(const TriMesh& mesh, H5::Group* h5, const bool compress)
-{
-  WriteListOfPointsAsMatrixH5("vertices", mesh.vertices, h5, compress);
-  WriteListOfArraysToMatrixH5("faces", mesh.faces, h5, compress);
-  
-  if (mesh.normals_valid)
-  {
-    WriteListOfPointsAsMatrixH5("face-normals", mesh.normals, h5, compress);
-  }
-}
-
-void xreg::WriteMeshH5File(const TriMesh& mesh, const std::string& path, const bool compress)
-{
-  H5::H5File h5(path, H5F_ACC_TRUNC);
-
-  WriteMeshH5(mesh, &h5, compress);
-
-  h5.flush(H5F_SCOPE_GLOBAL);
-  h5.close();
-}
+#endif
 

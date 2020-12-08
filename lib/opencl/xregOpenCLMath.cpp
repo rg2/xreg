@@ -342,6 +342,23 @@ float xregFloat16Inner(const float16 x, const float16 y)
 
 // Useful for debugging:
 
+void xregPrintVec2(const float2 x)
+{
+  printf("[ %+9.3f ; %+9.3f ]\n", x.x, x.y);
+}
+
+void xregPrintVec3(const float3 x)
+{
+  printf("[ %+9.3f ; %+9.3f ; %+9.3f ]\n",
+          x.x, x.y, x.z);
+}
+
+void xregPrintVec4(const float4 x)
+{
+  printf("[ %+9.3f ; %+9.3f ; %+9.3f ; %+9.3f ]\n",
+          x.x, x.y, x.z, x.w);
+}
+
 void xregPrintMat4x4(const float16 x)
 {
   printf("[ %+9.3f , %+9.3f , %+9.3f , %+9.3f ;\n"

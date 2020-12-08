@@ -150,9 +150,9 @@ private:
     ///        element for the jth object/volume in the ith iteration
     std::vector<ListOfListsOfScalarLists> pop_params;
 
-    void read(const H5::CommonFG& h5) override;
+    void read(const H5::Group& h5) override;
 
-    void write(H5::CommonFG* h5) override;
+    void write(H5::Group* h5) override;
   };
 
   ProjList debug_cur_mean_drrs_;

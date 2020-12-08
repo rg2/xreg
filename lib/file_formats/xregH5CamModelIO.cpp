@@ -26,7 +26,7 @@
 
 #include "xregHDF5.h"
 
-void xreg::WriteCamModelH5(const CameraModel& cam, H5::CommonFG* h5)
+void xreg::WriteCamModelH5(const CameraModel& cam, H5::Group* h5)
 {
   SetStringAttr("xreg-type", "cam-model", h5);
   
@@ -62,7 +62,7 @@ void xreg::WriteCamModelH5ToDisk(const CameraModel& cam, const std::string& dst_
   h5.close();
 }
 
-xreg::CameraModel xreg::ReadCamModelH5(const H5::CommonFG& h5)
+xreg::CameraModel xreg::ReadCamModelH5(const H5::Group& h5)
 {
   CameraModel cam;
 

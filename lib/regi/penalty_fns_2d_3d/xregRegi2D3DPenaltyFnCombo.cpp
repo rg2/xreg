@@ -106,7 +106,7 @@ xreg::Regi2D3DPenaltyFnCombo::debug_info()
   return debug_info_;
 }
     
-void xreg::Regi2D3DPenaltyFnCombo::ComboDebugInfo::write(H5::CommonFG* h5)
+void xreg::Regi2D3DPenaltyFnCombo::ComboDebugInfo::write(H5::Group* h5)
 {
   WriteStringH5("pen-fn-name", "combo", h5);
 
@@ -126,7 +126,7 @@ void xreg::Regi2D3DPenaltyFnCombo::ComboDebugInfo::write(H5::CommonFG* h5)
   }
 }
 
-void xreg::Regi2D3DPenaltyFnCombo::ComboDebugInfo::read(const H5::CommonFG& h5)
+void xreg::Regi2D3DPenaltyFnCombo::ComboDebugInfo::read(const H5::Group& h5)
 {
   const size_type num_pens = ReadSingleScalarH5ULong("num-pen-fns", h5);
   

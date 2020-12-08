@@ -31,18 +31,18 @@
 namespace H5
 {
 
-class CommonFG;
+class Group;
 
 }  // H5
 
 namespace xreg
 {
 
-TriMesh ReadMeshH5(const H5::CommonFG& h5);
+TriMesh ReadMeshH5(const H5::Group& h5);
 
 TriMesh ReadMeshH5File(const std::string& path);
 
-void WriteMeshH5(const TriMesh& mesh, H5::CommonFG* h5, const bool compress = true);
+void WriteMeshH5(const TriMesh& mesh, H5::Group* h5, const bool compress = true);
 
 void WriteMeshH5File(const TriMesh& mesh, const std::string& path, const bool compress = true);
 

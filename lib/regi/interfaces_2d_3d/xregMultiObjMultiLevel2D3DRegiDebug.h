@@ -102,11 +102,11 @@ struct DebugRegiResultsMultiLevel
   size_type total_num_projs_per_view() const;
 };
 
-void WriteMultiLevel2D3DRegiDebugH5(const DebugRegiResultsMultiLevel& results, H5::CommonFG* h5);
+void WriteMultiLevel2D3DRegiDebugH5(const DebugRegiResultsMultiLevel& results, H5::Group* h5);
 
 void WriteMultiLevel2D3DRegiDebugToDisk(const DebugRegiResultsMultiLevel& results, const std::string& path);
 
-DebugRegiResultsMultiLevel ReadMultiLevel2D3DRegiDebugH5(const H5::CommonFG& h5);
+DebugRegiResultsMultiLevel ReadMultiLevel2D3DRegiDebugH5(const H5::Group& h5);
 
 DebugRegiResultsMultiLevel ReadMultiLevel2D3DRegiDebugFromDisk(const std::string& path);
 
@@ -114,10 +114,10 @@ std::tuple<xreg::RayCaster::VolList,
            xreg::RayCaster::VolList>
 VolDataFromDebug(const DebugRegiResultsMultiLevel& results,
                  const bool do_hu_to_lin_att,
-                 const H5::CommonFG* h5 = nullptr);
+                 const H5::Group* h5 = nullptr);
 
 ProjDataF32List ProjDataFromDebug(const DebugRegiResultsMultiLevel& results,
-                                  const H5::CommonFG* h5 = nullptr);
+                                  const H5::Group* h5 = nullptr);
 
 }  // xreg
 
