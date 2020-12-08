@@ -10,7 +10,7 @@ Please visit the [wiki](https://github.com/rg2/xreg/wiki) for descriptions on th
 Basic usage of the executables is provided via a walkthrough/tutorial [here](https://github.com/rg2/xreg/wiki#walkthrough).
 Please submit an [issue](https://github.com/rg2/xreg/issues) for any problems, feature requests, or suggestions.
 
-This software was originally created while conducting research with [Russell Taylor](http://www.cs.jhu.edu/~rht), [Mehran Armand](https://bigss.lcsr.jhu.edu), and [Mathias Unberath](https://mathiasunberath.github.io/) within the [Laboratory for Computational Sensing and Robotics](https://lcsr.jhu.edu) at [Johns Hopkins University](https://www.jhu.edu).
+This software was originally created while conducting research with [Russell Taylor](http://www.cs.jhu.edu/~rht), [Mehran Armand](https://bigss.lcsr.jhu.edu), and [Mathias Unberath](https://mathiasunberath.github.io/) within the [Laboratory for Computational Sensing and Robotics](https://lcsr.jhu.edu) at [Johns Hopkins University](https://www.jhu.edu) and with Yoshito Otake of the [Imaging-based Computational Biomedicine Laboratory](http://icb-lab.naist.jp) at [NAIST](http://www.naist.jp).
 The current repository represents a rewrite/refactor of the original, internal, version of this software, with a focus on minimizing compile times and being reusable to novice developers and researchers.
 
 ## General Capabilities
