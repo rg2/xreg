@@ -74,6 +74,24 @@ def run_cmd(cmd_str):
 def wait_prompt(msg_str):
     input('{}. Press the <enter> or <return> key to continue...'.format(msg_str))
 
+def view_image(img_path):
+    if platform.system() == 'Darwin':
+        sp.check_call('open {}'.format(img_path), shell=True)
+    
+    wait_prompt('Check {} in an image viewer'.format(img_path))
+
+def view_movie(movie_path):
+    if platform.system() == 'Darwin':
+        sp.check_call('open {}'.format(movie_path), shell=True)
+    
+    wait_prompt('Inspect {} in a video player'.format(movie_path))
+
+def view_vol(vol_path, slicer_path):
+    if slicer_path:
+        sp.check_call('{} --python-code \"slicer.util.loadVolume(\'{}\')\"'.format(slicer_path, vol_path), shell=True)
+    else:
+        wait_prompt('Check {} in a visualization tool such as 3D Slicer'.format(vol_path))
+
 def macos_check_for_dyld_vars():
     if platform.system() == 'Darwin':
         # On MacOS variables starting with DYLD_ (like DYLD_LIBRARY_PATH) are removed before spawning
@@ -119,6 +137,16 @@ if __name__ == '__main__':
 
     macos_check_for_dyld_vars()
 
+    # Try and find 3D Slicer in order to display volume files
+    slicer_path = None
+
+    if platform.system() == 'Darwin':
+        mac_slicer_default_path = '/Applications/Slicer.app/Contents/MacOS/Slicer'
+        
+        if os.path.exists(mac_slicer_default_path):
+            slicer_path = mac_slicer_default_path
+
+
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-DICOM-Conversion
     if True:
@@ -130,7 +158,7 @@ if __name__ == '__main__':
 
         run_cmd('xreg-convert-dicom ABD_LYMPH_001 lymph.nii.gz --one')
        
-        wait_prompt('Check lymph.nii.gz in a visualization tool such as 3D Slicer')
+        view_vol('lymph.nii.gz', slicer_path)
 
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Volume-Cropping
@@ -140,7 +168,7 @@ if __name__ == '__main__':
 
         run_cmd('xreg-crop-vol lymph.nii.gz R.acsv pelvis.nii.gz')
 
-        wait_prompt('Check pelvis.nii.gz in a visualization tool such as 3D Slicer')
+        view_vol('pelvis.nii.gz', slicer_path)
     
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Mesh-Creation
@@ -199,7 +227,7 @@ if __name__ == '__main__':
 
         run_cmd('xreg-pao-create-repo-vol pelvis.nii.gz pao_cuts_seg.nii.gz pelvis_app_lands.fcsv left test_pao_frag_0.h5 test_pao_femur_0.h5 pao_vol.nii.gz')
         
-        wait_prompt('Check pao_vol.nii.gz in a visualization tool such as 3D Slicer')
+        view_vol('pao_vol.nii.gz', slicer_path)
 
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Volumetric-Modeling-of-Screws-and-Wires-for-PAO
@@ -210,7 +238,7 @@ if __name__ == '__main__':
 
         run_cmd('xreg-pao-add-screw-kwires-to-vol --super-sample 2 pao_vol.nii.gz pao_cuts_seg.nii.gz pelvis_app_lands.fcsv left test_pao_frag_0.h5 pelvis_left_insertion_labels.nii.gz pao_vol_with_kwire.nii.gz --p-two 1 --p-wire 1')
 
-        wait_prompt('Check pao_vol_with_kwire.nii.gz in a visualization tool such as 3D Slicer')
+        view_vol('pao_vol_with_kwire.nii.gz', slicer_path)
     
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Volumetric-Modeling-of-Screws-and-Wires-for-PAO
@@ -219,7 +247,7 @@ if __name__ == '__main__':
 
         run_cmd('xreg-pao-add-screw-kwires-to-vol --super-sample 2 pao_vol.nii.gz pao_cuts_seg.nii.gz pelvis_app_lands.fcsv left test_pao_frag_0.h5 pelvis_left_insertion_labels.nii.gz pao_vol_with_screws.nii.gz --p-two 0 --p-wire 0')
 
-        wait_prompt('Check pao_vol_with_screws.nii.gz in a visualization tool such as 3D Slicer')
+        view_vol('pao_vol_with_screws.nii.gz', slicer_path)
 
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Simulated-Fluoroscopy
@@ -235,8 +263,8 @@ if __name__ == '__main__':
         run_cmd('xreg-draw-xray-scene -i example1_1_pd_003.h5 pao_w_kwire_mesh.h5 example1_1_pose_003.h5')
 
         run_cmd('xreg-remap-tile-proj-data example1_1_pd_003.h5 example1_1_pd_003.png -d 0.25 -b 1')
-        
-        wait_prompt('Check example1_1_pd_003.png in an image viewer.')
+       
+        view_image('example1_1_pd_003.png')
    
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Point-Cloud-to-Surface-Registration
@@ -272,7 +300,7 @@ if __name__ == '__main__':
 
         run_cmd('xreg-remap-tile-proj-data example1_1_pd_003_for_regi.h5 -o -p 0 -d 0.25 example1_1_pd_003_proj_0_w_lands.png')
         
-        wait_prompt('Check example1_1_pd_003_proj_0_w_lands.png in an image viewer.')
+        view_image('example1_1_pd_003_proj_0_w_lands.png')
 
         run_cmd('xreg-hip-surg-pelvis-single-view-regi-2d-3d pelvis.nii.gz pelvis_regi_2d_3d_lands.fcsv example1_1_pd_003_for_regi.h5 regi_pose_example1_1_pd_003_proj0.h5 regi_debug_example1_1_pd_003_proj0_w_seg.h5 -s pelvis_seg.nii.gz')
         
@@ -280,7 +308,8 @@ if __name__ == '__main__':
 
         run_cmd('xreg-regi2d3d-replay regi_debug_example1_1_pd_003_proj0_w_seg.h5 --video-fps 10 --proj-ds 0.5')
 
-        wait_prompt('Inspect edges.mp4 and mov.mp4 in a video player.')
+        view_movie('edges.mp4')
+        view_movie('mov.mp4')
 
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Multiple-View-PAO-Fragment-Registration
@@ -293,5 +322,6 @@ if __name__ == '__main__':
 
         run_cmd('xreg-regi2d3d-replay --video-fps 10 --proj-ds 0.5 multi_obj_multi_view_debug.h5')
         
-        wait_prompt('Inspect edges.mp4 and mov.mp4 in a video player.')
+        view_movie('edges.mp4')
+        view_movie('mov.mp4')
 
