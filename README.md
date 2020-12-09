@@ -51,7 +51,7 @@ Although the following capabilities currently only exist in an internal version 
 ## Building
 A standard CMake configure/generate process is used.
 It is recommended to generate Ninja build files for fast compilation. 
-Example scripts for building all dependencies and the xReg repository are provided for [POSIX systems](example_build_script) (e.g. MacOS and Linux) and [Windows](example_build_script_win.cmd).
+Example scripts for building all dependencies and the xReg repository are provided for POSIX systems (e.g. MacOS and Linux) [here](example_build_script) and [here](example_build_script_2), and also for [Windows](example_build_script_win.cmd).
 The [docker](docker) directory demonstrates how Docker may be used to build the software.
 
 ### Dependencies
