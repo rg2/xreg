@@ -72,6 +72,12 @@ The [docker](docker) directory demonstrates how Docker may be used to build the 
     * Included with MacOS
   * Optional: [ffmpeg](https://ffmpeg.org) is used for writing videos when it is found in the system path. The OpenCV video writer is used if ffmpeg is not available.
 
+## Testing
+Functional testing is available in the form of a [python script](tests/wiki_cmds.py) that runs the commands found on the [wiki walkthrough](https://github.com/rg2/xreg/wiki#walkthrough).
+Results of the commands need to be examined by the user and determined to be successful or failures.
+All necessary data is downloaded automatically.
+When the appropriate visualization programs are available on the system, the script also automatically loads the output data for inspection.
+
 ## License and Attribution
 The software is available for use under the [MIT License](LICENSE).
 
