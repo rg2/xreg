@@ -74,11 +74,19 @@ def run_cmd(cmd_str):
 def wait_prompt(msg_str):
     input('{}. Press the <enter> or <return> key to continue...'.format(msg_str))
 
+def has_xdg_open():
+    try:
+        return bool(sp.check_output('which xdg-open', shell=True).decode().strip())
+    except:
+        return False
+
 def view_image(img_path):
     if platform.system() == 'Darwin':
         sp.check_call('open {}'.format(img_path), shell=True)
     elif platform.system() == 'Windows':
         sp.check_call(img_path, shell=True)
+    elif (platform.system() == 'Linux') and has_xdg_open():
+        sp.check_call('xdg-open {}'.format(img_path), shell=True)
     
     wait_prompt('Check {} in an image viewer'.format(img_path))
 
@@ -87,6 +95,8 @@ def view_movie(movie_path):
         sp.check_call('open {}'.format(movie_path), shell=True)
     elif platform.system() == 'Windows':
         sp.check_call(movie_path, shell=True)
+    elif (platform.system() == 'Linux') and has_xdg_open():
+        sp.check_call('xdg-open {}'.format(movie_path), shell=True)
 
     wait_prompt('Inspect {} in a video player'.format(movie_path))
 
@@ -155,6 +165,11 @@ if __name__ == '__main__':
         if os.path.exists(win_slicer_default_path):
             # enclose the path in quotes to handle any spaces
             slicer_path = '\"{}\"'.format(win_slicer_default_path)
+    elif platform.system() == 'Linux':
+        linux_slicer_default_path = os.path.expandvars('$HOME/Slicer-4.10.2-linux-amd64/Slicer')
+        
+        if os.path.exists(linux_slicer_default_path):
+            slicer_path = linux_slicer_default_path
 
     if slicer_path:
         print('Found Slicer at: {} -- will use for volume visualization!'.format(slicer_path))
