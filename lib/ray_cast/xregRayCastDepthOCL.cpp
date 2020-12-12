@@ -79,6 +79,8 @@ __kernel void xregDepthKernel(const RayCastArgs args,
     const float4 focal_pt_wrt_cam = cam_focal_pts[cam_idx];
 
     const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_LINEAR;
+    
+    const float4 tex_coords_off = (float4) (0.5f, 0.5f, 0.5f, 0);
 
     const float16 xform_cam_to_itk_idx = xregFrm4x4Composition(args.itk_phys_pt_to_itk_idx_xform, cam_to_itk_phys_xforms[proj_idx]);
 
@@ -124,7 +126,7 @@ __kernel void xregDepthKernel(const RayCastArgs args,
 
     for (ulong step_idx = 0; step_idx <= num_steps; ++step_idx, cur_cont_vol_idx += step_vec_wrt_itk_idx)
     {
-      if (read_imagef(vol_tex, sampler, cur_cont_vol_idx).x >= sur_coll_args.sur_coll_thresh)
+      if (read_imagef(vol_tex, sampler, cur_cont_vol_idx + tex_coords_off).x >= sur_coll_args.sur_coll_thresh)
       {
         const float3 coll_pt_wrt_cam = xregFrm4x4XformFloat3Pt(xform_itk_idx_to_cam,
                                                                xregFloat4HmgToFloat3(cur_cont_vol_idx));

@@ -70,6 +70,8 @@ __kernel void xregOccludingContourKernel(const RayCastArgs args,
     const float4 focal_pt_wrt_cam = cam_focal_pts[cam_idx];
 
     const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_LINEAR;
+    
+    const float4 tex_coords_off = (float4) (0.5f, 0.5f, 0.5f, 0);
 
     const float16 xform_cam_to_itk_idx = xregFrm4x4Composition(args.itk_phys_pt_to_itk_idx_xform, cam_to_itk_phys_xforms[proj_idx]);
 
@@ -105,6 +107,8 @@ __kernel void xregOccludingContourKernel(const RayCastArgs args,
 
     float4 cur_cont_vol_idx = (float4) (start_pt_wrt_itk_idx.x, start_pt_wrt_itk_idx.y, start_pt_wrt_itk_idx.z, 0);
 
+    cur_cont_vol_idx += tex_coords_off;
+
     // "/ pinhole_to_det_len_wrt_itk_idx" makes pinhole_to_det_wrt_itk_idx a unit vector
     const float scale_to_step = step_len_wrt_itk_idx / pinhole_to_det_len_wrt_itk_idx;
 
@@ -123,15 +127,15 @@ __kernel void xregOccludingContourKernel(const RayCastArgs args,
 
         // Gradient in X Direction:
         grad_vec.x = read_imagef(vol_tex, sampler, (float4) (cur_cont_vol_idx.x + 1, cur_cont_vol_idx.y, cur_cont_vol_idx.z, cur_cont_vol_idx.w)).x -
-                    read_imagef(vol_tex, sampler, (float4) (cur_cont_vol_idx.x - 1, cur_cont_vol_idx.y, cur_cont_vol_idx.z, cur_cont_vol_idx.w)).x;
+                     read_imagef(vol_tex, sampler, (float4) (cur_cont_vol_idx.x - 1, cur_cont_vol_idx.y, cur_cont_vol_idx.z, cur_cont_vol_idx.w)).x;
 
         // Gradient in Y Direction:
         grad_vec.y = read_imagef(vol_tex, sampler, (float4) (cur_cont_vol_idx.x, cur_cont_vol_idx.y + 1, cur_cont_vol_idx.z, cur_cont_vol_idx.w)).x -
-                    read_imagef(vol_tex, sampler, (float4) (cur_cont_vol_idx.x, cur_cont_vol_idx.y - 1, cur_cont_vol_idx.z, cur_cont_vol_idx.w)).x;
+                     read_imagef(vol_tex, sampler, (float4) (cur_cont_vol_idx.x, cur_cont_vol_idx.y - 1, cur_cont_vol_idx.z, cur_cont_vol_idx.w)).x;
 
         // Gradient in Z Direction:
         grad_vec.z = read_imagef(vol_tex, sampler, (float4) (cur_cont_vol_idx.x, cur_cont_vol_idx.y, cur_cont_vol_idx.z + 1, cur_cont_vol_idx.w)).x -
-                    read_imagef(vol_tex, sampler, (float4) (cur_cont_vol_idx.x, cur_cont_vol_idx.y, cur_cont_vol_idx.z - 1, cur_cont_vol_idx.w)).x;
+                     read_imagef(vol_tex, sampler, (float4) (cur_cont_vol_idx.x, cur_cont_vol_idx.y, cur_cont_vol_idx.z - 1, cur_cont_vol_idx.w)).x;
 
         grad_vec /= xregFloat3Norm(grad_vec);
 
