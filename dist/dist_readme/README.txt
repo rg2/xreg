@@ -3,7 +3,7 @@
             | xReg: Modeling and Registration Software for Surgery |
             |                                                      |
             |                  Executable Programs                 |
-            |                     v2020.09.26.0                    |
+            |                     v2020.12.13.0                    |
             |                                                      |
             |              Robert Grupp (grupp@jhu.edu)            |
             +------------------------------------------------------+
