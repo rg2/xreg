@@ -27,6 +27,12 @@ import shutil
 import glob
 import subprocess as sp
 
+kDEBUG = False
+
+def dbg_print(s):
+    if kDEBUG:
+        print(s)
+
 def get_lib_deps(exe_path):
     ldd_lines = sp.check_output('ldd {}'.format(exe_path), shell=True).decode().splitlines()
     
@@ -35,6 +41,9 @@ def get_lib_deps(exe_path):
     for l in ldd_lines:
         toks = l.split('=>')
         if len(toks) > 1:
+            if toks[1].strip() == 'not found':
+                raise ValueError('dep. not found for: {}'.format(toks[0].strip()))
+
             lib_path = toks[1][:toks[1].find('(0x')].strip()
 
             if lib_path:
@@ -63,11 +72,20 @@ if __name__ == '__main__':
     xreg_exes = glob.glob('{}/bin/xreg-*'.format(xreg_install_prefix))
 
     for exe in xreg_exes:
+        dbg_print('copying exe: {}'.format(exe))
         shutil.copy(exe, dst_bin_path)
-
-        for dep_src_path in get_lib_deps(exe):
-            if not os.path.exists('{}/{}'.format(dst_lib_path,os.path.basename(dep_src_path))):
-                shutil.copy(dep_src_path, dst_lib_path)
         
+        dbg_print('  checking deps...')
+        for dep_src_path in get_lib_deps(exe):
+            lib_name = os.path.basename(dep_src_path)
+
+            dbg_print('    {}'.format(lib_name))
+            if not os.path.exists('{}/{}'.format(dst_lib_path, lib_name)):
+                dbg_print('      copying...')
+                shutil.copy(dep_src_path, dst_lib_path)
+
+                update_rpath('{}/{}'.format(dst_lib_path, lib_name))
+        
+        dbg_print('  updating RPATH...')
         update_rpath('{}/{}'.format(dst_bin_path, os.path.basename(exe)))
 
