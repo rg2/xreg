@@ -65,12 +65,13 @@ mkdir -p $DEPS_INSTALL_DIR
 
 cd $DEPS_DIR
 
+# Operating system name
+OS_STR=`uname -s`
+
 if [ "$NEED_TO_DOWNLOAD" = true ]; then
   echo "Downloading third party libraries..."
   
   # Choose the TBB package for your operating system:
-  OS_STR=`uname -s`
-
   if [ "$OS_STR" == "Darwin" ]; then
     TBB_URL="https://github.com/intel/tbb/releases/download/2018_U1/tbb2018_20170919oss_mac.tgz"
   elif [ "$OS_STR" == "Linux" ]; then
@@ -336,6 +337,11 @@ if [ "$NEED_TO_START_XREG" = true ]; then
   mkdir $XREG_BUILD_DIR
   cd $XREG_BUILD_DIR
 
+  XREG_POS_INDEP_CODE_FLAG=""
+  if [ "$OS_STR" == "Linux" ] && [ "$BUILD_SHARED" == "ON" ]; then
+    XREG_POS_INDEP_CODE_FLAG="-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON"
+  fi
+
   XREG_CMAKE_INSTALL_FLAG=""
   if [ "$XREG_INSTALL_DIR" != "" ]; then
     XREG_CMAKE_INSTALL_FLAG="-DCMAKE_INSTALL_PREFIX:PATH=$XREG_INSTALL_DIR"
@@ -345,7 +351,8 @@ if [ "$NEED_TO_START_XREG" = true ]; then
     -DCMAKE_PREFIX_PATH:PATH=$DEPS_INSTALL_DIR \
     -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
     -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
-    -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON $XREG_CMAKE_INSTALL_FLAG
+    -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON $XREG_POS_INDEP_CODE_FLAG $XREG_CMAKE_INSTALL_FLAG
 
   cmake --build .
 
