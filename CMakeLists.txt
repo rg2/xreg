@@ -28,7 +28,7 @@ if (APPLE)
 endif ()
 
 # Version format is YYYY.MM.DD for a release and YYYY.MM.DD.1 for devel after the release
-project(xreg VERSION 2020.09.26.1)
+project(xreg VERSION 2020.12.13.0)
 
 set (CMAKE_CXX_STANDARD "11" CACHE STRING "C++ Standard (needs at least 11)")
 mark_as_advanced(CMAKE_CXX_STANDARD)

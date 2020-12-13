@@ -69,6 +69,8 @@ __kernel void xregSurRenderKernel1(const RayCastArgs args,
     const float4 focal_pt_wrt_cam = cam_focal_pts[cam_idx];
 
     const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_LINEAR;
+    
+    const float4 tex_coords_off = (float4) (0.5f, 0.5f, 0.5f, 0);
 
     const float16 xform_cam_to_itk_idx = xregFrm4x4Composition(args.itk_phys_pt_to_itk_idx_xform,
                                                                cam_to_itk_phys_xforms[proj_idx]);
@@ -121,7 +123,7 @@ __kernel void xregSurRenderKernel1(const RayCastArgs args,
 
     for (ulong step_idx = 0; step_idx <= num_steps; ++step_idx, cur_cont_vol_idx += step_vec_wrt_itk_idx)
     {
-      if (read_imagef(vol_tex, sampler, cur_cont_vol_idx).x >= sur_render_args.thresh)
+      if (read_imagef(vol_tex, sampler, cur_cont_vol_idx + tex_coords_off).x >= sur_render_args.thresh)
       {
         // The 5th, 6th, and 7th elements will store the initial point of intersection, before any backtracking
         dst_step_vecs_and_intersect_pts_wrt_itk_idx[idx].s4 = cur_cont_vol_idx.x;
@@ -151,6 +153,8 @@ __kernel void xregSurRenderKernel2(const RayCastArgs args,
     if (dst_step_vecs_and_intersect_pts_wrt_itk_idx[idx].s3 > 1.0e-6)
     {
       const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_LINEAR;
+      
+      const float4 tex_coords_off = (float4) (0.5f, 0.5f, 0.5f, 0);
 
       float3 light_src_vec = (float3) (dst_step_vecs_and_intersect_pts_wrt_itk_idx[idx].s0, dst_step_vecs_and_intersect_pts_wrt_itk_idx[idx].s1, dst_step_vecs_and_intersect_pts_wrt_itk_idx[idx].s2);
       // right now, this light source vector points from the light source, it needs to be negated, and it is when normalizing a few lines below
@@ -163,6 +167,8 @@ __kernel void xregSurRenderKernel2(const RayCastArgs args,
       light_src_vec /= -xregFloat3Norm(light_src_vec);
 
       float4 cur_cont_vol_idx = (float4) (dst_step_vecs_and_intersect_pts_wrt_itk_idx[idx].s4, dst_step_vecs_and_intersect_pts_wrt_itk_idx[idx].s5, dst_step_vecs_and_intersect_pts_wrt_itk_idx[idx].s6, 0);
+      
+      cur_cont_vol_idx += tex_coords_off;
 
       // we know that we should start out backtracking.
       cur_cont_vol_idx -= step_vec_wrt_itk_idx;

@@ -1,0 +1,363 @@
+#!/bin/bash
+#
+# Another example script for building dependencies and xReg.
+# Compared to the other bash build script (example_build_script) which only uses
+# static libraries and links from each dependency's cmake build directory, this script
+# allows for shared libraries and will also install all dependencies into a specified
+# install prefix. This allows users to pull in all dependencies by just setting the
+# CMAKE_PREFIX_PATH to this directory when configuring the xReg build.
+
+# stop after the first failed command
+set -e
+
+NEED_TO_DOWNLOAD=true
+NEED_TO_BUILD_THIRD_PARTY=true
+NEED_TO_START_XREG=true
+
+DO_GUI=true
+
+# Use these to explicitly set the build config
+#BUILD_CONFIG="Debug"
+#BUILD_CONFIG="Release"
+
+# This uses a default config of release, but is overriden by the BUILD_CONFIG
+# environment variable
+: ${BUILD_CONFIG:=Release}
+
+# Use these to explicitly set buiding shared or static libs
+#BUILD_SHARED="ON"
+#BUILD_SHARED="OFF"
+
+# This defaults to static libs, but is overriden by the BUILD_SHARED environment variable
+: ${BUILD_SHARED:=OFF}
+
+# directory of the xReg repo (since this script is located in the repo root)
+XREG_DIR="$(cd "$(dirname "$0")"; pwd)"
+
+# use this to build the xreg library and apps within the repo directory:
+XREG_BUILD_DIR="$XREG_DIR/build"
+# use this to build the xreg library and apps in a tmp directory:
+#XREG_BUILD_DIR="$HOME/tmp/xreg_build"
+
+# leave blank to not install xreg, otherwise set to installation prefix
+#XREG_INSTALL_DIR=""
+XREG_INSTALL_DIR="$HOME/xreg"
+#XREG_INSTALL_DIR="$HOME/tmp/xreg_install"
+
+# Set DEPS_DIR to a directory outside of the xReg repo in which to download and build dependencies
+
+# use this to build the deps in a subdirectory of the parent directory of the repo:
+DEPS_DIR="$XREG_DIR/../xreg_deps_build"
+# use this to build the deps in a tmp directory
+#DEPS_DIR="$HOME/tmp/xreg_deps_build"
+
+# use this to install the deps in a subdirectory of the parent directory of the repo:
+DEPS_INSTALL_DIR="$XREG_DIR/../xreg_deps_install"
+# use this to install the deps in a tmp directory
+#DEPS_INSTALL_DIR="$HOME/tmp/xreg_deps_install"
+
+# get rid of any repository prefix in the paths:
+DEPS_DIR="$(cd "$(dirname "$DEPS_DIR")"; pwd)/$(basename "$DEPS_DIR")"
+DEPS_INSTALL_DIR="$(cd "$(dirname "$DEPS_INSTALL_DIR")"; pwd)/$(basename "$DEPS_INSTALL_DIR")"
+
+mkdir -p $DEPS_DIR
+mkdir -p $DEPS_INSTALL_DIR
+
+cd $DEPS_DIR
+
+# Operating system name
+OS_STR=`uname -s`
+
+if [ "$NEED_TO_DOWNLOAD" = true ]; then
+  echo "Downloading third party libraries..."
+  
+  # Choose the TBB package for your operating system:
+  if [ "$OS_STR" == "Darwin" ]; then
+    TBB_URL="https://github.com/intel/tbb/releases/download/2018_U1/tbb2018_20170919oss_mac.tgz"
+  elif [ "$OS_STR" == "Linux" ]; then
+    TBB_URL="https://github.com/intel/tbb/releases/download/2018_U1/tbb2018_20170919oss_lin.tgz"
+  else
+    TBB_URL="https://github.com/intel/tbb/releases/download/2018_U1/tbb2018_20170919oss_win.zip"
+  fi
+
+  TBB_FILE=`basename $TBB_URL`
+
+  wget $TBB_URL
+
+  tar xf $TBB_FILE
+
+  rm $TBB_FILE
+
+  BOOST_URL="https://dl.bintray.com/boostorg/release/1.74.0/source/boost_1_74_0.zip"
+
+  BOOST_FILE=`basename $BOOST_URL`
+
+  wget $BOOST_URL
+
+  unzip -q $BOOST_FILE
+
+  rm $BOOST_FILE
+
+  EIGEN_URL="https://gitlab.com/libeigen/eigen/-/archive/3.3.4/eigen-3.3.4.zip"
+
+  EIGEN_FILE=`basename $EIGEN_URL`
+
+  wget $EIGEN_URL
+
+  unzip -q $EIGEN_FILE
+
+  rm $EIGEN_FILE
+
+  VIENNACL_URL="https://github.com/viennacl/viennacl-dev/archive/release-1.7.1.zip"
+
+  VIENNACL_FILE=`basename $VIENNACL_URL`
+
+  wget $VIENNACL_URL
+
+  unzip -q $VIENNACL_FILE
+
+  rm $VIENNACL_FILE
+
+  FMT_URL="https://github.com/fmtlib/fmt/archive/5.3.0.zip"
+
+  FMT_FILE=`basename $FMT_URL`
+
+  wget $FMT_URL
+
+  unzip -q $FMT_FILE
+
+  rm $FMT_FILE
+
+  NLOPT_URL="https://github.com/stevengj/nlopt/archive/v2.5.0.zip"
+
+  NLOPT_FILE=`basename $NLOPT_URL`
+
+  wget $NLOPT_URL
+
+  unzip -q $NLOPT_FILE
+
+  rm $NLOPT_FILE
+
+  VTK_URL="https://www.vtk.org/files/release/8.2/VTK-8.2.0.zip"
+
+  wget $VTK_URL
+
+  VTK_FILE=`basename $VTK_URL`
+
+  unzip -q $VTK_FILE
+
+  rm $VTK_FILE
+
+  ITK_URL="https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.1.1/InsightToolkit-5.1.1.zip"
+
+  ITK_FILE=`basename $ITK_URL`
+
+  wget $ITK_URL
+
+  unzip -q $ITK_FILE
+
+  rm $ITK_FILE
+  
+  OPENCV_URL="https://github.com/opencv/opencv/archive/3.4.12.zip"
+
+  OPENCV_FILE=`basename $OPENCV_URL`
+
+  wget $OPENCV_URL
+
+  unzip -q $OPENCV_FILE
+
+  rm $OPENCV_FILE
+fi
+
+TBB_EXTRACT_DIR="$DEPS_DIR/tbb2018_20170919oss"
+TBB_INSTALL_DIR="$DEPS_INSTALL_DIR/tbb"
+TBB_INC_DIR="$TBB_INSTALL_DIR/include"
+TBB_CMAKE_DIR="$TBB_INSTALL_DIR/cmake"
+
+BOOST_DIR="$DEPS_DIR/`ls | grep "boost_*"`"
+
+EIGEN_DIR="$DEPS_DIR/`ls | grep "eigen-*"`"
+
+VIENNACL_DIR="$DEPS_DIR/`ls | grep "viennacl-dev-release-*"`"
+
+FMT_DIR="$DEPS_DIR/`ls | grep "fmt-*"`"
+
+NLOPT_DIR="$DEPS_DIR/`ls | grep "nlopt-*"`"
+
+VTK_DIR="$DEPS_DIR/`ls | grep "VTK-*"`"
+
+ITK_DIR="$DEPS_DIR/`ls | grep "InsightToolkit-*"`"
+
+OPENCV_DIR="$DEPS_DIR/`ls | grep "opencv-*"`"
+
+if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
+
+  echo "Copying TBB to install prefix..."
+  mv $TBB_EXTRACT_DIR $TBB_INSTALL_DIR
+
+  echo "Copying header only libraries..."
+  mkdir -p $DEPS_INSTALL_DIR/include
+  
+  mv $BOOST_DIR/boost $DEPS_INSTALL_DIR/include
+  
+  mv $EIGEN_DIR/Eigen $DEPS_INSTALL_DIR/include
+  mv $EIGEN_DIR/unsupported $DEPS_INSTALL_DIR/include
+  mv $EIGEN_DIR/signature_of_eigen3_matrix_library $DEPS_INSTALL_DIR/include
+
+  mv $VIENNACL_DIR/viennacl $DEPS_INSTALL_DIR/include
+
+  echo "Building third-party libraries..."
+ 
+  cd $FMT_DIR
+  mkdir build
+  cd build
+  cmake -G Ninja .. \
+    -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR \
+    -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
+    -DCMAKE_CXX_STANDARD:STRING="11" \
+    -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
+    -DFMT_USE_CPP11:BOOL=ON \
+    -DFMT_TEST:BOOL=OFF \
+    -DFMT_INSTALL:BOOL=ON \
+    -DFMT_DOC:BOOL=OFF
+  cmake --build .
+  cmake --install .
+  cd ../../
+
+  cd $NLOPT_DIR
+  mkdir build
+  cd build
+  
+  cmake -G Ninja .. \
+    -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR \
+    -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
+    -DCMAKE_CXX_STANDARD:STRING="11" \
+    -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
+    -DNLOPT_CXX:BOOL=OFF \
+    -DNLOPT_PYTHON:BOOL=OFF \
+    -DNLOPT_OCTAVE:BOOL=OFF \
+    -DNLOPT_MATLAB:BOOL=OFF \
+    -DNLOPT_GUILE:BOOL=OFF \
+    -DNLOPT_SWIG:BOOL=OFF \
+    -DNLOPT_LINK_PYTHON:BOOL=OFF
+ 
+  # nlopt tries to override the install prefix originally passsed 
+  cmake -UCMAKE_INSTALL_PREFIX -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR .
+
+  cmake --build .
+  cmake --install .
+  
+  cd ../../
+
+  cd $VTK_DIR
+  mkdir build
+  cd build
+
+  VTK_NO_RENDER_FLAGS=""
+  if [ "$DO_GUI" = false ]; then
+    VTK_NO_RENDER_FLAGS="-DVTK_RENDERING_BACKEND=None -DVTK_Group_Rendering:BOOL=OFF"
+  fi
+
+  TBB_ROOT="$TBB_INC_DIR/.." cmake -G Ninja .. \
+    -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR \
+    -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
+    -DCMAKE_CXX_STANDARD:STRING="11" \
+    -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
+    -DVTK_Group_Imaging:BOOL=ON \
+    -DVTK_Group_Views:BOOL=ON \
+    -DBUILD_TESTING:BOOL=OFF \
+    -DVTK_SMP_IMPLEMENTATION_TYPE:STRING="TBB" $VTK_NO_RENDER_FLAGS
+
+  cmake --build .
+  cmake --install .
+
+  cd ../..
+
+  cd $ITK_DIR
+  mkdir build
+  cd build
+
+  cmake -G Ninja .. \
+      -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR \
+      -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
+      -DCMAKE_CXX_STANDARD:STRING="11" \
+      -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
+      -DBUILD_TESTING:BOOL=OFF \
+      -DBUILD_EXAMPLES:BOOL=OFF \
+      -DITK_USE_GPU:BOOL=OFF \
+      -DModule_ITKReview:BOOL=ON \
+      -DModule_LabelErodeDilate:BOOL=ON
+
+  cmake --build .
+  cmake --install .
+
+  cd ../..
+
+  cd $OPENCV_DIR
+  mkdir build
+  cd build
+
+  # Need to set this OFF on MARCC (and other systems without the necessary deps)
+  OPENCV_GUI_FLAGS=""
+  if [ "$DO_GUI" = false ]; then
+    OPENCV_GUI_FLAGS="-DBUILD_opencv_highgui:BOOL=OFF -DWITH_GSTREAMER:BOOL=OFF"
+  fi
+
+  cmake -G Ninja .. \
+        -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR \
+        -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
+        -DCMAKE_CXX_STANDARD:STRING="11" \
+        -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
+        -DBUILD_TESTS:BOOL=OFF \
+        -DBUILD_EXAMPLES:BOOL=OFF \
+        -DBUILD_DOCS:BOOL=OFF \
+        -DBUILD_WITH_DEBUG_INFO:BOOL=OFF \
+        -DWITH_TBB:BOOL=OFF \
+        -DBUILD_TBB:BOOL=OFF \
+        -DWITH_IPP:BOOL=OFF \
+        -DWITH_VTK:BOOL=OFF \
+        -DWITH_CUBLAS:BOOL=OFF \
+        -DWITH_CUDA:BOOL=OFF \
+        -DWITH_CUFFT:BOOL=OFF \
+        -DWITH_OPENCL:BOOL=OFF \
+        -DBUILD_opencv_python2:BOOL=OFF \
+        -DBUILD_opencv_python3:BOOL=OFF $OPENCV_GUI_FLAGS
+
+  cmake --build .
+  cmake --install .
+
+  cd ../..
+  
+fi
+
+# START: XREG BUILD:
+
+if [ "$NEED_TO_START_XREG" = true ]; then
+  
+  mkdir $XREG_BUILD_DIR
+  cd $XREG_BUILD_DIR
+
+  XREG_POS_INDEP_CODE_FLAG=""
+  if [ "$OS_STR" == "Linux" ] && [ "$BUILD_SHARED" == "ON" ]; then
+    XREG_POS_INDEP_CODE_FLAG="-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON"
+  fi
+
+  XREG_CMAKE_INSTALL_FLAG=""
+  if [ "$XREG_INSTALL_DIR" != "" ]; then
+    XREG_CMAKE_INSTALL_FLAG="-DCMAKE_INSTALL_PREFIX:PATH=$XREG_INSTALL_DIR"
+  fi
+
+  cmake -G Ninja $XREG_DIR \
+    -DCMAKE_PREFIX_PATH:PATH=$DEPS_INSTALL_DIR \
+    -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
+    -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
+    -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON $XREG_POS_INDEP_CODE_FLAG $XREG_CMAKE_INSTALL_FLAG
+
+  cmake --build .
+
+  if [ "$XREG_INSTALL_DIR" != "" ]; then
+    cmake --install .
+  fi
+fi
+

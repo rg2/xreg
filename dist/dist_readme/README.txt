@@ -3,7 +3,7 @@
             | xReg: Modeling and Registration Software for Surgery |
             |                                                      |
             |                  Executable Programs                 |
-            |                     v2020.09.26.0                    |
+            |                     v2020.12.13.0                    |
             |                                                      |
             |              Robert Grupp (grupp@jhu.edu)            |
             +------------------------------------------------------+
@@ -40,7 +40,8 @@ This software is provided under the terms of the MIT license and a copy of the l
 found in the "LICENSE" file.
 
 If you have found this software useful in your work, we kindly ask that you cite the most
-appropriate references below:
+appropriate references listed below. If you are unsure which work to cite, please see this wiki
+page for guidance: https://github.com/rg2/xreg/wiki/Licensing-and-Attribution.
 
 
     Grupp, Robert B., et al. "Pose estimation of periacetabular osteotomy fragments with intraoperative X-ray navigation." IEEE Transactions on Biomedical Engineering 67.2 (2019): 441-452.

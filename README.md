@@ -51,7 +51,7 @@ Although the following capabilities currently only exist in an internal version 
 ## Building
 A standard CMake configure/generate process is used.
 It is recommended to generate Ninja build files for fast compilation. 
-Example scripts for building all dependencies and the xReg repository are provided for [POSIX systems](example_build_script) (e.g. MacOS and Linux) and [Windows](example_build_script_win.cmd).
+Example scripts for building all dependencies and the xReg repository are provided for POSIX systems (e.g. MacOS and Linux) [here](example_build_script) and [here](example_build_script_2), and also for [Windows](example_build_script_win.cmd).
 The [docker](docker) directory demonstrates how Docker may be used to build the software.
 
 ### Dependencies
@@ -72,82 +72,13 @@ The [docker](docker) directory demonstrates how Docker may be used to build the 
     * Included with MacOS
   * Optional: [ffmpeg](https://ffmpeg.org) is used for writing videos when it is found in the system path. The OpenCV video writer is used if ffmpeg is not available.
 
+## Testing
+Functional testing is available in the form of a [python script](tests/wiki_cmds.py) that runs the commands found on the [wiki walkthrough](https://github.com/rg2/xreg/wiki#walkthrough).
+Results of the commands need to be examined by the user and determined to be successful or failures.
+All necessary data is downloaded automatically.
+When the appropriate visualization programs are available on the system, the script also automatically loads the output data for inspection.
+
 ## License and Attribution
 The software is available for use under the [MIT License](LICENSE).
 
-If you have found this software useful in your work, we kindly ask that you cite the most appropriate references below:
-```
-Grupp, Robert B., et al. "Pose estimation of periacetabular osteotomy fragments with intraoperative X-ray navigation." IEEE Transactions on Biomedical Engineering 67.2 (2019): 441-452.
-----------------------------------------------------------------------
-@article{grupp2019pose,
-  title={Pose estimation of periacetabular osteotomy fragments with intraoperative {X}-ray navigation},
-  author={Grupp, Robert B and Hegeman, Rachel A and Murphy, Ryan J and Alexander, Clayton P and Otake, Yoshito and McArthur, Benjamin A and Armand, Mehran and Taylor, Russell H},
-  journal={IEEE Transactions on Biomedical Engineering},
-  volume={67},
-  number={2},
-  pages={441--452},
-  year={2019},
-  publisher={IEEE}
-}
-```
-```
-Grupp, Robert B., Mehran Armand, and Russell H. Taylor. "Patch-based image similarity for intraoperative 2D/3D pelvis registration during periacetabular osteotomy." OR 2.0 Context-Aware Operating Theaters, Computer Assisted Robotic Endoscopy, Clinical Image-Based Procedures, and Skin Image Analysis. Springer, Cham, 2018. 153-163.
-----------------------------------------------------------------------
-@incollection{grupp2018patch,
-  title={Patch-based image similarity for intraoperative {2D}/{3D} pelvis registration during periacetabular osteotomy},
-  author={Grupp, Robert B and Armand, Mehran and Taylor, Russell H},
-  booktitle={OR 2.0 Context-Aware Operating Theaters, Computer Assisted Robotic Endoscopy, Clinical Image-Based Procedures, and Skin Image Analysis},
-  pages={153--163},
-  year={2018},
-  publisher={Springer}
-}
-```
-```
-Grupp, Robert B., et al. "Automatic annotation of hip anatomy in fluoroscopy for robust and efficient 2D/3D registration." International Journal of Computer Assisted Radiology and Surgery (2020): 1-11.
-----------------------------------------------------------------------
-@article{grupp2020automatic,
-  title={Automatic annotation of hip anatomy in fluoroscopy for robust and efficient {2D}/{3D} registration},
-  author={Grupp, Robert B and Unberath, Mathias and Gao, Cong and Hegeman, Rachel A and Murphy, Ryan J and Alexander, Clayton P and Otake, Yoshito and McArthur, Benjamin A and Armand, Mehran and Taylor, Russell H},
-  journal={International Journal of Computer Assisted Radiology and Surgery},
-  pages={1--11},
-  publisher={Springer}
-}
-```
-```
-Grupp, Robert, et al. "Fast and automatic periacetabular osteotomy fragment pose estimation using intraoperatively implanted fiducials and single-view fluoroscopy." Physics in Medicine & Biology (2020).
-----------------------------------------------------------------------
-@article{grupp2020fast,
-  title={Fast and automatic periacetabular osteotomy fragment pose estimation using intraoperatively implanted fiducials and single-view fluoroscopy},
-  author={Grupp, Robert and Murphy, Ryan and Hegeman, Rachel and Alexander, Clayton and Unberath, Mathias and Otake, Yoshito and McArthur, Benjamin and Armand, Mehran and Taylor, Russell H},
-  journal={Physics in Medicine \& Biology},
-  year={2020},
-  publisher={IOP Publishing}
-}
-```
-```
-Grupp, R., et al. "Pelvis surface estimation from partial CT for computer-aided pelvic osteotomies." Orthopaedic Proceedings. Vol. 98. No. SUPP_5. The British Editorial Society of Bone & Joint Surgery, 2016.
-----------------------------------------------------------------------
-@inproceedings{grupp2016pelvis,
-  title={Pelvis surface estimation from partial {CT} for computer-aided pelvic osteotomies},
-  author={Grupp, R and Otake, Y and Murphy, R and Parvizi, J and Armand, M and Taylor, R},
-  booktitle={Orthopaedic Proceedings},
-  volume={98},
-  number={SUPP\_5},
-  pages={55--55},
-  year={2016},
-  organization={The British Editorial Society of Bone \& Joint Surgery}
-}
-```
-```
-Grupp, Robert B., et al. "Smooth extrapolation of unknown anatomy via statistical shape models." Medical Imaging 2015: Image-Guided Procedures, Robotic Interventions, and Modeling. Vol. 9415. International Society for Optics and Photonics, 2015.
-----------------------------------------------------------------------
-@inproceedings{grupp2015smooth,
-  title={Smooth extrapolation of unknown anatomy via statistical shape models},
-  author={Grupp, Robert B and Chiang, H and Otake, Yoshito and Murphy, Ryan J and Gordon, Chad R and Armand, Mehran and Taylor, Russell H},
-  booktitle={Medical Imaging 2015: Image-Guided Procedures, Robotic Interventions, and Modeling},
-  volume={9415},
-  pages={941524},
-  year={2015},
-  organization={International Society for Optics and Photonics}
-}
-```
+If you have found this software useful in your work, we kindly ask that you cite the most appropriate references listed [here](https://github.com/rg2/xreg/wiki/Licensing-and-Attribution).

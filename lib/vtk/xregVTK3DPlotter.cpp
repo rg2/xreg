@@ -345,7 +345,11 @@ private:
 
 xreg::VTK3DPlotter::VTK3DPlotter()
 {
+#ifdef __APPLE__
   const double scale = HiDPIScaling();
+#else
+  const double scale = 1.0;
+#endif
 
   win_num_rows_ = std::lround(kDEFAULT_WIN_NUM_ROWS * scale);
   win_num_cols_ = std::lround(kDEFAULT_WIN_NUM_COLS * scale);
@@ -486,7 +490,11 @@ void xreg::VTK3DPlotter::set_title(const std::string& s)
 
 void xreg::VTK3DPlotter::set_size(const size_type num_rows, const size_type num_cols)
 {
+#ifdef __APPLE__
   const double scale = HiDPIScaling();
+#else
+  const double scale = 1.0;
+#endif
 
   win_num_rows_ = std::lround(scale * num_rows);
   win_num_cols_ = std::lround(scale * num_cols);

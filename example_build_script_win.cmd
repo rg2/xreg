@@ -5,6 +5,8 @@ setlocal
 REM Example script for building dependencies and xReg on Windows.
 REM This is not pretty, but can be used in a pinch and serves well to illustrate
 REM the settings used for achieving a successful build.
+REM This should be run from a command prompt loaded with the appropriate environment
+REM for building Visual Studio solutions (e.g. x64 Native Tools Command Prompt).
 
 SET "NEED_TO_DOWNLOAD=true"
 SET "NEED_TO_BUILD_THIRD_PARTY=true"
