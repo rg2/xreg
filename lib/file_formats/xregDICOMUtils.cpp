@@ -199,6 +199,7 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
         }
       }
 
+      if (ds.FindDataElement(gdcm::Tag(0x0020,0x0020)))
       {
         PatOrientAttr pat_orient_attr;
         pat_orient_attr.SetFromDataSet(ds);
@@ -301,7 +302,7 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
         }
       }
 
-      // See note below about GDCM always populating fields even when they are not present
+      // See *** note *** below about GDCM always populating fields even when they are not present
       // For this case it is always set to empty, but it is more appropriate to mark as invalid
       if (ds.FindDataElement(gdcm::Tag(0x0008,0x9206)))
       {
@@ -315,7 +316,8 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
           dcm_info.vol_props = StringStrip(StringStripExtraNulls(vol_props_attr.GetValue()));
         }
       }
-      
+
+      // *** NOTE ***      
       // Doing things a little differently here as the call to SetFromDataSet() will always 
       // result in a value even when the number of frames attribute is not present in the
       // file. In the case when it is not present, there appears to be some memory corruption
