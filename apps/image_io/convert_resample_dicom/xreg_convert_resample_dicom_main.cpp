@@ -777,6 +777,14 @@ int main( int argc, char* argv[] )
          "or a sequence of 2D images.)")
     << false;
 
+  po.add("exclude-derived", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "exclude-derived",
+         "Do NOT include DERIVED images (e.g. images with pixel values derived from other images).")
+    << false;
+  
+  po.add("exclude-secondary", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "exclude-secondary",
+         "Do NOT include SECONDARY images (e.g. images created after initial exam).")
+    << false;
+
   po.add("pat-lut", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "pat-lut",
          "Path to a CSV file which serves as a LUT between DICOM patient IDs and strings "
          "used to prefix output file names. The first column are the DICOM patient IDs "
@@ -909,6 +917,10 @@ int main( int argc, char* argv[] )
 
   const bool inc_multiframe_files = po.get("include-multiframe-files");
 
+  const bool exclude_derived = po.get("exclude-derived");
+  
+  const bool exclude_secondary = po.get("exclude-secondary");
+
   const std::string pat_id_lut_path = po.get("pat-lut");
 
   const bool use_pat_id_lut = !pat_id_lut_path.empty();
@@ -951,10 +963,14 @@ int main( int argc, char* argv[] )
        << "\n            Single Patient ID: " << (limit_single_pat    ? single_pat_id.c_str()     : "(All Patients)")
        << "\n             Single Study UID: " << (limit_single_study  ? single_study_uid.c_str()  : "(All Studies)")
        << "\n            Single Series UID: " << (limit_single_series ? single_series_uid.c_str() : "(All Series)")
+       << "\n      Use Patient ID for Name: " << use_pat_id_for_name
+       << "\n    Use Patient Name for Name: " << use_pat_name_for_name
        << "\n  Use Study/Series Desc. Name: " << use_desc_for_name
        << "\n         Use Conv. Kern. Name: " << use_conv_for_name
        << "\n           Include Localizers: " << inc_localizers
        << "\n    Include Multi-Frame Files: " << inc_multiframe_files
+       << "\n        Exclude Derived Files: " << exclude_derived
+       << "\n      Exclude Secondary Files: " << exclude_secondary
        << "\n           Use Patient ID LUT: " << use_pat_id_lut
        << "\n-----------------------------------------------------\n" << std::endl;
 
@@ -983,7 +999,8 @@ int main( int argc, char* argv[] )
   {
     vout << "reading directory tree and organizing..." << std::endl;
     GetOrgainizedDICOMInfos(input_root_dir, &org_dcm,
-                            inc_localizers, inc_multiframe_files);
+                            inc_localizers, inc_multiframe_files,
+                            !exclude_secondary, !exclude_derived);
   }
   else
   {
