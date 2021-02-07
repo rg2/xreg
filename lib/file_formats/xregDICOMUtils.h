@@ -31,6 +31,8 @@
 #include <unordered_map>
 #include <array>
 
+#include <boost/optional.hpp>
+
 #include "xregCommon.h"
 #include "xregFilesystemUtils.h"
 #include "xregObjWithOStream.h"
@@ -60,47 +62,35 @@ struct DICOMFIleBasicFields
   unsigned long num_rows;
   unsigned long num_cols;
 
-  bool pat_pos_valid;
-  std::string pat_pos;
+  boost::optional<std::string> pat_pos;
 
-  bool pat_orient_valid;
-  std::array<std::string,2> pat_orient;
+  boost::optional<std::array<std::string,2>> pat_orient;
 
-  bool study_desc_valid;
-  std::string study_desc;
+  boost::optional<std::string> study_desc;
 
-  bool series_desc_valid;
-  std::string series_desc;
+  boost::optional<std::string> series_desc;
 
-  bool image_type_valid;
-  std::vector<std::string> image_type;
+  boost::optional<std::vector<std::string>> image_type;
 
-  bool sec_cap_dev_manufacturer_valid;
-  std::string sec_cap_dev_manufacturer;
+  boost::optional<std::string> sec_cap_dev_manufacturer;
 
-  bool sec_cap_dev_software_versions_valid;
-  std::string sec_cap_dev_software_versions;
+  boost::optional<std::string> sec_cap_dev_software_versions;
 
-  bool software_versions_valid;
-  std::vector<std::string> software_versions;
+  boost::optional<std::vector<std::string>> software_versions;
 
-  bool vol_props_valid;
-  std::string vol_props;
+  boost::optional<std::string> vol_props;
 
-  bool num_frames_valid;
-  unsigned long num_frames;
+  boost::optional<unsigned long> num_frames;
 
-  bool proto_name_valid;
-  std::string proto_name;
+  boost::optional<std::string> proto_name;
 
-  bool conv_kernel_valid;
-  std::string conv_kernel;
+  boost::optional<std::string> conv_kernel;
 };
 
 using DICOMFIleBasicFieldsList = std::vector<DICOMFIleBasicFields>;
 
 /// \brief Populates a set of basic DICOM fields from a DICOM file.
-void ReadDICOMFileBasicFields(const std::string& dcm_path, DICOMFIleBasicFields* dcm_info);
+DICOMFIleBasicFields ReadDICOMFileBasicFields(const std::string& dcm_path);
 
 /// \brief Prints a set of basic DICOM fields
 void PrintDICOMFileBasicFields(const DICOMFIleBasicFields& dcm_info, std::ostream& out,
@@ -174,6 +164,11 @@ struct ReorderAndCheckDICOMInfos : public ObjWithOStream
   // if the slice spacing is constant - default 1.0e-6
   CoordScalar out_of_plane_spacing_tol = 1.0e-6;
 
+  // Perform the reordering and verification.
+  // The input list of DICOM fields is preserved and the sorted output is populated
+  // in a separate list via a pointer supplied by the caller.
+  // This routine returns true when the data is determined to be valid and false otherwise.
+  // When false is returned, the output sorted list should not be considered to be valid in any way.
   bool operator()(const DICOMFIleBasicFieldsList& src_infos,
                   DICOMFIleBasicFieldsList* dst_infos);
 };

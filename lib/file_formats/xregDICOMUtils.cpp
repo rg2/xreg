@@ -36,7 +36,7 @@
 #include "xregAssert.h"
 #include "xregStringUtils.h"
 
-void xreg::ReadDICOMFileBasicFields(const std::string& dcm_path, DICOMFIleBasicFields* dcm_info)
+xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm_path)
 {
   gdcm::Reader dcm_reader;
   dcm_reader.SetFileName(dcm_path.c_str());
@@ -109,6 +109,8 @@ void xreg::ReadDICOMFileBasicFields(const std::string& dcm_path, DICOMFIleBasicF
 
     if (dcm_reader.ReadSelectedTags(tags_to_read))
     {
+      DICOMFIleBasicFields dcm_info;
+
       gdcm::DataSet& ds = dcm_reader.GetFile().GetDataSet();
 
       // using excessive scoping here just to avoid using the wrong/previous
@@ -120,26 +122,26 @@ void xreg::ReadDICOMFileBasicFields(const std::string& dcm_path, DICOMFIleBasicF
       {
         PatientIDAttr pat_id_attr;
         pat_id_attr.SetFromDataSet(ds);
-        dcm_info->patient_id = StringStripExtraNulls(pat_id_attr.GetValue());
+        dcm_info.patient_id = StringStripExtraNulls(pat_id_attr.GetValue());
       }
 
       {
         StudyUIDAttr study_uid_attr;
         study_uid_attr.SetFromDataSet(ds);
-        dcm_info->study_uid = StringStripExtraNulls(study_uid_attr.GetValue());
-        dcm_info->study_uid = dcm_info->study_uid.substr(0, dcm_info->study_uid.size() - 1);
+        dcm_info.study_uid = StringStripExtraNulls(study_uid_attr.GetValue());
+        dcm_info.study_uid = dcm_info.study_uid.substr(0, dcm_info.study_uid.size() - 1);
       }
 
       {
         SeriesUIDAttr series_uid_attr;
         series_uid_attr.SetFromDataSet(ds);
-        dcm_info->series_uid = StringStripExtraNulls(series_uid_attr.GetValue());
+        dcm_info.series_uid = StringStripExtraNulls(series_uid_attr.GetValue());
       }
 
       {
         ModalityAttr modality_attr;
         modality_attr.SetFromDataSet(ds);
-        dcm_info->modality = StringStripExtraNulls(modality_attr.GetValue());
+        dcm_info.modality = StringStripExtraNulls(modality_attr.GetValue());
       }
 
       // get patient position, directions, and image spacing.
@@ -147,60 +149,68 @@ void xreg::ReadDICOMFileBasicFields(const std::string& dcm_path, DICOMFIleBasicF
         ImgPosPatAttr img_pos_pat_attr;
         img_pos_pat_attr.SetFromDataSet(ds);
         xregASSERT(img_pos_pat_attr.GetNumberOfValues() == 3);
-        dcm_info->img_pos_wrt_pat[0] = img_pos_pat_attr.GetValue(0);
-        dcm_info->img_pos_wrt_pat[1] = img_pos_pat_attr.GetValue(1);
-        dcm_info->img_pos_wrt_pat[2] = img_pos_pat_attr.GetValue(2);
+        dcm_info.img_pos_wrt_pat[0] = img_pos_pat_attr.GetValue(0);
+        dcm_info.img_pos_wrt_pat[1] = img_pos_pat_attr.GetValue(1);
+        dcm_info.img_pos_wrt_pat[2] = img_pos_pat_attr.GetValue(2);
       }
 
       {
         ImgOrientPatAttr img_orient_pat_attr;
         img_orient_pat_attr.SetFromDataSet(ds);
         xregASSERT(img_orient_pat_attr.GetNumberOfValues() == 6);
-        dcm_info->col_dir[0] = img_orient_pat_attr.GetValue(0);
-        dcm_info->col_dir[1] = img_orient_pat_attr.GetValue(1);
-        dcm_info->col_dir[2] = img_orient_pat_attr.GetValue(2);
-        dcm_info->row_dir[0] = img_orient_pat_attr.GetValue(3);
-        dcm_info->row_dir[1] = img_orient_pat_attr.GetValue(4);
-        dcm_info->row_dir[2] = img_orient_pat_attr.GetValue(5);
+        dcm_info.col_dir[0] = img_orient_pat_attr.GetValue(0);
+        dcm_info.col_dir[1] = img_orient_pat_attr.GetValue(1);
+        dcm_info.col_dir[2] = img_orient_pat_attr.GetValue(2);
+        dcm_info.row_dir[0] = img_orient_pat_attr.GetValue(3);
+        dcm_info.row_dir[1] = img_orient_pat_attr.GetValue(4);
+        dcm_info.row_dir[2] = img_orient_pat_attr.GetValue(5);
       }
 
       {
         RowsAttr rows_attr;
         rows_attr.SetFromDataSet(ds);
         xregASSERT(rows_attr.GetNumberOfValues() == 1);
-        dcm_info->num_rows = rows_attr.GetValue();
+        dcm_info.num_rows = rows_attr.GetValue();
       }
 
       {
         ColsAttr cols_attr;
         cols_attr.SetFromDataSet(ds);
         xregASSERT(cols_attr.GetNumberOfValues() == 1);
-        dcm_info->num_cols = cols_attr.GetValue();
+        dcm_info.num_cols = cols_attr.GetValue();
       }
 
       {
         PixelSpacingAttr ps_attr;
         ps_attr.SetFromDataSet(ds);
         xregASSERT(ps_attr.GetNumberOfValues() == 2);
-        dcm_info->col_spacing = ps_attr.GetValue(0);
-        dcm_info->row_spacing = ps_attr.GetValue(1);
+        dcm_info.col_spacing = ps_attr.GetValue(0);
+        dcm_info.row_spacing = ps_attr.GetValue(1);
       }
 
       {
-        dcm_info->pat_pos_valid = true;
         PatPosAttr pat_pos_attr;
         pat_pos_attr.SetFromDataSet(ds);
-        xregASSERT(pat_pos_attr.GetNumberOfValues() == 1);
-        dcm_info->pat_pos = StringStripExtraNulls(pat_pos_attr.GetValue());
+        
+        if (pat_pos_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(pat_pos_attr.GetNumberOfValues() == 1);
+          dcm_info.pat_pos = StringStripExtraNulls(pat_pos_attr.GetValue());
+        }
       }
 
       {
-        dcm_info->pat_orient_valid = true;
         PatOrientAttr pat_orient_attr;
         pat_orient_attr.SetFromDataSet(ds);
-        xregASSERT(pat_orient_attr.GetNumberOfValues() == 2);
-        dcm_info->pat_orient[0] = StringStripExtraNulls(pat_orient_attr.GetValue(0));
-        dcm_info->pat_orient[1] = StringStripExtraNulls(pat_orient_attr.GetValue(1));
+        
+        if (pat_orient_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(pat_orient_attr.GetNumberOfValues() == 2);
+          
+          dcm_info.pat_orient = std::array<std::string,2> {
+                                  StringStripExtraNulls(pat_orient_attr.GetValue(0)),
+                                  StringStripExtraNulls(pat_orient_attr.GetValue(1)) };
+        }
       }
 
       {
@@ -211,12 +221,7 @@ void xreg::ReadDICOMFileBasicFields(const std::string& dcm_path, DICOMFIleBasicF
         {
           xregASSERT(study_desc_attr.GetNumberOfValues() == 1);
           
-          dcm_info->study_desc_valid = true;
-          dcm_info->study_desc = StringStripExtraNulls(study_desc_attr.GetValue());
-        }
-        else
-        {
-          dcm_info->study_desc_valid = false;
+          dcm_info.study_desc = StringStripExtraNulls(study_desc_attr.GetValue());
         }
       }
 
@@ -228,12 +233,7 @@ void xreg::ReadDICOMFileBasicFields(const std::string& dcm_path, DICOMFIleBasicF
         {
           xregASSERT(series_desc_attr.GetNumberOfValues() == 1);
 
-          dcm_info->series_desc_valid = true;
-          dcm_info->series_desc = StringStripExtraNulls(series_desc_attr.GetValue());
-        }
-        else
-        {
-          dcm_info->series_desc_valid = false;
+          dcm_info.series_desc = StringStripExtraNulls(series_desc_attr.GetValue());
         }
       }
 
@@ -245,20 +245,17 @@ void xreg::ReadDICOMFileBasicFields(const std::string& dcm_path, DICOMFIleBasicF
 
         if (len_img_type_attr > 0)
         {
-          dcm_info->image_type_valid = true;
+          std::vector<std::string> image_type;
           
-          dcm_info->image_type.clear();
-          dcm_info->image_type.reserve(len_img_type_attr);
+          image_type.reserve(len_img_type_attr);
          
           for (int img_type_idx = 0; img_type_idx < len_img_type_attr; ++img_type_idx)
           {
-            dcm_info->image_type.push_back(StringStrip(StringStripExtraNulls(
+            image_type.push_back(StringStrip(StringStripExtraNulls(
                                               img_type_attr.GetValue(img_type_idx))));
           }
-        }
-        else
-        {
-          dcm_info->image_type_valid = false;
+          
+          dcm_info.image_type = image_type;
         }
       }
 
@@ -268,13 +265,8 @@ void xreg::ReadDICOMFileBasicFields(const std::string& dcm_path, DICOMFIleBasicF
 
         if (sec_cap_dev_man_attr.GetNumberOfValues() > 0)
         {
-          dcm_info->sec_cap_dev_manufacturer_valid = true;
           xregASSERT(sec_cap_dev_man_attr.GetNumberOfValues() == 1);
-          dcm_info->sec_cap_dev_manufacturer = StringStripExtraNulls(sec_cap_dev_man_attr.GetValue());
-        }
-        else
-        {
-          dcm_info->sec_cap_dev_manufacturer_valid = false;
+          dcm_info.sec_cap_dev_manufacturer = StringStripExtraNulls(sec_cap_dev_man_attr.GetValue());
         }
       }
 
@@ -284,14 +276,8 @@ void xreg::ReadDICOMFileBasicFields(const std::string& dcm_path, DICOMFIleBasicF
 
         if (sec_cap_dev_sw_vers_attr.GetNumberOfValues() > 0)
         {
-          dcm_info->sec_cap_dev_software_versions_valid = true;
-
           xregASSERT(sec_cap_dev_sw_vers_attr.GetNumberOfValues() == 1);
-          dcm_info->sec_cap_dev_software_versions = StringStripExtraNulls(sec_cap_dev_sw_vers_attr.GetValue());
-        }
-        else
-        {
-          dcm_info->sec_cap_dev_software_versions_valid = false;
+          dcm_info.sec_cap_dev_software_versions = StringStripExtraNulls(sec_cap_dev_sw_vers_attr.GetValue());
         }
       }
 
@@ -301,21 +287,17 @@ void xreg::ReadDICOMFileBasicFields(const std::string& dcm_path, DICOMFIleBasicF
 
         if (sw_vers_attr.GetNumberOfValues() > 0)
         {
-          dcm_info->software_versions_valid = true;
-
           const int num_sw_ver_toks = sw_vers_attr.GetNumberOfValues();
 
-          dcm_info->software_versions.clear();
-          dcm_info->software_versions.reserve(num_sw_ver_toks);
+          std::vector<std::string> software_versions;
+          software_versions.reserve(num_sw_ver_toks);
 
           for (int sw_ver_idx = 0; sw_ver_idx < num_sw_ver_toks; ++sw_ver_idx)
           {
-            dcm_info->software_versions.push_back(StringStripExtraNulls(sw_vers_attr.GetValue(sw_ver_idx)));
+            software_versions.push_back(StringStripExtraNulls(sw_vers_attr.GetValue(sw_ver_idx)));
           }
-        }
-        else
-        {
-          dcm_info->software_versions_valid = false;
+          
+          dcm_info.software_versions = software_versions;
         }
       }
 
@@ -330,17 +312,8 @@ void xreg::ReadDICOMFileBasicFields(const std::string& dcm_path, DICOMFIleBasicF
         {
           xregASSERT(vol_props_attr.GetNumberOfValues() == 1);
           
-          dcm_info->vol_props_valid = true;
-          dcm_info->vol_props = StringStrip(StringStripExtraNulls(vol_props_attr.GetValue()));
+          dcm_info.vol_props = StringStrip(StringStripExtraNulls(vol_props_attr.GetValue()));
         }
-        else
-        {
-          dcm_info->vol_props_valid = false;
-        }
-      }
-      else
-      {
-        dcm_info->vol_props_valid = false;
       }
       
       // Doing things a little differently here as the call to SetFromDataSet() will always 
@@ -356,17 +329,8 @@ void xreg::ReadDICOMFileBasicFields(const std::string& dcm_path, DICOMFIleBasicF
         {
           xregASSERT(num_frames_attr.GetNumberOfValues() == 1);
 
-          dcm_info->num_frames_valid = true;
-          dcm_info->num_frames = num_frames_attr.GetValue();
+          dcm_info.num_frames = num_frames_attr.GetValue();
         }
-        else
-        {
-          dcm_info->num_frames_valid = false;
-        }
-      }
-      else
-      {
-        dcm_info->num_frames_valid = false;
       }
 
       {
@@ -377,12 +341,7 @@ void xreg::ReadDICOMFileBasicFields(const std::string& dcm_path, DICOMFIleBasicF
         {
           xregASSERT(proto_name_attr.GetNumberOfValues() == 1);
           
-          dcm_info->proto_name_valid = true;
-          dcm_info->proto_name = StringStripExtraNulls(proto_name_attr.GetValue());
-        }
-        else
-        {
-          dcm_info->proto_name_valid = false;
+          dcm_info.proto_name = StringStripExtraNulls(proto_name_attr.GetValue());
         }
       }
 
@@ -392,18 +351,19 @@ void xreg::ReadDICOMFileBasicFields(const std::string& dcm_path, DICOMFIleBasicF
 
         if (conv_kernel_attr.GetNumberOfValues() > 0)
         {
-          xregASSERT(conv_kernel_attr.GetNumberOfValues() == 1);
+          if (conv_kernel_attr.GetNumberOfValues() > 1)
+          {
+            std::cerr << "WARNING: conv. kernel attr. (0018,1210) has more than one value! "
+                         "Only the first value will be used!" << std::endl;
+          }
 
-          dcm_info->conv_kernel_valid = true;
-          dcm_info->conv_kernel = StringStrip(StringStripExtraNulls(conv_kernel_attr.GetValue()));
-        }
-        else
-        {
-          dcm_info->conv_kernel_valid = false;
+          dcm_info.conv_kernel = StringStrip(StringStripExtraNulls(conv_kernel_attr.GetValue(0)));
         }
       }
 
-      dcm_info->file_path = dcm_path;
+      dcm_info.file_path = dcm_path;
+      
+      return dcm_info;
     }
     else
     {
@@ -433,45 +393,49 @@ void xreg::PrintDICOMFileBasicFields(const DICOMFIleBasicFields& dcm_info, std::
       << indent << "       Image Row Spacing: " << fmt::sprintf("%0.4f", dcm_info.row_spacing) << '\n'
       << indent << "          Image Num Rows: " << dcm_info.num_rows << '\n'
       << indent << "          Image Num Cols: " << dcm_info.num_cols << '\n'
-      << indent << "        Patient Position: " << (dcm_info.pat_pos_valid ? dcm_info.pat_pos : kNOT_PROVIDED_STR) << '\n'
-      << indent << "         Patient Orient.: " << (dcm_info.pat_orient_valid ? fmt::sprintf("%s , %s", dcm_info.pat_orient[0], dcm_info.pat_orient[1]) : kNOT_PROVIDED_STR) << '\n'
-      << indent << "             Study Desc.: " << (dcm_info.study_desc_valid ? dcm_info.study_desc : kNOT_PROVIDED_STR) << '\n'
-      << indent << "            Series Desc.: " << (dcm_info.series_desc_valid ? dcm_info.series_desc : kNOT_PROVIDED_STR) << '\n'
-      << indent << "              Image Type: " << (dcm_info.image_type_valid ? JoinTokens(dcm_info.image_type, " , ") : kNOT_PROVIDED_STR) << '\n'
-      << indent << "     Sec. Cap. Dev. Man.: " << (dcm_info.sec_cap_dev_manufacturer_valid ? dcm_info.sec_cap_dev_manufacturer : kNOT_PROVIDED_STR) << '\n'
-      << indent << "  Sec. Cap. Dev. SW Ver.: " << (dcm_info.sec_cap_dev_software_versions_valid ? dcm_info.sec_cap_dev_software_versions : kNOT_PROVIDED_STR) << '\n'
-      << indent << "       Software Versions: " << (dcm_info.software_versions_valid ? JoinTokens(dcm_info.software_versions, " , ") : kNOT_PROVIDED_STR) << '\n'
-      << indent << "             Vol. Props.: " << (dcm_info.vol_props_valid ? dcm_info.vol_props : kNOT_PROVIDED_STR) << '\n'
-      << indent << "             Num. Frames: " << (dcm_info.num_frames_valid ? fmt::format("{}", dcm_info.num_frames) : kNOT_PROVIDED_STR) << '\n'
-      << indent << "           Protocol Name: " << (dcm_info.proto_name_valid ? dcm_info.proto_name : kNOT_PROVIDED_STR) << '\n'
-      << indent << "            Conv. Kernel: " << (dcm_info.conv_kernel_valid ? dcm_info.conv_kernel : kNOT_PROVIDED_STR) << '\n';
+      << indent << "        Patient Position: " << (dcm_info.pat_pos ? *dcm_info.pat_pos : kNOT_PROVIDED_STR) << '\n'
+      << indent << "         Patient Orient.: " << (dcm_info.pat_orient ?
+                                                      fmt::sprintf("%s , %s",
+                                                                   (*dcm_info.pat_orient)[0],
+                                                                   (*dcm_info.pat_orient)[1]) :
+                                                      kNOT_PROVIDED_STR) << '\n'
+      << indent << "             Study Desc.: " << (dcm_info.study_desc ? *dcm_info.study_desc : kNOT_PROVIDED_STR) << '\n'
+      << indent << "            Series Desc.: " << (dcm_info.series_desc ? *dcm_info.series_desc : kNOT_PROVIDED_STR) << '\n'
+      << indent << "              Image Type: " << (dcm_info.image_type ? JoinTokens(*dcm_info.image_type, " , ") : kNOT_PROVIDED_STR) << '\n'
+      << indent << "     Sec. Cap. Dev. Man.: " << (dcm_info.sec_cap_dev_manufacturer ? *dcm_info.sec_cap_dev_manufacturer : kNOT_PROVIDED_STR) << '\n'
+      << indent << "  Sec. Cap. Dev. SW Ver.: " << (dcm_info.sec_cap_dev_software_versions ? *dcm_info.sec_cap_dev_software_versions : kNOT_PROVIDED_STR) << '\n'
+      << indent << "       Software Versions: " << (dcm_info.software_versions ? JoinTokens(*dcm_info.software_versions, " , ") : kNOT_PROVIDED_STR) << '\n'
+      << indent << "             Vol. Props.: " << (dcm_info.vol_props ? *dcm_info.vol_props : kNOT_PROVIDED_STR) << '\n'
+      << indent << "             Num. Frames: " << (dcm_info.num_frames ? fmt::format("{}", *dcm_info.num_frames) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "           Protocol Name: " << (dcm_info.proto_name ? *dcm_info.proto_name : kNOT_PROVIDED_STR) << '\n'
+      << indent << "            Conv. Kernel: " << (dcm_info.conv_kernel ? *dcm_info.conv_kernel : kNOT_PROVIDED_STR) << '\n';
 
   out.flush();
 }
 
 bool xreg::IsLocalizer(const DICOMFIleBasicFields& dcm_info)
 {
-  return dcm_info.image_type_valid &&
-          (std::find(dcm_info.image_type.begin(), dcm_info.image_type.end(), "LOCALIZER")
-                  != dcm_info.image_type.end());
+  return dcm_info.image_type &&
+          (std::find(dcm_info.image_type->begin(), dcm_info.image_type->end(), "LOCALIZER")
+                  != dcm_info.image_type->end());
 }
 
 bool xreg::IsMRLocalizer(const DICOMFIleBasicFields& dcm_info)
 {
   return (dcm_info.modality == "MR") &&
-         (dcm_info.image_type_valid &&
-          (std::find(dcm_info.image_type.begin(), dcm_info.image_type.end(), "LOCALIZER")
-                  != dcm_info.image_type.end()));
+         (dcm_info.image_type &&
+          (std::find(dcm_info.image_type->begin(), dcm_info.image_type->end(), "LOCALIZER")
+                  != dcm_info.image_type->end()));
 }
 
 bool xreg::IsVolDICOMFile(const DICOMFIleBasicFields& dcm_info)
 {
-  return dcm_info.vol_props_valid && (dcm_info.vol_props == "VOLUME");
+  return dcm_info.vol_props && (*dcm_info.vol_props == "VOLUME");
 }
 
 bool xreg::IsMultiFrameDICOMFile(const DICOMFIleBasicFields& dcm_info)
 {
-  return dcm_info.num_frames_valid && (dcm_info.num_frames > 1);
+  return dcm_info.num_frames && (*dcm_info.num_frames > 1);
 }
 
 void xreg::GetDICOMDirs(const std::string& root_dir_path, PathStringList* dir_paths)
@@ -593,7 +557,7 @@ void xreg::GetOrgainizedDICOMInfos(const std::string& root_dir_path,
     {
       const std::string cur_file_path = dcm_file_path.string();
 
-      ReadDICOMFileBasicFields(cur_file_path, &tmp_basic_fields);
+      tmp_basic_fields = ReadDICOMFileBasicFields(cur_file_path);
 
       if ((inc_localizer  || !IsLocalizer(tmp_basic_fields)) &&
           (inc_multi_frame_files || !IsMultiFrameDICOMFile(tmp_basic_fields)))
@@ -644,13 +608,13 @@ void xreg::PrintOrganizedDICOMFiles(const OrganizedDICOMFiles& org_dcm, std::ost
 
         if (print_dcm_info)
         {
-          ReadDICOMFileBasicFields(paths[0], &dcm_info);
+          dcm_info = ReadDICOMFileBasicFields(paths[0]);
 
           if (first_series)
           {
             out << indent3 << "Study Description: "
-                << (dcm_info.study_desc_valid ? dcm_info.study_desc.c_str()
-                                              : "(Not Provided)")
+                << (dcm_info.study_desc ? dcm_info.study_desc->c_str()
+                                        : "(Not Provided)")
                 << std::endl;
           }
         }
@@ -661,8 +625,8 @@ void xreg::PrintOrganizedDICOMFiles(const OrganizedDICOMFiles& org_dcm, std::ost
         if (print_dcm_info)
         {
           out << indent4 << "Series Description: "
-              << (dcm_info.series_desc_valid ? dcm_info.series_desc.c_str()
-                                            : "(Not Provided)")
+              << (dcm_info.series_desc ? dcm_info.series_desc->c_str()
+                                       : "(Not Provided)")
               << std::endl;
         }
 
@@ -694,12 +658,12 @@ void xreg::ReadDICOMInfosFromDir(const std::string& dir_path, DICOMFIleBasicFiel
 
   for (size_type dcm_idx = 0; dcm_idx < num_dcm; ++dcm_idx)
   {
-    ReadDICOMFileBasicFields(dcm_paths[dcm_idx], &dcms[dcm_idx]);
+    dcms[dcm_idx] = ReadDICOMFileBasicFields(dcm_paths[dcm_idx]);
   }
 }
 
 bool xreg::ReorderAndCheckDICOMInfos::operator()(const DICOMFIleBasicFieldsList& src_infos,
-                                               DICOMFIleBasicFieldsList* dst_infos)
+                                                 DICOMFIleBasicFieldsList* dst_infos)
 {
   const CoordScalar kTOL = 1.0e-6;
 
