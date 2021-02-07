@@ -106,6 +106,10 @@ bool IsVolDICOMFile(const DICOMFIleBasicFields& dcm_info);
 
 bool IsMultiFrameDICOMFile(const DICOMFIleBasicFields& dcm_info);
 
+bool IsSecondaryDICOMFile(const DICOMFIleBasicFields& dcm_info);
+
+bool IsDerivedDICOMFile(const DICOMFIleBasicFields& dcm_info);
+
 /// \brief Stores paths to DICOM files organized by patient ID, study UID, and
 ///        series UID.
 struct OrganizedDICOMFiles
@@ -141,7 +145,9 @@ void GetDICOMFilePathObjsInDir(const std::string& dir, PathList* dcm_paths);
 void GetOrgainizedDICOMInfos(const std::string& root_dir_path,
                              OrganizedDICOMFiles* org_dcm,
                              const bool inc_localizer = false,
-                             const bool inc_multi_frame_files = false);
+                             const bool inc_multi_frame_files = false,
+                             const bool inc_secondary = true,
+                             const bool inc_derived = true);
 
 /// \brief Get basic information structs for every DICOM file in a single directory
 ///

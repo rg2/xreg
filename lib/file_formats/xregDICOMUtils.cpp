@@ -451,6 +451,20 @@ bool xreg::IsMultiFrameDICOMFile(const DICOMFIleBasicFields& dcm_info)
   return dcm_info.num_frames && (*dcm_info.num_frames > 1);
 }
 
+bool xreg::IsSecondaryDICOMFile(const DICOMFIleBasicFields& dcm_info)
+{
+  return dcm_info.image_type &&
+          (std::find(dcm_info.image_type->begin(), dcm_info.image_type->end(), "SECONDARY")
+                  != dcm_info.image_type->end());
+}
+
+bool xreg::IsDerivedDICOMFile(const DICOMFIleBasicFields& dcm_info)
+{
+  return dcm_info.image_type &&
+          (std::find(dcm_info.image_type->begin(), dcm_info.image_type->end(), "DERIVED")
+                  != dcm_info.image_type->end());
+}
+
 void xreg::GetDICOMDirs(const std::string& root_dir_path, PathStringList* dir_paths)
 {
   PathList paths_to_check;
@@ -549,7 +563,9 @@ void xreg::GetDICOMFilePathObjsInDir(const std::string& dir, PathList* dcm_paths
 void xreg::GetOrgainizedDICOMInfos(const std::string& root_dir_path,
                                    OrganizedDICOMFiles* org_dcm,
                                    const bool inc_localizer,
-                                   const bool inc_multi_frame_files)
+                                   const bool inc_multi_frame_files,
+                                   const bool inc_secondary,
+                                   const bool inc_derived)
 {
   org_dcm->patient_infos.clear();
   org_dcm->root_dir = root_dir_path;
@@ -573,7 +589,9 @@ void xreg::GetOrgainizedDICOMInfos(const std::string& root_dir_path,
       tmp_basic_fields = ReadDICOMFileBasicFields(cur_file_path);
 
       if ((inc_localizer  || !IsLocalizer(tmp_basic_fields)) &&
-          (inc_multi_frame_files || !IsMultiFrameDICOMFile(tmp_basic_fields)))
+          (inc_multi_frame_files || !IsMultiFrameDICOMFile(tmp_basic_fields)) &&
+          (inc_secondary || !IsSecondaryDICOMFile(tmp_basic_fields)) &&
+          (inc_derived || !IsDerivedDICOMFile(tmp_basic_fields)))
       {
         org_dcm->patient_infos[tmp_basic_fields.patient_id]
                                 [tmp_basic_fields.study_uid]
