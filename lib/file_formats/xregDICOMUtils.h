@@ -48,6 +48,8 @@ struct DICOMFIleBasicFields
   std::string patient_id;
   std::string series_uid;
   std::string study_uid;
+  
+  std::string patient_name;
 
   std::string modality;
 

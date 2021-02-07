@@ -45,7 +45,10 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
     using PatientIDAttr = gdcm::Attribute<0x0010,0x0020>;
     using StudyUIDAttr  = gdcm::Attribute<0x0020,0x000D>;
     using SeriesUIDAttr = gdcm::Attribute<0x0020,0x000E>;
-    using ModalityAttr  = gdcm::Attribute<0x0008,0x0060>;
+    
+    using PatientNameAttr = gdcm::Attribute<0x0010,0x0010>;
+
+    using ModalityAttr = gdcm::Attribute<0x0008,0x0060>;
 
     using ImgPosPatAttr    = gdcm::Attribute<0x0020,0x0032>;
     using ImgOrientPatAttr = gdcm::Attribute<0x0020,0x0037>;
@@ -79,6 +82,7 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
     tags_to_read.insert(PatientIDAttr::GetTag());
     tags_to_read.insert(StudyUIDAttr::GetTag());
     tags_to_read.insert(SeriesUIDAttr::GetTag());
+    tags_to_read.insert(PatientNameAttr::GetTag());
     tags_to_read.insert(ModalityAttr::GetTag());
 
     tags_to_read.insert(ImgPosPatAttr::GetTag());
@@ -136,6 +140,12 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
         SeriesUIDAttr series_uid_attr;
         series_uid_attr.SetFromDataSet(ds);
         dcm_info.series_uid = StringStripExtraNulls(series_uid_attr.GetValue());
+      }
+
+      {
+        PatientNameAttr pat_name_attr;
+        pat_name_attr.SetFromDataSet(ds);
+        dcm_info.patient_name = StringStripExtraNulls(pat_name_attr.GetValue());
       }
 
       {
@@ -385,6 +395,7 @@ void xreg::PrintDICOMFileBasicFields(const DICOMFIleBasicFields& dcm_info, std::
 
   out << indent << "               File Path: " << dcm_info.file_path << '\n'
       << indent << "              Patient ID: " << dcm_info.patient_id << '\n'
+      << indent << "            Patient Name: " << dcm_info.patient_name << '\n'
       << indent << "               Study UID: " << dcm_info.study_uid << '\n'
       << indent << "              Series UID: " << dcm_info.series_uid << '\n'
       << indent << "                Modality: " << dcm_info.modality << '\n'
