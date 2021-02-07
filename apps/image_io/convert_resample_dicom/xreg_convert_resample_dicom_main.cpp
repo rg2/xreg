@@ -746,12 +746,23 @@ int main( int argc, char* argv[] )
          "Limit processing to a specific series UID.")
     << "";
 
+  po.add("no-name-w-pat-id", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-name-w-pat-id",
+         "Do NOT include the patient ID for naming output files. Use care with this option as "
+         "datasets may have different patient IDs with the same patient name, which could "
+         "possibily result in several series mapping to the same output file. This could result "
+         "in not all series being written out to disk WITHOUT WARNING.")
+    << false;
+
+  po.add("name-w-pat-name", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "name-w-pat-name",
+         "Include patient name for naming output files.")
+    << false;
+
   po.add("name-w-desc", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "name-w-desc",
-         "Use study and series descriptions for naming output files.")
+         "Include study and series descriptions for naming output files.")
     << false;
 
   po.add("name-w-conv", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "name-w-conv",
-         "Use convolution kernel for naming output files (useful for distinguishing between "
+         "Include convolution kernel for naming output files (useful for distinguishing between "
          "soft-tissue and bone reconstructions).")
     << false;
 
@@ -887,17 +898,13 @@ int main( int argc, char* argv[] )
   const std::string single_series_uid   = po.get("series-uid");
   const bool        limit_single_series = !single_series_uid.empty();
 
+  const bool use_pat_id_for_name = !po.get("no-name-w-pat-id").as_bool();
+
+  const bool use_pat_name_for_name = po.get("name-w-pat-name");
+
   const bool use_desc_for_name = po.get("name-w-desc");
   const bool use_conv_for_name = po.get("name-w-conv");
   
-  if ((int(use_desc_for_name) + int(use_conv_for_name)) > 1)
-  {
-    std::cerr << "ERROR: can only use one flag for choosing DICOM fields for output naming!"
-              << " Choose one of \"name-w-desc\" or \"name-w-conv\"" << std::endl;
-
-    return kEXIT_VAL_BAD_USE;
-  }
-
   const bool inc_localizers = po.get("include-localizer");
 
   const bool inc_multiframe_files = po.get("include-multiframe-files");
@@ -1255,31 +1262,38 @@ int main( int argc, char* argv[] )
 
             if (!one_image_input)
             {
-              std::string dst_file_name;
-             
-              const std::string pat_id_for_filename = get_valid_name_for_path(pat_id_str_remap);
+              std::stringstream dst_file_name_ss;
+            
+              if (use_pat_id_for_name)
+              {
+                dst_file_name_ss << get_valid_name_for_path(pat_id_str_remap);
+                dst_file_name_ss << '_';
+              }
+              
+              if (use_pat_name_for_name)
+              {
+                dst_file_name_ss << get_valid_name_for_path(first_dcm.patient_name)
+                                 << '_';
+              }
+
+              dst_file_name_ss << fmt::format("{:02d}", cur_img_idx);
 
               if (use_desc_for_name)
               {
-                dst_file_name = fmt::format("{}_{:02d}_{}_{}.{}",
-                                            pat_id_for_filename, cur_img_idx,
-                                            get_valid_name_for_path(first_dcm.study_desc),
-                                            get_valid_name_for_path(first_dcm.series_desc),
-                                            out_file_ext);
+                dst_file_name_ss << '_'
+                                 << get_valid_name_for_path(first_dcm.study_desc)
+                                 << get_valid_name_for_path(first_dcm.series_desc);
               }
-              else if (use_conv_for_name)
+              
+              if (use_conv_for_name)
               {
-                dst_file_name = fmt::format("{}_{:02d}_{}.{}",
-                                            pat_id_for_filename, cur_img_idx,
-                                            get_valid_name_for_path(first_dcm.conv_kernel),
-                                            out_file_ext);
+                dst_file_name_ss << '_'
+                                 << get_valid_name_for_path(first_dcm.conv_kernel);
               }
-              else
-              {
-                dst_file_name = fmt::format("{}_{:02d}.{}", pat_id_str_remap, cur_img_idx, out_file_ext);
-              }
+              
+              dst_file_name_ss << '.' << out_file_ext;
 
-              dst_file_path += dst_file_name;
+              dst_file_path += dst_file_name_ss.str();
             }
             else if (dst_file_path.file_extension().empty())
             {
