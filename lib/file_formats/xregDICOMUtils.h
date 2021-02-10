@@ -87,6 +87,33 @@ struct DICOMFIleBasicFields
   boost::optional<std::string> proto_name;
 
   boost::optional<std::string> conv_kernel;
+
+  // Fields that we would like to use from 2D radiographs/fluoro:
+
+  boost::optional<std::string> body_part_examined;
+
+  boost::optional<std::string> view_position;
+
+  boost::optional<double> dist_src_to_det_mm;
+  
+  boost::optional<double> dist_src_to_pat_mm;
+  
+  boost::optional<double> kvp;
+
+  boost::optional<double> tube_current_mA;
+
+  boost::optional<double> exposure_mAs;
+
+  boost::optional<double> exposure_muAs;
+
+  boost::optional<double> exposure_time_ms;
+
+  // units are dGy * cm * cm
+  boost::optional<double> dose_area_product_dGy_cm_sq;
+
+  boost::optional<double> intensifier_diameter_mm;
+
+  boost::optional<std::string> fov_shape;
 };
 
 using DICOMFIleBasicFieldsList = std::vector<DICOMFIleBasicFields>;

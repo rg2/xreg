@@ -78,6 +78,22 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
     
     using ConvKernelAttr = gdcm::Attribute<0x0018,0x1210>;
 
+    using BodyPartAttr = gdcm::Attribute<0x0018,0x0015>;
+    using ViewPosAttr  = gdcm::Attribute<0x0018,0x5101>;
+    
+    using DistSrcToDetAttr = gdcm::Attribute<0x0018,0x1110>;
+    using DistSrcToPatAttr = gdcm::Attribute<0x0018,0x1111>;
+    
+    using KVPAttr          = gdcm::Attribute<0x0018,0x0060>;
+    using TubeCurrentAttr  = gdcm::Attribute<0x0018,0x1151>;
+    using ExposuremAsAttr  = gdcm::Attribute<0x0018,0x1152>;
+    using ExposuremuAsAttr = gdcm::Attribute<0x0018,0x1153>;
+    using ExposureTimeAttr = gdcm::Attribute<0x0018,0x1150>;
+    using DoseAreaProdAttr = gdcm::Attribute<0x0018,0x115E>;
+    
+    using IntensifierDiameterAttr = gdcm::Attribute<0x0018,0x1162>;
+    using FOVShapeAttr            = gdcm::Attribute<0x0018,0x1147>;
+
     std::set<gdcm::Tag> tags_to_read;
     tags_to_read.insert(PatientIDAttr::GetTag());
     tags_to_read.insert(StudyUIDAttr::GetTag());
@@ -110,6 +126,22 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
     tags_to_read.insert(ProtoNameAttr::GetTag());
     
     tags_to_read.insert(ConvKernelAttr::GetTag());
+    
+    tags_to_read.insert(BodyPartAttr::GetTag());
+    tags_to_read.insert(ViewPosAttr::GetTag());
+    
+    tags_to_read.insert(DistSrcToDetAttr::GetTag());
+    tags_to_read.insert(DistSrcToPatAttr::GetTag());
+
+    tags_to_read.insert(KVPAttr::GetTag());
+    tags_to_read.insert(TubeCurrentAttr::GetTag());
+    tags_to_read.insert(ExposuremAsAttr::GetTag());
+    tags_to_read.insert(ExposuremuAsAttr::GetTag());
+    tags_to_read.insert(ExposureTimeAttr::GetTag());
+    tags_to_read.insert(DoseAreaProdAttr::GetTag());
+    
+    tags_to_read.insert(IntensifierDiameterAttr::GetTag());
+    tags_to_read.insert(FOVShapeAttr::GetTag());
 
     if (dcm_reader.ReadSelectedTags(tags_to_read))
     {
@@ -373,6 +405,162 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
         }
       }
 
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x0015)))
+      {
+        BodyPartAttr body_part_attr;
+        body_part_attr.SetFromDataSet(ds);
+
+        if (body_part_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(body_part_attr.GetNumberOfValues() == 1);
+
+          dcm_info.body_part_examined = StringStripExtraNulls(body_part_attr.GetValue());
+        }
+      }
+
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x5101)))
+      {
+        ViewPosAttr view_pos_attr;
+        view_pos_attr.SetFromDataSet(ds);
+
+        if (view_pos_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(view_pos_attr.GetNumberOfValues() == 1);
+          
+          dcm_info.view_position = StringStripExtraNulls(view_pos_attr.GetValue());
+        }
+      }
+
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x1110)))
+      {
+        DistSrcToDetAttr dist_src_to_det_attr;
+        dist_src_to_det_attr.SetFromDataSet(ds);
+
+        if (dist_src_to_det_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(dist_src_to_det_attr.GetNumberOfValues() == 1);
+          
+          dcm_info.dist_src_to_det_mm = dist_src_to_det_attr.GetValue();
+        }
+      }
+
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x1111)))
+      {
+        DistSrcToPatAttr dist_src_to_pat_attr;
+        dist_src_to_pat_attr.SetFromDataSet(ds);
+
+        if (dist_src_to_pat_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(dist_src_to_pat_attr.GetNumberOfValues() == 1);
+          
+          dcm_info.dist_src_to_pat_mm = dist_src_to_pat_attr.GetValue();
+        }
+      }
+
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x0060)))
+      {
+        KVPAttr kvp_attr;
+        kvp_attr.SetFromDataSet(ds);
+
+        if (kvp_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(kvp_attr.GetNumberOfValues() == 1);
+          
+          dcm_info.kvp = kvp_attr.GetValue();
+        }
+      }
+
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x1151)))
+      {
+        TubeCurrentAttr tube_current_attr;
+        tube_current_attr.SetFromDataSet(ds);
+
+        if (tube_current_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(tube_current_attr.GetNumberOfValues() == 1);
+          
+          dcm_info.tube_current_mA = tube_current_attr.GetValue();
+        }
+      }
+      
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x1152)))
+      {
+        ExposuremAsAttr exposure_mAs_attr;
+        exposure_mAs_attr.SetFromDataSet(ds);
+
+        if (exposure_mAs_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(exposure_mAs_attr.GetNumberOfValues() == 1);
+          
+          dcm_info.exposure_mAs = exposure_mAs_attr.GetValue();
+        }
+      }
+      
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x1153)))
+      {
+        ExposuremuAsAttr exposure_muAs_attr;
+        exposure_muAs_attr.SetFromDataSet(ds);
+
+        if (exposure_muAs_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(exposure_muAs_attr.GetNumberOfValues() == 1);
+          
+          dcm_info.exposure_muAs = exposure_muAs_attr.GetValue();
+        }
+      }
+
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x1150)))
+      {
+        ExposureTimeAttr exposure_time_attr;
+        exposure_time_attr.SetFromDataSet(ds);
+
+        if (exposure_time_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(exposure_time_attr.GetNumberOfValues() == 1);
+          
+          dcm_info.exposure_time_ms = exposure_time_attr.GetValue();
+        }
+      }
+
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x115E)))
+      {
+        DoseAreaProdAttr dose_area_prod_attr;
+        dose_area_prod_attr.SetFromDataSet(ds);
+
+        if (dose_area_prod_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(dose_area_prod_attr.GetNumberOfValues() == 1);
+          
+          dcm_info.dose_area_product_dGy_cm_sq = dose_area_prod_attr.GetValue();
+        }
+      }
+
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x1162)))
+      {
+        IntensifierDiameterAttr intensifier_diam_attr;
+        intensifier_diam_attr.SetFromDataSet(ds);
+
+        if (intensifier_diam_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(intensifier_diam_attr.GetNumberOfValues() == 1);
+          
+          dcm_info.intensifier_diameter_mm = intensifier_diam_attr.GetValue();
+        }
+      }
+
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x1147)))
+      {
+        FOVShapeAttr fov_shape_attr;
+        fov_shape_attr.SetFromDataSet(ds);
+
+        if (fov_shape_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(fov_shape_attr.GetNumberOfValues() == 1);
+          
+          dcm_info.fov_shape = StringStripExtraNulls(fov_shape_attr.GetValue());
+        }
+      }
+
       dcm_info.file_path = dcm_path;
       
       return dcm_info;
@@ -393,35 +581,47 @@ void xreg::PrintDICOMFileBasicFields(const DICOMFIleBasicFields& dcm_info, std::
 {
   const std::string kNOT_PROVIDED_STR("<Not Provided>");
 
-  out << indent << "               File Path: " << dcm_info.file_path << '\n'
-      << indent << "              Patient ID: " << dcm_info.patient_id << '\n'
-      << indent << "            Patient Name: " << dcm_info.patient_name << '\n'
-      << indent << "               Study UID: " << dcm_info.study_uid << '\n'
-      << indent << "              Series UID: " << dcm_info.series_uid << '\n'
-      << indent << "                Modality: " << dcm_info.modality << '\n'
-      << indent << "          Image Position: " << fmt::sprintf("[%+10.4f,%+10.4f,%+10.4f]", dcm_info.img_pos_wrt_pat[0], dcm_info.img_pos_wrt_pat[1], dcm_info.img_pos_wrt_pat[2]) << '\n'
-      << indent << "          Image Col Dir.: " << fmt::sprintf("[%+0.4f,%+0.4f,%+0.4f]", dcm_info.col_dir[0], dcm_info.col_dir[1], dcm_info.col_dir[2]) << '\n'
-      << indent << "          Image Row Dir.: " << fmt::sprintf("[%+0.4f,%+0.4f,%+0.4f]", dcm_info.row_dir[0], dcm_info.row_dir[1], dcm_info.row_dir[2]) << '\n'
-      << indent << "       Image Col Spacing: " << fmt::sprintf("%0.4f", dcm_info.col_spacing) << '\n'
-      << indent << "       Image Row Spacing: " << fmt::sprintf("%0.4f", dcm_info.row_spacing) << '\n'
-      << indent << "          Image Num Rows: " << dcm_info.num_rows << '\n'
-      << indent << "          Image Num Cols: " << dcm_info.num_cols << '\n'
-      << indent << "        Patient Position: " << (dcm_info.pat_pos ? *dcm_info.pat_pos : kNOT_PROVIDED_STR) << '\n'
-      << indent << "         Patient Orient.: " << (dcm_info.pat_orient ?
-                                                      fmt::sprintf("%s , %s",
-                                                                   (*dcm_info.pat_orient)[0],
-                                                                   (*dcm_info.pat_orient)[1]) :
-                                                      kNOT_PROVIDED_STR) << '\n'
-      << indent << "             Study Desc.: " << (dcm_info.study_desc ? *dcm_info.study_desc : kNOT_PROVIDED_STR) << '\n'
-      << indent << "            Series Desc.: " << (dcm_info.series_desc ? *dcm_info.series_desc : kNOT_PROVIDED_STR) << '\n'
-      << indent << "              Image Type: " << (dcm_info.image_type ? JoinTokens(*dcm_info.image_type, " , ") : kNOT_PROVIDED_STR) << '\n'
-      << indent << "     Sec. Cap. Dev. Man.: " << (dcm_info.sec_cap_dev_manufacturer ? *dcm_info.sec_cap_dev_manufacturer : kNOT_PROVIDED_STR) << '\n'
-      << indent << "  Sec. Cap. Dev. SW Ver.: " << (dcm_info.sec_cap_dev_software_versions ? *dcm_info.sec_cap_dev_software_versions : kNOT_PROVIDED_STR) << '\n'
-      << indent << "       Software Versions: " << (dcm_info.software_versions ? JoinTokens(*dcm_info.software_versions, " , ") : kNOT_PROVIDED_STR) << '\n'
-      << indent << "             Vol. Props.: " << (dcm_info.vol_props ? *dcm_info.vol_props : kNOT_PROVIDED_STR) << '\n'
-      << indent << "             Num. Frames: " << (dcm_info.num_frames ? fmt::format("{}", *dcm_info.num_frames) : kNOT_PROVIDED_STR) << '\n'
-      << indent << "           Protocol Name: " << (dcm_info.proto_name ? *dcm_info.proto_name : kNOT_PROVIDED_STR) << '\n'
-      << indent << "            Conv. Kernel: " << (dcm_info.conv_kernel ? *dcm_info.conv_kernel : kNOT_PROVIDED_STR) << '\n';
+  out << indent << "                   File Path: " << dcm_info.file_path << '\n'
+      << indent << "                  Patient ID: " << dcm_info.patient_id << '\n'
+      << indent << "                Patient Name: " << dcm_info.patient_name << '\n'
+      << indent << "                   Study UID: " << dcm_info.study_uid << '\n'
+      << indent << "                  Series UID: " << dcm_info.series_uid << '\n'
+      << indent << "                    Modality: " << dcm_info.modality << '\n'
+      << indent << "              Image Position: " << fmt::sprintf("[%+10.4f,%+10.4f,%+10.4f]", dcm_info.img_pos_wrt_pat[0], dcm_info.img_pos_wrt_pat[1], dcm_info.img_pos_wrt_pat[2]) << '\n'
+      << indent << "              Image Col Dir.: " << fmt::sprintf("[%+0.4f,%+0.4f,%+0.4f]", dcm_info.col_dir[0], dcm_info.col_dir[1], dcm_info.col_dir[2]) << '\n'
+      << indent << "              Image Row Dir.: " << fmt::sprintf("[%+0.4f,%+0.4f,%+0.4f]", dcm_info.row_dir[0], dcm_info.row_dir[1], dcm_info.row_dir[2]) << '\n'
+      << indent << "           Image Col Spacing: " << fmt::sprintf("%0.4f", dcm_info.col_spacing) << '\n'
+      << indent << "           Image Row Spacing: " << fmt::sprintf("%0.4f", dcm_info.row_spacing) << '\n'
+      << indent << "              Image Num Rows: " << dcm_info.num_rows << '\n'
+      << indent << "              Image Num Cols: " << dcm_info.num_cols << '\n'
+      << indent << "            Patient Position: " << (dcm_info.pat_pos ? *dcm_info.pat_pos : kNOT_PROVIDED_STR) << '\n'
+      << indent << "             Patient Orient.: " << (dcm_info.pat_orient ?
+                                                          fmt::sprintf("%s , %s",
+                                                                       (*dcm_info.pat_orient)[0],
+                                                                       (*dcm_info.pat_orient)[1]) :
+                                                          kNOT_PROVIDED_STR) << '\n'
+      << indent << "                 Study Desc.: " << (dcm_info.study_desc ? *dcm_info.study_desc : kNOT_PROVIDED_STR) << '\n'
+      << indent << "                Series Desc.: " << (dcm_info.series_desc ? *dcm_info.series_desc : kNOT_PROVIDED_STR) << '\n'
+      << indent << "                  Image Type: " << (dcm_info.image_type ? JoinTokens(*dcm_info.image_type, " , ") : kNOT_PROVIDED_STR) << '\n'
+      << indent << "         Sec. Cap. Dev. Man.: " << (dcm_info.sec_cap_dev_manufacturer ? *dcm_info.sec_cap_dev_manufacturer : kNOT_PROVIDED_STR) << '\n'
+      << indent << "      Sec. Cap. Dev. SW Ver.: " << (dcm_info.sec_cap_dev_software_versions ? *dcm_info.sec_cap_dev_software_versions : kNOT_PROVIDED_STR) << '\n'
+      << indent << "           Software Versions: " << (dcm_info.software_versions ? JoinTokens(*dcm_info.software_versions, " , ") : kNOT_PROVIDED_STR) << '\n'
+      << indent << "                 Vol. Props.: " << (dcm_info.vol_props ? *dcm_info.vol_props : kNOT_PROVIDED_STR) << '\n'
+      << indent << "                 Num. Frames: " << (dcm_info.num_frames ? fmt::format("{}", *dcm_info.num_frames) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "               Protocol Name: " << (dcm_info.proto_name ? *dcm_info.proto_name : kNOT_PROVIDED_STR) << '\n'
+      << indent << "                Conv. Kernel: " << (dcm_info.conv_kernel ? *dcm_info.conv_kernel : kNOT_PROVIDED_STR) << '\n'
+      << indent << "                   Body Part: " << (dcm_info.body_part_examined ? *dcm_info.body_part_examined : kNOT_PROVIDED_STR) << '\n'
+      << indent << "               View Position: " << (dcm_info.view_position ? *dcm_info.view_position : kNOT_PROVIDED_STR) << '\n'
+      << indent << "      Dist. Src-to-Det. (mm): " << (dcm_info.dist_src_to_det_mm ? fmt::format("{:.1f}", *dcm_info.dist_src_to_det_mm) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "      Dist. Src-to-Pat. (mm): " << (dcm_info.dist_src_to_pat_mm ? fmt::format("{:.1f}", *dcm_info.dist_src_to_pat_mm) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "          Peak Engergy (kVp): " << (dcm_info.kvp ? fmt::format("{:.1f}", *dcm_info.kvp) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "           Tube Current (mA): " << (dcm_info.tube_current_mA ? fmt::format("{:.1f}", *dcm_info.tube_current_mA) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "              Exposure (mAs): " << (dcm_info.exposure_mAs ? fmt::format("{:.3f}", *dcm_info.exposure_mAs) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "             Exposure (muAs): " << (dcm_info.exposure_muAs ? fmt::format("{:.3f}", *dcm_info.exposure_muAs) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "          Exposure Time (ms): " << (dcm_info.exposure_time_ms ? fmt::format("{:.3f}", *dcm_info.exposure_time_ms) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "  Dose Area Prod. (dGy*cm^2): " << (dcm_info.dose_area_product_dGy_cm_sq ? fmt::format("{:.3f}", *dcm_info.dose_area_product_dGy_cm_sq) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "      Intensifier Diam. (mm): " << (dcm_info.intensifier_diameter_mm ? fmt::format("{:.1f}", *dcm_info.intensifier_diameter_mm) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "                   FOV Shape: " << (dcm_info.fov_shape ? *dcm_info.fov_shape : kNOT_PROVIDED_STR) << '\n';
 
   out.flush();
 }
