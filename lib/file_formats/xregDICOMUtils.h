@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -169,12 +169,15 @@ void GetDICOMFilePathObjsInDir(const std::string& dir, PathList* dcm_paths);
 ///        hierarchy and store in a hierarchy of data structures.
 ///
 /// Organized as Patient ID -> Studies for each Patient ID -> Series for each study
+/// When the modalities argument is non-empty, then only the specified modalities will
+/// be included in the output.
 void GetOrgainizedDICOMInfos(const std::string& root_dir_path,
                              OrganizedDICOMFiles* org_dcm,
                              const bool inc_localizer = false,
                              const bool inc_multi_frame_files = false,
                              const bool inc_secondary = true,
-                             const bool inc_derived = true);
+                             const bool inc_derived = true,
+                             const std::vector<std::string>& modalities = std::vector<std::string>());
 
 /// \brief Get basic information structs for every DICOM file in a single directory
 ///

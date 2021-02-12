@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -765,8 +765,11 @@ void xreg::GetOrgainizedDICOMInfos(const std::string& root_dir_path,
                                    const bool inc_localizer,
                                    const bool inc_multi_frame_files,
                                    const bool inc_secondary,
-                                   const bool inc_derived)
+                                   const bool inc_derived,
+                                   const std::vector<std::string>& modalities)
 {
+  const bool check_modality = !modalities.empty();
+
   org_dcm->patient_infos.clear();
   org_dcm->root_dir = root_dir_path;
 
@@ -791,7 +794,10 @@ void xreg::GetOrgainizedDICOMInfos(const std::string& root_dir_path,
       if ((inc_localizer  || !IsLocalizer(tmp_basic_fields)) &&
           (inc_multi_frame_files || !IsMultiFrameDICOMFile(tmp_basic_fields)) &&
           (inc_secondary || !IsSecondaryDICOMFile(tmp_basic_fields)) &&
-          (inc_derived || !IsDerivedDICOMFile(tmp_basic_fields)))
+          (inc_derived || !IsDerivedDICOMFile(tmp_basic_fields)) &&
+          (!check_modality ||
+           (std::find(modalities.begin(), modalities.end(), tmp_basic_fields.modality)
+                                                                     != modalities.end())))
       {
         org_dcm->patient_infos[tmp_basic_fields.patient_id]
                                 [tmp_basic_fields.study_uid]
