@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -785,6 +785,14 @@ int main( int argc, char* argv[] )
          "Do NOT include SECONDARY images (e.g. images created after initial exam).")
     << false;
 
+  po.add("modalities", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "modalities",
+         "A comma delimited string indicating which modalities should be considered. "
+         "An empty string (the default) considers all modalities. "
+         "This is case-sensitive - upper case strings are standard. "
+         "Examples: \"CT\" will only convert CT datasets, "
+         "\"CT,MR\" will convert CT and MR datasets.")
+    << "";
+
   po.add("pat-lut", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "pat-lut",
          "Path to a CSV file which serves as a LUT between DICOM patient IDs and strings "
          "used to prefix output file names. The first column are the DICOM patient IDs "
@@ -923,6 +931,10 @@ int main( int argc, char* argv[] )
 
   const std::string pat_id_lut_path = po.get("pat-lut");
 
+  const std::string modalities_to_consider_str = po.get("modalities");
+
+  const auto modalities_to_consider = StringSplit(modalities_to_consider_str, ",");
+
   const bool use_pat_id_lut = !pat_id_lut_path.empty();
 
   vout << "Inputs: "
@@ -971,6 +983,7 @@ int main( int argc, char* argv[] )
        << "\n    Include Multi-Frame Files: " << inc_multiframe_files
        << "\n        Exclude Derived Files: " << exclude_derived
        << "\n      Exclude Secondary Files: " << exclude_secondary
+       << "\n        Modalities Considered: " << (modalities_to_consider_str.empty() ? "<ALL>" : modalities_to_consider_str.c_str())
        << "\n           Use Patient ID LUT: " << use_pat_id_lut
        << "\n-----------------------------------------------------\n" << std::endl;
 
@@ -1000,7 +1013,8 @@ int main( int argc, char* argv[] )
     vout << "reading directory tree and organizing..." << std::endl;
     GetOrgainizedDICOMInfos(input_root_dir, &org_dcm,
                             inc_localizers, inc_multiframe_files,
-                            !exclude_secondary, !exclude_derived);
+                            !exclude_secondary, !exclude_derived,
+                            modalities_to_consider);
   }
   else
   {
