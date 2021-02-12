@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2020-2021 Robert Grupp
+# Copyright (c) 2021 Robert Grupp
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,13 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_subdirectory(convert_resample_dicom)
-add_subdirectory(report_dicom)
-add_subdirectory(crop_vol)
-add_subdirectory(remap_and_tile_proj_data)
-add_subdirectory(extract_nii_from_proj_data)
-add_subdirectory(add_lands_to_proj_data)
-add_subdirectory(draw_xray_scene)
-add_subdirectory(regi2d3d_replay)
-add_subdirectory(convert_rad_raw_to_proj_data)
+set(EXE_NAME "${XREG_EXE_PREFIX}convert-rad-raw-to-proj-data")
+
+add_executable(${EXE_NAME} xreg_convert_rad_raw_to_proj_data_main.cpp)
+
+target_link_libraries(${EXE_NAME} PUBLIC ${XREG_EXE_LIBS_TO_LINK})
+
+install(TARGETS ${EXE_NAME})
 
