@@ -93,6 +93,8 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
     
     using IntensifierDiameterAttr = gdcm::Attribute<0x0018,0x1162>;
     using FOVShapeAttr            = gdcm::Attribute<0x0018,0x1147>;
+    
+    using ImagerPixelSpacingAttr = gdcm::Attribute<0x0018,0x1164>;
 
     std::set<gdcm::Tag> tags_to_read;
     tags_to_read.insert(PatientIDAttr::GetTag());
@@ -142,6 +144,8 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
     
     tags_to_read.insert(IntensifierDiameterAttr::GetTag());
     tags_to_read.insert(FOVShapeAttr::GetTag());
+
+    tags_to_read.insert(ImagerPixelSpacingAttr::GetTag());
 
     if (dcm_reader.ReadSelectedTags(tags_to_read))
     {
@@ -559,6 +563,18 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
           
           dcm_info.fov_shape = StringStripExtraNulls(fov_shape_attr.GetValue());
         }
+      }
+    
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x1164)))
+      {
+        ImagerPixelSpacingAttr imager_pixel_spacing_attr;
+        imager_pixel_spacing_attr.SetFromDataSet(ds);
+
+        xregASSERT(imager_pixel_spacing_attr.GetNumberOfValues() == 2);
+        
+        dcm_info.imager_pixel_spacing =
+          std::array<CoordScalar,2> { static_cast<CoordScalar>(imager_pixel_spacing_attr.GetValue(0)),
+                                      static_cast<CoordScalar>(imager_pixel_spacing_attr.GetValue(1)) };
       }
 
       dcm_info.file_path = dcm_path;

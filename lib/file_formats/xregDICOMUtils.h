@@ -114,6 +114,12 @@ struct DICOMFIleBasicFields
   boost::optional<double> intensifier_diameter_mm;
 
   boost::optional<std::string> fov_shape;
+
+  // This is usally populated for 2D X-ray images, e.g. when the standard
+  // pixel spacing fields are not appropriate as they are required to be
+  // in "patient space."
+  // row spacing , col spacing
+  boost::optional<std::array<CoordScalar,2>> imager_pixel_spacing;
 };
 
 using DICOMFIleBasicFieldsList = std::vector<DICOMFIleBasicFields>;
