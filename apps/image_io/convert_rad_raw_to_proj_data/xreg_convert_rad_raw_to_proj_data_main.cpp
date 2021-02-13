@@ -32,7 +32,6 @@ int main(int argc, char* argv[])
 {
   constexpr int kEXIT_VAL_SUCCESS  = 0;
   constexpr int kEXIT_VAL_BAD_USE  = 1;
-  constexpr int kEXIT_VAL_NO_PROJS = 2;
 
   ProgOpts po;
 
