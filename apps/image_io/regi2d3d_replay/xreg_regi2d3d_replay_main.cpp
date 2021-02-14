@@ -331,7 +331,7 @@ int main(int argc, char* argv[])
   // check to see if a subset of views are used...
   size_type num_views_used = 0;
 
-  // this is not ideal, but it gets us by for know
+  // this is not ideal, but it gets us by for now
   // ensure that if a subset of views is specified, then the same views are used in all registrations
   {
     auto projs_used_are_same = [] (const IndexList& i1, const IndexList& i2)
@@ -484,7 +484,7 @@ int main(int argc, char* argv[])
   if (std::abs(1.0 - ds_factor) > 1.0e-6)
   {
     vout << "downsampling fixed images..." << std::endl;
-    fixed_proj_data = DownsampleProjData(fixed_proj_data, ds_factor);
+    fixed_proj_data = DownsampleProjData(fixed_proj_data, ds_factor, true);
   }
   else
   {
@@ -1023,7 +1023,7 @@ int main(int argc, char* argv[])
   frame_file_names.reserve(tot_num_projs);
   frame_titles.reserve(tot_num_projs);
         
-  const int tile_border_thickness = std::min(1, static_cast<int>(std::lround(10 * ds_factor)));
+  const int tile_border_thickness = std::max(1, static_cast<int>(std::lround(10 * ds_factor)));
 
   for (size_type lvl = 0; lvl < num_levels; ++lvl)
   {
