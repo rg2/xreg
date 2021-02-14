@@ -640,7 +640,8 @@ xreg::Pt3 xreg::CalcSourcePositionDelta(const CameraModel& cam1, const CameraMod
   return delta_cam1_src;
 }
 
-xreg::CameraModel xreg::DownsampleCameraModel(const CameraModel& src_cam, const CoordScalar ds_factor)
+xreg::CameraModel xreg::DownsampleCameraModel(const CameraModel& src_cam, const CoordScalar ds_factor,
+                                              const bool force_even_dims)
 {
   CameraModel dst_cam;
   dst_cam.coord_frame_type = src_cam.coord_frame_type;
@@ -651,9 +652,24 @@ xreg::CameraModel xreg::DownsampleCameraModel(const CameraModel& src_cam, const 
   intrins(0,2) *= ds_factor;
   intrins(1,2) *= ds_factor;
 
+  long num_ds_rows = std::lround(src_cam.num_det_rows * ds_factor);
+  long num_ds_cols = std::lround(src_cam.num_det_cols * ds_factor);
+
+  if (force_even_dims)
+  {
+    if (num_ds_rows % 2)
+    {
+      --num_ds_rows;
+    }
+
+    if (num_ds_cols % 2)
+    {
+      --num_ds_cols;
+    }
+  }
+
   dst_cam.setup(intrins, src_cam.extrins.matrix(),
-                std::lround(src_cam.num_det_rows * ds_factor),
-                std::lround(src_cam.num_det_cols * ds_factor),
+                num_ds_rows, num_ds_cols,
                 src_cam.det_row_spacing / ds_factor,
                 src_cam.det_col_spacing / ds_factor);
 
