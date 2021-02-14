@@ -37,16 +37,53 @@ using namespace xreg;
 
 template <class tPixelScalar>
 ProjData<tPixelScalar>
-DownsampleProjDataHelper(const ProjData<tPixelScalar>& src_proj, const CoordScalar ds_factor)
+DownsampleProjDataHelper(const ProjData<tPixelScalar>& src_proj, const CoordScalar ds_factor,
+                         const bool force_even_dims)
 {
   ProjData<tPixelScalar> dst_proj;
  
-  dst_proj.cam = DownsampleCameraModel(src_proj.cam, ds_factor); 
+  dst_proj.cam = DownsampleCameraModel(src_proj.cam, ds_factor, force_even_dims); 
 
   if (src_proj.img)
   {
     dst_proj.img = DownsampleImage(src_proj.img.GetPointer(), ds_factor);
     
+    if (force_even_dims)
+    {
+      using ProjImg   = typename ProjData<tPixelScalar>::Proj;
+      using ROIFilter = itk::RegionOfInterestImageFilter<ProjImg,ProjImg>;
+
+      auto ds_sz = dst_proj.img->GetLargestPossibleRegion().GetSize();
+      
+      const bool cols_are_odd = ds_sz[0] % 2;
+      const bool rows_are_odd = ds_sz[1] % 2;
+
+      if (cols_are_odd || rows_are_odd)
+      {
+        if (cols_are_odd)
+        {
+          --ds_sz[0];
+        }
+        
+        if (rows_are_odd)
+        {
+          --ds_sz[1];
+        }
+
+        typename ProjImg::RegionType roi;
+        roi.SetSize(ds_sz);
+        roi.SetIndex(0,0);
+        roi.SetIndex(1,0);
+
+        auto roi_filter = ROIFilter::New();
+        roi_filter->SetInput(dst_proj.img);
+        roi_filter->SetRegionOfInterest(roi);
+        roi_filter->Update();
+        
+        dst_proj.img = roi_filter->GetOutput();
+      }
+    }
+
     const auto ds_sz = dst_proj.img->GetLargestPossibleRegion().GetSize();
     xregASSERT(ds_sz[0] == dst_proj.cam.num_det_cols);
     xregASSERT(ds_sz[1] == dst_proj.cam.num_det_rows);
@@ -65,14 +102,15 @@ DownsampleProjDataHelper(const ProjData<tPixelScalar>& src_proj, const CoordScal
 
 template <class tPixelScalar>
 std::vector<ProjData<tPixelScalar>>
-DownsampleProjDataHelper(const std::vector<ProjData<tPixelScalar>>& src_projs, const CoordScalar ds_factor)
+DownsampleProjDataHelper(const std::vector<ProjData<tPixelScalar>>& src_projs, const CoordScalar ds_factor,
+                         const bool force_even_dims)
 {
   std::vector<ProjData<tPixelScalar>> dst_projs;
   dst_projs.reserve(src_projs.size());
 
   for (const auto& src_proj : src_projs)
   {
-    dst_projs.push_back(DownsampleProjDataHelper(src_proj, ds_factor));
+    dst_projs.push_back(DownsampleProjDataHelper(src_proj, ds_factor, force_even_dims));
   }
 
   return dst_projs;
@@ -277,37 +315,43 @@ MakeImageFromCam(const CameraModel& cam)
 
 }  // un-named
 
-xreg::ProjDataF32 xreg::DownsampleProjData(const ProjDataF32& src_proj, const CoordScalar ds_factor)
+xreg::ProjDataF32 xreg::DownsampleProjData(const ProjDataF32& src_proj, const CoordScalar ds_factor,
+                                           const bool force_even_dims)
 {
-  return DownsampleProjDataHelper(src_proj, ds_factor);
+  return DownsampleProjDataHelper(src_proj, ds_factor, force_even_dims);
 }
 
-xreg::ProjDataU16 xreg::DownsampleProjData(const ProjDataU16& src_proj, const CoordScalar ds_factor)
+xreg::ProjDataU16 xreg::DownsampleProjData(const ProjDataU16& src_proj, const CoordScalar ds_factor,
+                                           const bool force_even_dims)
 {
-  return DownsampleProjDataHelper(src_proj, ds_factor);
+  return DownsampleProjDataHelper(src_proj, ds_factor, force_even_dims);
 }
 
-xreg::ProjDataU8 xreg::DownsampleProjData(const ProjDataU8& src_proj, const CoordScalar ds_factor)
+xreg::ProjDataU8 xreg::DownsampleProjData(const ProjDataU8& src_proj, const CoordScalar ds_factor,
+                                          const bool force_even_dims)
 {
-  return DownsampleProjDataHelper(src_proj, ds_factor);
+  return DownsampleProjDataHelper(src_proj, ds_factor, force_even_dims);
 }
 
 xreg::ProjDataF32List
-xreg::DownsampleProjData(const ProjDataF32List& src_projs, const CoordScalar ds_factor)
+xreg::DownsampleProjData(const ProjDataF32List& src_projs, const CoordScalar ds_factor,
+                         const bool force_even_dims)
 {
-  return DownsampleProjDataHelper(src_projs, ds_factor);
+  return DownsampleProjDataHelper(src_projs, ds_factor, force_even_dims);
 }
 
 xreg::ProjDataU16List
-xreg::DownsampleProjData(const ProjDataU16List& src_projs, const CoordScalar ds_factor)
+xreg::DownsampleProjData(const ProjDataU16List& src_projs, const CoordScalar ds_factor,
+                         const bool force_even_dims)
 {
-  return DownsampleProjDataHelper(src_projs, ds_factor);
+  return DownsampleProjDataHelper(src_projs, ds_factor, force_even_dims);
 }
 
 xreg::ProjDataU8List
-xreg::DownsampleProjData(const ProjDataU8List& src_projs, const CoordScalar ds_factor)
+xreg::DownsampleProjData(const ProjDataU8List& src_projs, const CoordScalar ds_factor,
+                         const bool force_even_dims)
 {
-  return DownsampleProjDataHelper(src_projs, ds_factor);
+  return DownsampleProjDataHelper(src_projs, ds_factor, force_even_dims);
 }
 
 std::vector<xreg::CameraModel>

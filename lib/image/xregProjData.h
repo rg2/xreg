@@ -82,13 +82,19 @@ using ProjDataF32List = std::vector<ProjDataF32>;
 using ProjDataU16List = std::vector<ProjDataU16>;
 using ProjDataU8List  = std::vector<ProjDataU8>;
 
-ProjDataF32 DownsampleProjData(const ProjDataF32& src_proj, const CoordScalar ds_factor);
-ProjDataU16 DownsampleProjData(const ProjDataU16& src_proj, const CoordScalar ds_factor);
-ProjDataU8 DownsampleProjData(const ProjDataU8& src_proj, const CoordScalar ds_factor);
+ProjDataF32 DownsampleProjData(const ProjDataF32& src_proj, const CoordScalar ds_factor,
+                               const bool force_even_dims = false);
+ProjDataU16 DownsampleProjData(const ProjDataU16& src_proj, const CoordScalar ds_factor,
+                               const bool force_even_dims = false);
+ProjDataU8 DownsampleProjData(const ProjDataU8& src_proj, const CoordScalar ds_factor,
+                              const bool force_even_dims = false);
 
-ProjDataF32List DownsampleProjData(const ProjDataF32List& src_projs, const CoordScalar ds_factor);
-ProjDataU16List DownsampleProjData(const ProjDataU16List& src_projs, const CoordScalar ds_factor);
-ProjDataU8List DownsampleProjData(const ProjDataU8List& src_projs, const CoordScalar ds_factor);
+ProjDataF32List DownsampleProjData(const ProjDataF32List& src_projs, const CoordScalar ds_factor,
+                                   const bool force_even_dims = false);
+ProjDataU16List DownsampleProjData(const ProjDataU16List& src_projs, const CoordScalar ds_factor,
+                                   const bool force_even_dims = false);
+ProjDataU8List DownsampleProjData(const ProjDataU8List& src_projs, const CoordScalar ds_factor,
+                                  const bool force_even_dims = false);
 
 template <class tPixelScalar>
 using CamImgPair = std::tuple<CameraModel,typename itk::Image<tPixelScalar,2>::Pointer>;
