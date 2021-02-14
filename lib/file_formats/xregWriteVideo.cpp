@@ -102,7 +102,7 @@ void xreg::WriteImageFramesToVideoWithFFMPEG::open()
                                   dst_vid_path,           // output file
                                   bp::std_in < p->ffmpeg_p_in,
                                   bp::std_out > bp::null,
-                                  bp::std_err > bp::null));  
+                                  bp::std_err > bp::null)); 
 }
 
 void xreg::WriteImageFramesToVideoWithFFMPEG::close()
