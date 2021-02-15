@@ -637,7 +637,14 @@ void xreg::PrintDICOMFileBasicFields(const DICOMFIleBasicFields& dcm_info, std::
       << indent << "          Exposure Time (ms): " << (dcm_info.exposure_time_ms ? fmt::format("{:.3f}", *dcm_info.exposure_time_ms) : kNOT_PROVIDED_STR) << '\n'
       << indent << "  Dose Area Prod. (dGy*cm^2): " << (dcm_info.dose_area_product_dGy_cm_sq ? fmt::format("{:.3f}", *dcm_info.dose_area_product_dGy_cm_sq) : kNOT_PROVIDED_STR) << '\n'
       << indent << "      Intensifier Diam. (mm): " << (dcm_info.intensifier_diameter_mm ? fmt::format("{:.1f}", *dcm_info.intensifier_diameter_mm) : kNOT_PROVIDED_STR) << '\n'
-      << indent << "                   FOV Shape: " << (dcm_info.fov_shape ? *dcm_info.fov_shape : kNOT_PROVIDED_STR) << '\n';
+      << indent << "                   FOV Shape: " << (dcm_info.fov_shape ? *dcm_info.fov_shape : kNOT_PROVIDED_STR) << '\n'
+      << indent << " Imager Pix. Spacing (mm/px): "
+                << (dcm_info.imager_pixel_spacing ?
+                      fmt::format("[ {:.1f} , {:.1f}]",
+                                  (*dcm_info.imager_pixel_spacing)[0],
+                                  (*dcm_info.imager_pixel_spacing)[1]) :
+                      kNOT_PROVIDED_STR)
+                << '\n';
 
   out.flush();
 }
