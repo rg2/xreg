@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020,2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -121,6 +121,16 @@ std::unique_ptr<WriteImageFramesToVideo> GetWriteImageFramesToVideo();
 void WriteAllImageFramesToVideo(const std::string& vid_path,
                                 const std::vector<cv::Mat>& frames,
                                 const double fps = 10.0);
+
+void WriteImageFilesToVideo(const std::string& vid_path,
+                            const std::vector<std::string>& img_paths,
+                            const double fps = 10.0);
+
+void WriteDirOfImagesToVideo(const std::string& vid_path,
+                             const std::string& img_dir,
+                             const bool lex_sort = false,
+                             const std::vector<std::string>& img_exts = { ".png" },
+                             const double fps = 10.0);
 
 }  // xreg
 

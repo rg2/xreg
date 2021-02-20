@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020,2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -201,5 +201,48 @@ void xreg::WriteAllImageFramesToVideo(const std::string& vid_path,
   writer->write(frames);
  
   writer->close();
+}
+
+void xreg::WriteImageFilesToVideo(const std::string& vid_path,
+                                  const std::vector<std::string>& img_paths,
+                                  const double fps)
+{
+  std::vector<cv::Mat> frames;
+
+  const size_type num_frames = img_paths.size();
+
+  frames.reserve(num_frames);
+
+  for (size_type i = 0; i < num_frames; ++i)
+  {
+    frames.push_back(cv::imread(img_paths[i]));
+  }
+
+  WriteAllImageFramesToVideo(vid_path, frames, fps);
+}
+
+void xreg::WriteDirOfImagesToVideo(const std::string& vid_path,
+                                   const std::string& img_dir,
+                                   const bool lex_sort,
+                                   const std::vector<std::string>& img_exts,
+                                   const double fps)
+{
+  FileExtensions file_exts;
+  
+  for (const auto& ext : img_exts)
+  {
+    file_exts.add(ext);
+  }
+  
+  std::vector<std::string> img_paths;
+
+  GetFilePathsFromDir(img_dir, &img_paths, file_exts);
+
+  if (lex_sort)
+  {
+    std::sort(img_paths.begin(), img_paths.end());
+  }
+
+  WriteImageFilesToVideo(vid_path, img_paths, fps);
 }
 
