@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
   const std::string src_dir = po.pos_args()[0];
   const std::string dst_mov = po.pos_args()[1];
 
-  double fps = po.get("fps");
+  double fps_or_len = po.get("fps");
 
   const bool sort_paths = po.get("sort");
 
@@ -103,12 +103,13 @@ int main(int argc, char* argv[])
 
   if (video_len_passed)
   {
-    std::cerr << "ERROR: video length not currently supported!" << std::endl;
-    return kEXIT_VAL_BAD_USE;
+    vout << "overriding FPS with video length argument..." << std::endl;
+    fps_or_len = po.get("len");
   }
 
   vout << "processing directory contents and creating video..." << std::endl;
-  WriteDirOfImagesToVideo(dst_mov, src_dir, sort_paths, img_exts, fps);
+  WriteDirOfImagesToVideo(dst_mov, src_dir, sort_paths, img_exts, fps_or_len,
+                          !video_len_passed);
 
   return kEXIT_VAL_SUCCESS;
 }
