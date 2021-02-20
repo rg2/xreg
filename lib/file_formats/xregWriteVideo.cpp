@@ -39,7 +39,7 @@
 
 #include "xregAssert.h"
 #include "xregFilesystemUtils.h"
-  
+
 void xreg::WriteImageFramesToVideo::write(const std::vector<cv::Mat>& frames)
 {
   for (const cv::Mat& f : frames)
@@ -192,16 +192,23 @@ void xreg::WriteAllImageFramesToVideo(const std::string& vid_path,
                                       const double fps_or_len,
                                       const bool is_fps)
 {
-  auto writer = GetWriteImageFramesToVideo();
+  if (!frames.empty())
+  {
+    auto writer = GetWriteImageFramesToVideo();
 
-  writer->dst_vid_path = vid_path;
-  writer->fps = is_fps ? fps_or_len : (frames.size() / fps_or_len);
-  
-  writer->open();
+    writer->dst_vid_path = vid_path;
+    writer->fps = is_fps ? fps_or_len : (frames.size() / fps_or_len);
+    
+    writer->open();
 
-  writer->write(frames);
- 
-  writer->close();
+    writer->write(frames);
+   
+    writer->close();
+  }
+  else
+  {
+    xregThrow("No frames provided to create video!");
+  }
 }
 
 void xreg::WriteImageFilesToVideo(const std::string& vid_path,
