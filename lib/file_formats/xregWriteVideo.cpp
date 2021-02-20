@@ -189,12 +189,13 @@ std::unique_ptr<xreg::WriteImageFramesToVideo> xreg::GetWriteImageFramesToVideo(
 
 void xreg::WriteAllImageFramesToVideo(const std::string& vid_path,
                                       const std::vector<cv::Mat>& frames,
-                                      const double fps)
+                                      const double fps_or_len,
+                                      const bool is_fps)
 {
   auto writer = GetWriteImageFramesToVideo();
 
   writer->dst_vid_path = vid_path;
-  writer->fps = fps;
+  writer->fps = is_fps ? fps_or_len : (frames.size() / fps_or_len);
   
   writer->open();
 
@@ -205,7 +206,8 @@ void xreg::WriteAllImageFramesToVideo(const std::string& vid_path,
 
 void xreg::WriteImageFilesToVideo(const std::string& vid_path,
                                   const std::vector<std::string>& img_paths,
-                                  const double fps)
+                                  const double fps_or_len,
+                                  const bool is_fps)
 {
   std::vector<cv::Mat> frames;
 
@@ -218,14 +220,15 @@ void xreg::WriteImageFilesToVideo(const std::string& vid_path,
     frames.push_back(cv::imread(img_paths[i]));
   }
 
-  WriteAllImageFramesToVideo(vid_path, frames, fps);
+  WriteAllImageFramesToVideo(vid_path, frames, fps_or_len, is_fps);
 }
 
 void xreg::WriteDirOfImagesToVideo(const std::string& vid_path,
                                    const std::string& img_dir,
                                    const bool lex_sort,
                                    const std::vector<std::string>& img_exts,
-                                   const double fps)
+                                   const double fps_or_len,
+                                   const bool is_fps)
 {
   FileExtensions file_exts;
   
@@ -243,6 +246,6 @@ void xreg::WriteDirOfImagesToVideo(const std::string& vid_path,
     std::sort(img_paths.begin(), img_paths.end());
   }
 
-  WriteImageFilesToVideo(vid_path, img_paths, fps);
+  WriteImageFilesToVideo(vid_path, img_paths, fps_or_len, is_fps);
 }
 

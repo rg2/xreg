@@ -118,19 +118,37 @@ private:
 
 std::unique_ptr<WriteImageFramesToVideo> GetWriteImageFramesToVideo();
 
+// The final two arguments are used to determine the speed or length of the video.
+// When is_fps == true, then fps_or_len represents the desired frames per second 
+// of the output video.
+// When is_fps == false, then fps_or_len represents the desired length of the output
+// video in seconds.
 void WriteAllImageFramesToVideo(const std::string& vid_path,
                                 const std::vector<cv::Mat>& frames,
-                                const double fps = 10.0);
+                                const double fps_or_len = 10.0,
+                                const bool is_fps = true);
 
+// The final two arguments are used to determine the speed or length of the video.
+// When is_fps == true, then fps_or_len represents the desired frames per second 
+// of the output video.
+// When is_fps == false, then fps_or_len represents the desired length of the output
+// video in seconds.
 void WriteImageFilesToVideo(const std::string& vid_path,
                             const std::vector<std::string>& img_paths,
-                            const double fps = 10.0);
+                            const double fps_or_len = 10.0,
+                            const bool is_fps = true);
 
+// The final two arguments are used to determine the speed or length of the video.
+// When is_fps == true, then fps_or_len represents the desired frames per second 
+// of the output video.
+// When is_fps == false, then fps_or_len represents the desired length of the output
+// video in seconds.
 void WriteDirOfImagesToVideo(const std::string& vid_path,
                              const std::string& img_dir,
                              const bool lex_sort = false,
                              const std::vector<std::string>& img_exts = { ".png" },
-                             const double fps = 10.0);
+                             const double fps_or_len = 10.0,
+                             const bool is_fps = true);
 
 }  // xreg
 
