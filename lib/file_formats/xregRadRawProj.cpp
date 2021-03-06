@@ -144,7 +144,14 @@ xreg::ReadRadRawProj(const std::string& rad_file_path)
   xregASSERT(info.data_type == "float");
 
   auto img = MakeITK2DVol<float>(info.num_cols, info.num_rows);
- 
+
+  {
+    const std::array<float,2> tmp_spacing = { info.col_spacing_mm_per_pixel,
+                                              info.row_spacing_mm_per_pixel };
+
+    img->SetSpacing(tmp_spacing.data());
+  }
+
   FileInputStream fin(fmt::format("{}.raw", std::get<0>(Path(rad_file_path).split_ext())));
 
   xregASSERT(fin.num_bytes_left() == (sizeof(float) * info.num_cols * info.num_rows));
