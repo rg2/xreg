@@ -30,6 +30,8 @@
 namespace xreg
 {
 
+// Store metadata found in .rad/.raw projection files from the Ljubljana 2D/3D datasets.
+// Data is available here: http://lit.fe.uni-lj.si/tools.php?lang=eng
 struct RadRawProjInfo
 {
   size_type num_cols;
