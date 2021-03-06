@@ -37,5 +37,6 @@ add_library(xreg_file_formats OBJECT ${XREG_CUR_LIB_HEADERS}
                                      xregH5ProjDataIO.cpp
                                      xregH5SE3OptVarsIO.cpp
                                      xregWriteVideo.cpp
-                                     xregRadRawProj.cpp)
+                                     xregRadRawProj.cpp
+                                     xregStaRawVol.cpp)
 
