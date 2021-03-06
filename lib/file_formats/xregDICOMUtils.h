@@ -50,6 +50,11 @@ struct DICOMFIleBasicFields
   std::string study_uid;
   
   std::string patient_name;
+  
+  double study_time;
+  boost::optional<double> series_time;
+  boost::optional<double> acquisition_time;
+  boost::optional<double> content_time;
 
   std::string modality;
 

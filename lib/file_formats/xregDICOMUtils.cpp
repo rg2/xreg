@@ -47,6 +47,11 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
     using SeriesUIDAttr = gdcm::Attribute<0x0020,0x000E>;
     
     using PatientNameAttr = gdcm::Attribute<0x0010,0x0010>;
+    
+    using StudyTimeAttr       = gdcm::Attribute<0x0008,0x0030>;
+    using SeriesTimeAttr      = gdcm::Attribute<0x0008,0x0031>;
+    using AcquisitionTimeAttr = gdcm::Attribute<0x0008,0x0032>;
+    using ContentTimeAttr     = gdcm::Attribute<0x0008,0x0033>;
 
     using ModalityAttr = gdcm::Attribute<0x0008,0x0060>;
 
@@ -101,6 +106,12 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
     tags_to_read.insert(StudyUIDAttr::GetTag());
     tags_to_read.insert(SeriesUIDAttr::GetTag());
     tags_to_read.insert(PatientNameAttr::GetTag());
+   
+    tags_to_read.insert(StudyTimeAttr::GetTag());
+    tags_to_read.insert(SeriesTimeAttr::GetTag());
+    tags_to_read.insert(AcquisitionTimeAttr::GetTag());
+    tags_to_read.insert(ContentTimeAttr::GetTag());
+
     tags_to_read.insert(ModalityAttr::GetTag());
 
     tags_to_read.insert(ImgPosPatAttr::GetTag());
@@ -182,6 +193,45 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
         PatientNameAttr pat_name_attr;
         pat_name_attr.SetFromDataSet(ds);
         dcm_info.patient_name = StringStripExtraNulls(pat_name_attr.GetValue());
+      }
+
+      {
+        StudyTimeAttr study_time_attr;
+        study_time_attr.SetFromDataSet(ds);
+        dcm_info.study_time = StringCast<double>(StringStripExtraNulls(study_time_attr.GetValue()));
+      }
+      
+      if (ds.FindDataElement(gdcm::Tag(0x0008,0x0031)))
+      {
+        SeriesTimeAttr series_time_attr;
+        series_time_attr.SetFromDataSet(ds);
+
+        if (series_time_attr.GetNumberOfValues() > 0)
+        {
+          dcm_info.series_time = StringCast<double>(StringStripExtraNulls(series_time_attr.GetValue()));
+        }
+      }
+      
+      if (ds.FindDataElement(gdcm::Tag(0x0008,0x0032)))
+      {
+        AcquisitionTimeAttr aquis_time_attr;
+        aquis_time_attr.SetFromDataSet(ds);
+
+        if (aquis_time_attr.GetNumberOfValues() > 0)
+        {
+          dcm_info.acquisition_time = StringCast<double>(StringStripExtraNulls(aquis_time_attr.GetValue()));
+        }
+      }
+      
+      if (ds.FindDataElement(gdcm::Tag(0x0008,0x0033)))
+      {
+        ContentTimeAttr content_time_attr;
+        content_time_attr.SetFromDataSet(ds);
+
+        if (content_time_attr.GetNumberOfValues() > 0)
+        {
+          dcm_info.content_time = StringCast<double>(StringStripExtraNulls(content_time_attr.GetValue()));
+        }
       }
 
       {
@@ -602,6 +652,10 @@ void xreg::PrintDICOMFileBasicFields(const DICOMFIleBasicFields& dcm_info, std::
       << indent << "                Patient Name: " << dcm_info.patient_name << '\n'
       << indent << "                   Study UID: " << dcm_info.study_uid << '\n'
       << indent << "                  Series UID: " << dcm_info.series_uid << '\n'
+      << indent << "                  Study Time: " << dcm_info.study_time << '\n'
+      << indent << "                 Series Time: " << (dcm_info.series_time ? fmt::format("{}", *dcm_info.series_time) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "            Acquisition Time: " << (dcm_info.acquisition_time ? fmt::format("{}", *dcm_info.acquisition_time) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "                Content Time: " << (dcm_info.content_time ? fmt::format("{}", *dcm_info.content_time) : kNOT_PROVIDED_STR) << '\n'
       << indent << "                    Modality: " << dcm_info.modality << '\n'
       << indent << "              Image Position: " << fmt::sprintf("[%+10.4f,%+10.4f,%+10.4f]", dcm_info.img_pos_wrt_pat[0], dcm_info.img_pos_wrt_pat[1], dcm_info.img_pos_wrt_pat[2]) << '\n'
       << indent << "              Image Col Dir.: " << fmt::sprintf("[%+0.4f,%+0.4f,%+0.4f]", dcm_info.col_dir[0], dcm_info.col_dir[1], dcm_info.col_dir[2]) << '\n'
