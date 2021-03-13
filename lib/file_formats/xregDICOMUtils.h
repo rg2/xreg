@@ -116,15 +116,34 @@ struct DICOMFIleBasicFields
   // units are dGy * cm * cm
   boost::optional<double> dose_area_product_dGy_cm_sq;
 
-  boost::optional<double> intensifier_diameter_mm;
-
   boost::optional<std::string> fov_shape;
+
+  boost::optional<std::array<unsigned long,2>> fov_origin_off;
+  
+  enum FOVRot
+  {
+    kZERO = 0,
+    kNINETY = 90,
+    kONE_EIGHTY = 180,
+    kTWO_SEVENTY = 270
+  };
+  
+  boost::optional<FOVRot> fov_rot;
+
+  boost::optional<bool> fov_horizontal_flip;
+
+  boost::optional<double> intensifier_diameter_mm;
 
   // This is usally populated for 2D X-ray images, e.g. when the standard
   // pixel spacing fields are not appropriate as they are required to be
   // in "patient space."
   // row spacing , col spacing
   boost::optional<std::array<CoordScalar,2>> imager_pixel_spacing;
+  
+  boost::optional<double> grid_focal_dist_mm;
+  
+  boost::optional<double> window_center;
+  boost::optional<double> window_width;
 };
 
 using DICOMFIleBasicFieldsList = std::vector<DICOMFIleBasicFields>;

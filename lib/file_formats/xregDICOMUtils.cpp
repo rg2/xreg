@@ -96,10 +96,18 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
     using ExposureTimeAttr = gdcm::Attribute<0x0018,0x1150>;
     using DoseAreaProdAttr = gdcm::Attribute<0x0018,0x115E>;
     
+    using FOVShapeAttr     = gdcm::Attribute<0x0018,0x1147>;
+    using FOVOriginOffAttr = gdcm::Attribute<0x0018,0x7030>;
+    using FOVRotAttr       = gdcm::Attribute<0x0018,0x7032>;
+    using FOVHorizFlipAttr = gdcm::Attribute<0x0018,0x7034>;
+
     using IntensifierDiameterAttr = gdcm::Attribute<0x0018,0x1162>;
-    using FOVShapeAttr            = gdcm::Attribute<0x0018,0x1147>;
+    using ImagerPixelSpacingAttr  = gdcm::Attribute<0x0018,0x1164>;
     
-    using ImagerPixelSpacingAttr = gdcm::Attribute<0x0018,0x1164>;
+    using GridFocalDistAttr = gdcm::Attribute<0x0018,0x704c>;
+    
+    using WinCenterAttr = gdcm::Attribute<0x0028,0x1050>;
+    using WinWidthAttr  = gdcm::Attribute<0x0028,0x1051>;
 
     std::set<gdcm::Tag> tags_to_read;
     tags_to_read.insert(PatientIDAttr::GetTag());
@@ -153,10 +161,18 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
     tags_to_read.insert(ExposureTimeAttr::GetTag());
     tags_to_read.insert(DoseAreaProdAttr::GetTag());
     
-    tags_to_read.insert(IntensifierDiameterAttr::GetTag());
     tags_to_read.insert(FOVShapeAttr::GetTag());
+    tags_to_read.insert(FOVOriginOffAttr::GetTag());
+    tags_to_read.insert(FOVRotAttr::GetTag());
+    tags_to_read.insert(FOVHorizFlipAttr::GetTag());
 
+    tags_to_read.insert(IntensifierDiameterAttr::GetTag());
     tags_to_read.insert(ImagerPixelSpacingAttr::GetTag());
+    
+    tags_to_read.insert(GridFocalDistAttr::GetTag());
+    
+    tags_to_read.insert(WinCenterAttr::GetTag());
+    tags_to_read.insert(WinWidthAttr::GetTag());
 
     if (dcm_reader.ReadSelectedTags(tags_to_read))
     {
@@ -589,6 +605,64 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
         }
       }
 
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x1147)))
+      {
+        FOVShapeAttr fov_shape_attr;
+        fov_shape_attr.SetFromDataSet(ds);
+
+        if (fov_shape_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(fov_shape_attr.GetNumberOfValues() == 1);
+          
+          dcm_info.fov_shape = StringStripExtraNulls(fov_shape_attr.GetValue());
+        }
+      }
+      
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x7030)))
+      {
+        FOVOriginOffAttr fov_origin_off_attr;
+        fov_origin_off_attr.SetFromDataSet(ds);
+
+        if (fov_origin_off_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(fov_origin_off_attr.GetNumberOfValues() == 2);
+          
+          std::array<unsigned long,2> tmp_fov_origin_off;
+          
+          tmp_fov_origin_off[0] = fov_origin_off_attr.GetValue(0);
+          tmp_fov_origin_off[1] = fov_origin_off_attr.GetValue(1);
+
+          dcm_info.fov_origin_off = tmp_fov_origin_off;
+        }
+      }
+      
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x7032)))
+      {
+        FOVRotAttr fov_rot_attr;
+        fov_rot_attr.SetFromDataSet(ds);
+
+        if (fov_rot_attr.GetNumberOfValues() > 0)
+        {
+          const int tmp_fov_rot = fov_rot_attr.GetValue();
+
+          xregASSERT((tmp_fov_rot == 0) || (tmp_fov_rot == 90) ||
+                     (tmp_fov_rot == 180) || (tmp_fov_rot == 270));
+
+          dcm_info.fov_rot = static_cast<DICOMFIleBasicFields::FOVRot>(tmp_fov_rot);
+        }
+      }
+      
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x7034)))
+      {
+        FOVHorizFlipAttr fov_horiz_flip_attr;
+        fov_horiz_flip_attr.SetFromDataSet(ds);
+
+        if (fov_horiz_flip_attr.GetNumberOfValues() > 0)
+        {
+          dcm_info.fov_horizontal_flip = fov_horiz_flip_attr.GetValue() == "YES";
+        }
+      }
+    
       if (ds.FindDataElement(gdcm::Tag(0x0018,0x1162)))
       {
         IntensifierDiameterAttr intensifier_diam_attr;
@@ -602,19 +676,6 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
         }
       }
 
-      if (ds.FindDataElement(gdcm::Tag(0x0018,0x1147)))
-      {
-        FOVShapeAttr fov_shape_attr;
-        fov_shape_attr.SetFromDataSet(ds);
-
-        if (fov_shape_attr.GetNumberOfValues() > 0)
-        {
-          xregASSERT(fov_shape_attr.GetNumberOfValues() == 1);
-          
-          dcm_info.fov_shape = StringStripExtraNulls(fov_shape_attr.GetValue());
-        }
-      }
-    
       if (ds.FindDataElement(gdcm::Tag(0x0018,0x1164)))
       {
         ImagerPixelSpacingAttr imager_pixel_spacing_attr;
@@ -626,7 +687,40 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
           std::array<CoordScalar,2> { static_cast<CoordScalar>(imager_pixel_spacing_attr.GetValue(0)),
                                       static_cast<CoordScalar>(imager_pixel_spacing_attr.GetValue(1)) };
       }
+      
+      if (ds.FindDataElement(gdcm::Tag(0x0018,0x704c)))
+      {
+        GridFocalDistAttr grid_focal_dist_attr;
+        grid_focal_dist_attr.SetFromDataSet(ds);
 
+        if (grid_focal_dist_attr.GetNumberOfValues() > 0)
+        {
+          dcm_info.grid_focal_dist_mm = grid_focal_dist_attr.GetValue();
+        }
+      }
+      
+      if (ds.FindDataElement(gdcm::Tag(0x0028,0x1050)))
+      {
+        WinCenterAttr win_center_attr;
+        win_center_attr.SetFromDataSet(ds);
+
+        if (win_center_attr.GetNumberOfValues() > 0)
+        {
+          dcm_info.window_center = win_center_attr.GetValue(0);
+        }
+      }
+
+      if (ds.FindDataElement(gdcm::Tag(0x0028,0x1051)))
+      {
+        WinWidthAttr win_width_attr;
+        win_width_attr.SetFromDataSet(ds);
+
+        if (win_width_attr.GetNumberOfValues() > 0)
+        {
+          dcm_info.window_width = win_width_attr.GetValue(0);
+        }
+      }
+    
       dcm_info.file_path = dcm_path;
       
       return dcm_info;
@@ -690,14 +784,21 @@ void xreg::PrintDICOMFileBasicFields(const DICOMFIleBasicFields& dcm_info, std::
       << indent << "             Exposure (muAs): " << (dcm_info.exposure_muAs ? fmt::format("{:.3f}", *dcm_info.exposure_muAs) : kNOT_PROVIDED_STR) << '\n'
       << indent << "          Exposure Time (ms): " << (dcm_info.exposure_time_ms ? fmt::format("{:.3f}", *dcm_info.exposure_time_ms) : kNOT_PROVIDED_STR) << '\n'
       << indent << "  Dose Area Prod. (dGy*cm^2): " << (dcm_info.dose_area_product_dGy_cm_sq ? fmt::format("{:.3f}", *dcm_info.dose_area_product_dGy_cm_sq) : kNOT_PROVIDED_STR) << '\n'
-      << indent << "      Intensifier Diam. (mm): " << (dcm_info.intensifier_diameter_mm ? fmt::format("{:.1f}", *dcm_info.intensifier_diameter_mm) : kNOT_PROVIDED_STR) << '\n'
       << indent << "                   FOV Shape: " << (dcm_info.fov_shape ? *dcm_info.fov_shape : kNOT_PROVIDED_STR) << '\n'
+      << indent << "           FOV Origin Offset: " << (dcm_info.fov_origin_off ? fmt::format("[{} , {}]", (*dcm_info.fov_origin_off)[0], (*dcm_info.fov_origin_off)[1]) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "                FOV Rotation: " << (dcm_info.fov_rot ? fmt::format("{}", static_cast<int>(*dcm_info.fov_rot)) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "         FOV Horizontal Flip: " << (dcm_info.fov_horizontal_flip ? std::string(*dcm_info.fov_horizontal_flip ? "YES" : "NO") : kNOT_PROVIDED_STR) << '\n'
+      << indent << "      Intensifier Diam. (mm): " << (dcm_info.intensifier_diameter_mm ? fmt::format("{:.1f}", *dcm_info.intensifier_diameter_mm) : kNOT_PROVIDED_STR) << '\n'
       << indent << " Imager Pix. Spacing (mm/px): "
                 << (dcm_info.imager_pixel_spacing ?
-                      fmt::format("[ {:.1f} , {:.1f}]",
+                      fmt::format("[ {:.3f} , {:.3f}]",
                                   (*dcm_info.imager_pixel_spacing)[0],
                                   (*dcm_info.imager_pixel_spacing)[1]) :
                       kNOT_PROVIDED_STR)
+                << '\n'
+      << indent << "       Grid Focal Dist. (mm): " << (dcm_info.grid_focal_dist_mm ? fmt::format("{}", *dcm_info.grid_focal_dist_mm) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "               Window Center: " << (dcm_info.window_center ? fmt::format("{}", *dcm_info.window_center) : kNOT_PROVIDED_STR) << '\n'
+      << indent << "                Window Width: " << (dcm_info.window_width ? fmt::format("{}", *dcm_info.window_width) : kNOT_PROVIDED_STR) << '\n'
                 << '\n';
 
   out.flush();
