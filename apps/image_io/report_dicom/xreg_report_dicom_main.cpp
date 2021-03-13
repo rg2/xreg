@@ -36,6 +36,7 @@
 
 #include "xregProgOptUtils.h"
 #include "xregFilesystemUtils.h"
+#include "xregDICOMUtils.h"
 
 int main( int argc, char* argv[] )
 {
@@ -61,6 +62,14 @@ int main( int argc, char* argv[] )
               "positional arguments.");
   po.set_arg_usage("<Input DICOM Directory or DICOM File Path> [[[tag 1] tag2] ... tag N]");
 
+  po.add("skip-full-print", 's', ProgOpts::kSTORE_TRUE, "skip-full-print",
+         "Skip the raw printout of all DICOM fields.")
+    << false;
+
+  po.add("print-xreg-fields", '-x', ProgOpts::kSTORE_TRUE, "print-xreg-fields",
+         "Print basic DICOM fields as stored by the DICOMFIleBasicFields struct.")
+    << false;
+
   po.set_min_num_pos_args(1);
 
   try
@@ -81,87 +90,101 @@ int main( int argc, char* argv[] )
     return kEXIT_VAL_SUCCESS;
   }
 
+  const bool skip_full_print = po.get("skip-full-print");
+
+  const bool print_xreg_fields = po.get("print-xreg-fields");
+
   using TagSetType = std::set<std::string>;
   TagSetType in_tags(po.pos_args().begin() + 1, po.pos_args().end());
   const bool limit_tags = !in_tags.empty();
 
   std::string img_path = po.pos_args()[0];
 
-  // First check for a directory as source input, if true then assume we are
-  // dealing with DICOM
-  itk::Directory::Pointer src_dir = itk::Directory::New();
-  if (src_dir->Load(img_path.c_str()))
+  if (!skip_full_print)
   {
-    int good_file_idx = -1;
-
-    const int num_files = src_dir->GetNumberOfFiles();
-
-    for (int file_idx = 0; file_idx < num_files; ++file_idx)
+    // First check for a directory as source input, if true then assume we are
+    // dealing with DICOM
+    itk::Directory::Pointer src_dir = itk::Directory::New();
+    if (src_dir->Load(img_path.c_str()))
     {
-      if (src_dir->GetFile(file_idx)[0] != '.')
+      int good_file_idx = -1;
+
+      const int num_files = src_dir->GetNumberOfFiles();
+
+      for (int file_idx = 0; file_idx < num_files; ++file_idx)
       {
-        good_file_idx = file_idx;
-        break;
+        if (src_dir->GetFile(file_idx)[0] != '.')
+        {
+          good_file_idx = file_idx;
+          break;
+        }
+      }
+
+      if (good_file_idx >= 0)
+      {
+        img_path += kFILE_SEPS[0];
+        img_path += src_dir->GetFile(good_file_idx);
+      }
+      else
+      {
+        std::cerr << "ERROR: could not find a file to read!" << std::endl;
+        return kEXIT_VAL_EMPTY_DIR;
       }
     }
 
-    if (good_file_idx >= 0)
+    using ImageIOType = itk::GDCMImageIO;
+
+    ImageIOType::Pointer dcm_io = ImageIOType::New();
+
+    using ReaderType = itk::ImageFileReader<ImageType>;
+    ReaderType::Pointer reader = ReaderType::New();
+    reader->SetImageIO(dcm_io);
+    reader->SetFileName(img_path);
+
+    try
     {
-      img_path += kFILE_SEPS[0];
-      img_path += src_dir->GetFile(good_file_idx);
+      reader->Update();
     }
-    else
+    catch (itk::ExceptionObject& e)
     {
-      std::cerr << "ERROR: could not find a file to read!" << std::endl;
-      return kEXIT_VAL_EMPTY_DIR;
+      std::cerr << "ERROR: reading file:\n" << e << std::endl;
+      return kEXIT_VAL_IO_FAILURE;
     }
-  }
 
-  using ImageIOType = itk::GDCMImageIO;
+    using DictionaryType = itk::MetaDataDictionary;
 
-  ImageIOType::Pointer dcm_io = ImageIOType::New();
+    const DictionaryType& dict = dcm_io->GetMetaDataDictionary();
 
-  using ReaderType = itk::ImageFileReader<ImageType>;
-  ReaderType::Pointer reader = ReaderType::New();
-  reader->SetImageIO(dcm_io);
-  reader->SetFileName(img_path);
+    DictionaryType::ConstIterator dict_end_it = dict.End();
 
-  try
-  {
-    reader->Update();
-  }
-  catch (itk::ExceptionObject& e)
-  {
-    std::cerr << "ERROR: reading file:\n" << e << std::endl;
-    return kEXIT_VAL_IO_FAILURE;
-  }
-
-  using DictionaryType = itk::MetaDataDictionary;
-
-  const DictionaryType& dict = dcm_io->GetMetaDataDictionary();
-
-  DictionaryType::ConstIterator dict_end_it = dict.End();
-
-  for (DictionaryType::ConstIterator dict_it = dict.Begin(); dict_it != dict_end_it; ++dict_it)
-  {
-    using MetaDataStringType = itk::MetaDataObject<std::string>;
-
-    MetaDataStringType::Pointer entry = dynamic_cast<MetaDataStringType*>(dict_it->second.GetPointer());
-
-    if (entry)
+    for (DictionaryType::ConstIterator dict_it = dict.Begin(); dict_it != dict_end_it; ++dict_it)
     {
-      std::string tag_key = dict_it->first;
+      using MetaDataStringType = itk::MetaDataObject<std::string>;
 
-      // only print out if no tags have been specified, or this tag is a specified tag
-      if (!limit_tags || (in_tags.find(tag_key)) != in_tags.end())
+      MetaDataStringType::Pointer entry = dynamic_cast<MetaDataStringType*>(dict_it->second.GetPointer());
+
+      if (entry)
       {
-        std::string label_id;
+        std::string tag_key = dict_it->first;
 
-        const bool tag_found = itk::GDCMImageIO::GetLabelFromTag(tag_key, label_id);
+        // only print out if no tags have been specified, or this tag is a specified tag
+        if (!limit_tags || (in_tags.find(tag_key)) != in_tags.end())
+        {
+          std::string label_id;
 
-        std::cout << "(" << tag_key << ") " << (tag_found ? label_id.c_str() : "Unknown") << " = " << entry->GetMetaDataObjectValue() << std::endl;
+          const bool tag_found = itk::GDCMImageIO::GetLabelFromTag(tag_key, label_id);
+
+          std::cout << "(" << tag_key << ") " << (tag_found ? label_id.c_str() : "Unknown") << " = " << entry->GetMetaDataObjectValue() << std::endl;
+        }
       }
     }
+  }
+
+  if (print_xreg_fields)
+  {
+    std::cout << "--------- xreg Basic DICOM Fields ---------" << std::endl;
+
+    PrintDICOMFileBasicFields(ReadDICOMFileBasicFields(img_path), std::cout);
   }
 
   return kEXIT_VAL_SUCCESS;
