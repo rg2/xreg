@@ -30,12 +30,6 @@
 namespace xreg
 {
 
-std::vector<std::vector<size_type>>
-BruteForce3Combos(const size_type num_pts);
-
-std::vector<std::vector<size_type>>
-BruteForce4Combos(const size_type num_pts);
-
 class RANSACPnP : public Landmark2D3DRegi
 {
 public:

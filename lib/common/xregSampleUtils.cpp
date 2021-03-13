@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020, 2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,8 @@
 #include <random>
 #include <algorithm>
 
+#include "xregAssert.h"
+
 void xreg::SeedRNGEngWithRandDev(std::mt19937* rng)
 {
   std::random_device rd;
@@ -40,3 +42,66 @@ void xreg::SeedRNGEngWithRandDev(std::mt19937* rng)
   rng->seed(init_seed_seq);
 }
 
+std::vector<std::vector<xreg::size_type>>
+xreg::BruteForce3Combos(const size_type num_elem)
+{
+  xregASSERT(num_elem >= 3);
+  
+  std::vector<std::vector<size_type>> combos;
+
+  std::vector<size_type> tmp_arr(3);
+
+  for (size_type i = 0; i < (num_elem - 2); ++i)
+  {
+    tmp_arr[0] = i;
+
+    for (size_type j = (i + 1); j < (num_elem - 1); ++j)
+    {
+      tmp_arr[1] = j;
+
+      for (size_type k = (j + 1); k < num_elem; ++k)
+      {
+        tmp_arr[2] = k;
+
+        combos.push_back(tmp_arr);
+      }
+    }
+  }
+
+  return combos;
+}
+
+std::vector<std::vector<xreg::size_type>>
+xreg::BruteForce4Combos(const size_type num_elem)
+{
+  xregASSERT(num_elem >= 4);
+
+  std::vector<std::vector<size_type>> combos;
+
+  std::vector<size_type> tmp_arr(4);
+
+  for (size_type i = 0; i < (num_elem - 3); ++i)
+  {
+    tmp_arr[0] = i;
+
+    for (size_type j = (i + 1); j < (num_elem - 2); ++j)
+    {
+      tmp_arr[1] = j;
+
+      for (size_type k = (j + 1); k < (num_elem - 1); ++k)
+      {
+        tmp_arr[2] = k;
+        
+        for (size_type l = (k + 1); l < num_elem; ++l)
+        {
+          tmp_arr[3] = l;
+
+          combos.push_back(tmp_arr);
+        }
+      }
+    }
+  }
+
+  return combos;
+}
+ 

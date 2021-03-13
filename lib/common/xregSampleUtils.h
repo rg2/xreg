@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020, 2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,11 +27,24 @@
 
 #include <random>
 
+#include "xregCommon.h"
+
 namespace xreg
 {
 
-// helper function to initialize mt rng engine with a random device, this is code that I keep having to re-write everywhere
+// helper function to initialize mt rng engine with a random device, this is
+// code that I keep having to re-write everywhere.
 void SeedRNGEngWithRandDev(std::mt19937* rng);
+
+// Return an exhaustive list of combinations of 3 elements from a collection of
+// a specified list. Each combination is represented by a list of 3 indices.
+std::vector<std::vector<size_type>>
+BruteForce3Combos(const size_type num_elem);
+
+// Return an exhaustive list of combinations of 4 elements from a collection of
+// a specified list. Each combination is represented by a list of 4 indices.
+std::vector<std::vector<size_type>>
+BruteForce4Combos(const size_type num_elem);
 
 }  // xreg
 
