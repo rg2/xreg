@@ -50,6 +50,12 @@ xreg::RadRawProjInfo xreg::ReadRadRawProjInfo(const std::string& file_path)
   bool found_tpos      = false;
   bool found_src_pos   = false;
 
+  const char* size_param_str      = "Size[pixels]";
+  const char* step_param_str      = "Step[mm]";
+  const char* data_type_param_str = "DataType";
+  const char* src_pos_param_str   = "SourcePosition[mm]";
+  const char* pos_param_str       = "TPosition";
+
   for (size_type line_idx = 0; line_idx < num_lines; ++line_idx)
   {
     const auto colon_sep_toks = StringSplit(lines[line_idx], ":");
@@ -64,7 +70,7 @@ xreg::RadRawProjInfo xreg::ReadRadRawProjInfo(const std::string& file_path)
       {
         const auto& param_val = colon_sep_toks[1];
 
-        if (param_name == "Size[pixels]")
+        if (param_name == size_param_str)
         {
           const auto size_toks = StringCast<size_type>(StringSplit(param_val));
           
@@ -75,7 +81,7 @@ xreg::RadRawProjInfo xreg::ReadRadRawProjInfo(const std::string& file_path)
 
           found_size = true;
         }
-        else if (param_name == "Step[mm]")
+        else if (param_name == step_param_str)
         {
           const auto step_toks = StringCast<float>(StringSplit(param_val));
           
@@ -86,13 +92,13 @@ xreg::RadRawProjInfo xreg::ReadRadRawProjInfo(const std::string& file_path)
 
           found_step = true;
         }
-        else if (param_name == "DataType")
+        else if (param_name == data_type_param_str)
         {
           info.data_type = StringStrip(param_val);
 
           found_data_type = true;
         }
-        else if (param_name == "SourcePosition[mm]")
+        else if (param_name == src_pos_param_str)
         {
           const auto pos_toks = StringCast<float>(StringSplit(param_val));
 
@@ -105,7 +111,7 @@ xreg::RadRawProjInfo xreg::ReadRadRawProjInfo(const std::string& file_path)
           found_src_pos = true;
         }
       }
-      else if (param_name == "TPosition")
+      else if (param_name == pos_param_str)
       {
         if ((line_idx + 4) < num_lines)
         {
@@ -130,7 +136,35 @@ xreg::RadRawProjInfo xreg::ReadRadRawProjInfo(const std::string& file_path)
 
   if (!(found_size && found_step && found_data_type && found_tpos && found_src_pos))
   {
-    xregThrow("Failed to find required .rad metadata fields!");
+    std::vector<std::string> params_not_found;
+
+    if (!found_size)
+    {
+      params_not_found.push_back(size_param_str);
+    }
+
+    if (!found_step)
+    {
+      params_not_found.push_back(step_param_str);
+    }
+
+    if (!found_data_type)
+    {
+      params_not_found.push_back(data_type_param_str);
+    }
+
+    if (!found_tpos)
+    {
+      params_not_found.push_back(pos_param_str);
+    }
+
+    if (!found_src_pos)
+    {
+      params_not_found.push_back(src_pos_param_str);
+    }
+
+    xregThrow("Failed to find required .rad metadata fields: %s",
+              JoinTokens(params_not_found, " , ").c_str());
   }
 
   return info;
