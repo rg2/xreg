@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020,2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,6 +47,17 @@ FitCircle2D(const Pt2& x,
 /// center point and radius.
 /// Requires at least three points.
 std::tuple<Pt2,CoordScalar> FitCircle2D(const Pt2List& pts);
+
+/// \brief Fits a 2D circle to a collection of points using a RANSAC
+///        strategy to detect outliers.
+///
+/// The FitCircle2D() call with three points is used to generate candidate
+/// solutions and create the consensus sets. The call to FitCircle2D() on a
+/// collection of points is called using the conensus to produce the final
+/// solution.
+std::tuple<Pt2,CoordScalar>
+FitCircle2DRansac(const Pt2List& pts, const int num_proposals = -1,
+                  const CoordScalar inlier_thresh = 0.01f);
 
 }  // xreg
 
