@@ -66,6 +66,54 @@ xreg::size_type xreg::BinCoeff(const size_type n, const size_type k)
 }
 
 std::vector<std::vector<xreg::size_type>>
+xreg::SampleCombos(const size_type num_elem, const size_type combo_len,
+                   const size_type num_combos, std::mt19937& rng)
+{
+  using Combo = std::vector<size_type>;
+  
+  const size_type max_num_combos = BinCoeff(num_elem, combo_len);
+  
+  xregASSERT(num_combos <= max_num_combos);
+
+  std::vector<Combo> combos;
+  combos.reserve(num_combos);
+
+  // perform a naive rejection sampling
+
+  // this will keep track of the combos that have been sampled, and prevent them
+  // from being sampled again. We store a separate std::vector of the combos that
+  // are to be returned, as it will be free of any sorting that std::set imposes.
+  std::set<Combo> combos_set;
+
+  Combo tmp_combo(combo_len);
+
+  std::uniform_int_distribution<size_type> uni_dist(0, num_elem - 1);
+
+  for (size_type combo_idx = 0; combo_idx < num_combos; ++combo_idx)
+  {
+    bool bad_combo = true;
+
+    do
+    {
+      for (size_type i = 0; i < combo_len; ++i)
+      {
+        tmp_combo[i] = uni_dist(rng);
+      }
+
+      std::sort(tmp_combo.begin(), tmp_combo.end());
+
+      // combo is bad if it was not inserted
+      bad_combo = !combos_set.insert(tmp_combo).second;
+    }
+    while (bad_combo);
+
+    combos.push_back(tmp_combo);
+  }
+
+  return combos;
+}
+
+std::vector<std::vector<xreg::size_type>>
 xreg::BruteForce3Combos(const size_type num_elem)
 {
   xregASSERT(num_elem >= 3);
