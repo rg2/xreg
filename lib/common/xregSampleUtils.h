@@ -36,6 +36,9 @@ namespace xreg
 // code that I keep having to re-write everywhere.
 void SeedRNGEngWithRandDev(std::mt19937* rng);
 
+// Compute binomial coefficient - e.g. n choose k.
+size_type BinCoeff(const size_type n, const size_type k);
+
 // Return an exhaustive list of combinations of 3 elements from a collection of
 // a specified list. Each combination is represented by a list of 3 indices.
 std::vector<std::vector<size_type>>

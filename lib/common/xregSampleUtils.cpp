@@ -42,6 +42,29 @@ void xreg::SeedRNGEngWithRandDev(std::mt19937* rng)
   rng->seed(init_seed_seq);
 }
 
+xreg::size_type xreg::BinCoeff(const size_type n, const size_type k)
+{
+  xregASSERT(k <= n);
+
+  // https://en.wikipedia.org/wiki/Binomial_coefficient#Multiplicative_formula
+  
+  const size_type n_plus_1 = n + 1;
+
+  const size_type limit = std::min(k, n - k);
+  
+  size_type numer = 1;
+  size_type denom = 1;
+  
+  for (size_type i = 1; i <= limit; ++i)
+  {
+    numer *= n_plus_1 - i;
+
+    denom *= i;
+  }
+  
+  return numer / denom;
+}
+
 std::vector<std::vector<xreg::size_type>>
 xreg::BruteForce3Combos(const size_type num_elem)
 {
@@ -67,6 +90,8 @@ xreg::BruteForce3Combos(const size_type num_elem)
       }
     }
   }
+
+  xregASSERT(combos.size() == BinCoeff(num_elem, 3));
 
   return combos;
 }
@@ -101,6 +126,8 @@ xreg::BruteForce4Combos(const size_type num_elem)
       }
     }
   }
+  
+  xregASSERT(combos.size() == BinCoeff(num_elem, 4));
 
   return combos;
 }
