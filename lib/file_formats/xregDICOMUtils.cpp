@@ -70,6 +70,11 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
     using SeriesDescAttr = gdcm::Attribute<0x0008,0x103E>;
     
     using ImageTypeAttr = gdcm::Attribute<0x0008,0x0008>;
+    
+    using ManufacturerAttr          = gdcm::Attribute<0x0008,0x0070>;
+    using InstitutionNameAttr       = gdcm::Attribute<0x0008,0x0080>;
+    using InstitutionDeptAttr       = gdcm::Attribute<0x0008,0x1040>;
+    using ManufacturerModelNameAttr = gdcm::Attribute<0x0008,0x1090>;
 
     using SecCapDevManAttr    = gdcm::Attribute<0x0018,0x1016>;
     using SecCapDevSWVersAttr = gdcm::Attribute<0x0018,0x1019>;
@@ -97,6 +102,8 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
     using DoseAreaProdAttr = gdcm::Attribute<0x0018,0x115E>;
     
     using FOVShapeAttr     = gdcm::Attribute<0x0018,0x1147>;
+    // We never use the FOV dims attribute, because it does not actually compile!
+    //using FOVDimsAttr      = gdcm::Attribute<0x0018,0x1149>;
     using FOVOriginOffAttr = gdcm::Attribute<0x0018,0x7030>;
     using FOVRotAttr       = gdcm::Attribute<0x0018,0x7032>;
     using FOVHorizFlipAttr = gdcm::Attribute<0x0018,0x7034>;
@@ -136,6 +143,11 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
 
     tags_to_read.insert(ImageTypeAttr::GetTag());
 
+    tags_to_read.insert(ManufacturerAttr::GetTag());
+    tags_to_read.insert(InstitutionNameAttr::GetTag());
+    tags_to_read.insert(InstitutionDeptAttr::GetTag());
+    tags_to_read.insert(ManufacturerModelNameAttr::GetTag());
+
     tags_to_read.insert(SecCapDevManAttr::GetTag());
     tags_to_read.insert(SecCapDevSWVersAttr::GetTag());
 
@@ -162,6 +174,7 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
     tags_to_read.insert(DoseAreaProdAttr::GetTag());
     
     tags_to_read.insert(FOVShapeAttr::GetTag());
+    tags_to_read.insert(gdcm::Tag(0x0018,0x1149));  // FOV Dims
     tags_to_read.insert(FOVOriginOffAttr::GetTag());
     tags_to_read.insert(FOVRotAttr::GetTag());
     tags_to_read.insert(FOVHorizFlipAttr::GetTag());
@@ -369,6 +382,58 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
           }
           
           dcm_info.image_type = image_type;
+        }
+      }
+
+      {
+        ManufacturerAttr manufacturer_attr;
+        manufacturer_attr.SetFromDataSet(ds);
+
+        if (manufacturer_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(manufacturer_attr.GetNumberOfValues() == 1);
+
+          dcm_info.manufacturer = StringStrip(StringStripExtraNulls(manufacturer_attr.GetValue()));
+        }
+      }
+      
+      if (ds.FindDataElement(gdcm::Tag(0x0008,0x0080)))
+      {
+        InstitutionNameAttr inst_name_attr;
+        inst_name_attr.SetFromDataSet(ds);
+
+        if (inst_name_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(inst_name_attr.GetNumberOfValues() == 1);
+
+          dcm_info.institution_name = StringStrip(StringStripExtraNulls(inst_name_attr.GetValue()));
+        }
+      }
+
+      if (ds.FindDataElement(gdcm::Tag(0x0008,0x1040)))
+      {
+        InstitutionDeptAttr inst_dept_attr;
+        inst_dept_attr.SetFromDataSet(ds);
+
+        if (inst_dept_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(inst_dept_attr.GetNumberOfValues() == 1);
+
+          dcm_info.department_name = StringStrip(StringStripExtraNulls(inst_dept_attr.GetValue()));
+        }
+      }
+
+      if (ds.FindDataElement(gdcm::Tag(0x0008,0x1090)))
+      {
+        ManufacturerModelNameAttr manufacturer_model_attr;
+        manufacturer_model_attr.SetFromDataSet(ds);
+
+        if (manufacturer_model_attr.GetNumberOfValues() > 0)
+        {
+          xregASSERT(manufacturer_model_attr.GetNumberOfValues() == 1);
+
+          dcm_info.manufacturers_model_name = StringStrip(StringStripExtraNulls(
+                                                    manufacturer_model_attr.GetValue()));
         }
       }
 
@@ -614,7 +679,28 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
         {
           xregASSERT(fov_shape_attr.GetNumberOfValues() == 1);
           
-          dcm_info.fov_shape = StringStripExtraNulls(fov_shape_attr.GetValue());
+          dcm_info.fov_shape = StringStrip(StringStripExtraNulls(fov_shape_attr.GetValue()));
+        }
+      }
+     
+      {
+        // See note above why we do things differently for FOV dims
+        gdcm::Tag fov_dims_tag(0x0018,0x1149);
+
+        if (ds.FindDataElement(fov_dims_tag))
+        {
+          // The FOV dims value is stored as an integer string or two integer strings,
+          // separated by \, when the FOV shape is RECTANGLE
+
+          try
+          {
+            std::vector<char> val_str = dynamic_cast<const gdcm::ByteValue&>(
+                                            ds.GetDataElement(fov_dims_tag).GetValue());
+            val_str.push_back(0);
+
+            dcm_info.fov_dims = StringCast<unsigned long>(StringSplit(val_str.data(), "\\"));
+          }
+          catch (const std::bad_cast&) { }
         }
       }
       
@@ -767,6 +853,10 @@ void xreg::PrintDICOMFileBasicFields(const DICOMFIleBasicFields& dcm_info, std::
       << indent << "                 Study Desc.: " << (dcm_info.study_desc ? *dcm_info.study_desc : kNOT_PROVIDED_STR) << '\n'
       << indent << "                Series Desc.: " << (dcm_info.series_desc ? *dcm_info.series_desc : kNOT_PROVIDED_STR) << '\n'
       << indent << "                  Image Type: " << (dcm_info.image_type ? JoinTokens(*dcm_info.image_type, " , ") : kNOT_PROVIDED_STR) << '\n'
+      << indent << "                Manufacturer: " << dcm_info.manufacturer << '\n'
+      << indent << "            Institution Name: " << (dcm_info.institution_name ? *dcm_info.institution_name : kNOT_PROVIDED_STR) << '\n'
+      << indent << "             Department Name: " << (dcm_info.department_name ? *dcm_info.department_name : kNOT_PROVIDED_STR) << '\n'
+      << indent << "           Manuf. Model Name: " << (dcm_info.manufacturers_model_name ? *dcm_info.manufacturers_model_name : kNOT_PROVIDED_STR) << '\n'
       << indent << "         Sec. Cap. Dev. Man.: " << (dcm_info.sec_cap_dev_manufacturer ? *dcm_info.sec_cap_dev_manufacturer : kNOT_PROVIDED_STR) << '\n'
       << indent << "      Sec. Cap. Dev. SW Ver.: " << (dcm_info.sec_cap_dev_software_versions ? *dcm_info.sec_cap_dev_software_versions : kNOT_PROVIDED_STR) << '\n'
       << indent << "           Software Versions: " << (dcm_info.software_versions ? JoinTokens(*dcm_info.software_versions, " , ") : kNOT_PROVIDED_STR) << '\n'
@@ -785,6 +875,7 @@ void xreg::PrintDICOMFileBasicFields(const DICOMFIleBasicFields& dcm_info, std::
       << indent << "          Exposure Time (ms): " << (dcm_info.exposure_time_ms ? fmt::format("{:.3f}", *dcm_info.exposure_time_ms) : kNOT_PROVIDED_STR) << '\n'
       << indent << "  Dose Area Prod. (dGy*cm^2): " << (dcm_info.dose_area_product_dGy_cm_sq ? fmt::format("{:.3f}", *dcm_info.dose_area_product_dGy_cm_sq) : kNOT_PROVIDED_STR) << '\n'
       << indent << "                   FOV Shape: " << (dcm_info.fov_shape ? *dcm_info.fov_shape : kNOT_PROVIDED_STR) << '\n'
+      << indent << "         FOV Dimensions (mm): " << (dcm_info.fov_dims ? JoinTokens(ToStrings(*dcm_info.fov_dims), " , ") : kNOT_PROVIDED_STR) << '\n'
       << indent << "           FOV Origin Offset: " << (dcm_info.fov_origin_off ? fmt::format("[{} , {}]", (*dcm_info.fov_origin_off)[0], (*dcm_info.fov_origin_off)[1]) : kNOT_PROVIDED_STR) << '\n'
       << indent << "                FOV Rotation: " << (dcm_info.fov_rot ? fmt::format("{}", static_cast<int>(*dcm_info.fov_rot)) : kNOT_PROVIDED_STR) << '\n'
       << indent << "         FOV Horizontal Flip: " << (dcm_info.fov_horizontal_flip ? std::string(*dcm_info.fov_horizontal_flip ? "YES" : "NO") : kNOT_PROVIDED_STR) << '\n'

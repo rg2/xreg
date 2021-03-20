@@ -79,6 +79,14 @@ struct DICOMFIleBasicFields
 
   boost::optional<std::vector<std::string>> image_type;
 
+  std::string manufacturer;
+
+  boost::optional<std::string> institution_name;
+
+  boost::optional<std::string> department_name;
+
+  boost::optional<std::string> manufacturers_model_name;
+
   boost::optional<std::string> sec_cap_dev_manufacturer;
 
   boost::optional<std::string> sec_cap_dev_software_versions;
@@ -117,6 +125,8 @@ struct DICOMFIleBasicFields
   boost::optional<double> dose_area_product_dGy_cm_sq;
 
   boost::optional<std::string> fov_shape;
+  
+  boost::optional<std::vector<unsigned long>> fov_dims;
 
   boost::optional<std::array<unsigned long,2>> fov_origin_off;
   
