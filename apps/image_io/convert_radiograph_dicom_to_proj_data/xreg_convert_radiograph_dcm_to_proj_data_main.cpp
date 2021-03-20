@@ -22,6 +22,8 @@
  * SOFTWARE.
  */
 
+#include <fmt/format.h>
+
 #include "xregProgOptUtils.h"
 #include "xregH5ProjDataIO.h"
 #include "xregDICOMUtils.h"
@@ -29,6 +31,8 @@
 #include "xregFCSVUtils.h"
 #include "xregLandmarkMapUtils.h"
 #include "xregAnatCoordFrames.h"
+#include "xregStringUtils.h"
+#include "xregCIOSFusionDICOM.h"
 
 using namespace xreg;
   
@@ -59,14 +63,18 @@ int ReadPixelsAndWriteToH5(const CameraModel& cam,
     {
       std::cerr << "WARNING: Image column spacing (" << img_spacing[0]
                 <<") differs from camera model column spacings ("
-                << pd.cam.det_col_spacing << ")" << std::endl;
+                << pd.cam.det_col_spacing
+                << "). Image values will be updated to match camera model."
+                << std::endl;
     }
 
     if (std::abs(img_spacing[1] - pd.cam.det_row_spacing) > 1.0e-3)
     {
       std::cerr << "WARNING: Image row spacing (" << img_spacing[1]
                 <<") differs from camera model row spacings ("
-                << pd.cam.det_row_spacing << ")" << std::endl;
+                << pd.cam.det_row_spacing 
+                << "). Image values will be updated to match camera model."
+                << std::endl;
     }
     
     // Always prefer the spacing obtained by interpreting DICOM fields
@@ -89,7 +97,7 @@ int main(int argc, char* argv[])
 
   xregPROG_OPTS_SET_COMPILE_DATE(po);
 
-  po.set_help("");
+  po.set_help("TODO");
   po.set_arg_usage("<Input DICOM File> <Output Proj. Data File> [<landmarks FCSV file>]");
   po.set_min_num_pos_args(2);
 
@@ -101,6 +109,40 @@ int main(int argc, char* argv[])
          "Image row and column spacing (mm / pixel) value to use ONLY when a suitable value may "
          "not be obtained from the DICOM metadata.")
     << 1.0;
+
+  po.add("guess-spacing", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "guess-spacing",
+         "Guess pixel spacings based on other metadata values, such FOV shape and size. "
+         "This overrides any value set by \"spacing\" unless the metadata needed to make a guess is "
+         "not available.")
+    << false;
+
+  po.add("proj-frame", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "proj-frame",
+         "Orientation of the projective coordinate frame to be used unless overriden by another "
+         "superceding flag. "
+         "Origin is always at the X-ray source. "
+         "The X axis runs parallel with the direction along an image row and is oriented in the "
+         "increasing column direction. "
+         "The Y axis runs parallel with the direction along an image column and is oriented "
+         "in the increasing row direction. "
+         "The Z axis is orthogonal to the detector plane and this flag determines the direction "
+         "(either towards the X-ray source or away). "
+         "Values: "
+         "\"det-neg-z\" --> Moving from the X-ray source to the detector is a movement in the "
+         "negative Z direction. "
+         "\"det-pos-z\" --> Moving from the X-ray source to the detector is a movement in the "
+         "positive Z direction. "
+         "\"auto\" --> Automatically select the orientation based on the modality field. "
+         "\"XA\" and \"RF\" yield \"det-neg-z\" while \"CR\" and \"DX\" yield \"det-pos-z\"")
+    << "auto";
+  
+  po.add("no-bayview-check", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-bayview-check",
+         "Do NOT inspect metadata fields to determine that the input file was created using the "
+         "Siemens CIOS Fusion C-arm in the JHMI Bayview lab. When this check IS performed and a "
+         "file is determined to have been created using the Bayview C-arm, then the extrinsic "
+         "transformation of the projection is populated from a previously computed transformation "
+         "which has an X-axis and center of rotation corresponding to the oribital rotation of "
+         "the C-arm.")
+    << false;
 
   po.add("pixel-type", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "pixel-type",
          "Pixel type used when saving the output projection data. Valid values are: "
@@ -129,7 +171,13 @@ int main(int argc, char* argv[])
 
   const double src_to_det_default = po.get("src-to-det");
   const double spacing_default = po.get("spacing");
-  
+
+  const bool guess_spacing = po.get("guess-spacing");
+
+  const std::string proj_frame_str = ToLowerCase(po.get("proj-frame").as_string());
+
+  const bool no_bayview_check = po.get("no-bayview-check");
+
   const std::string pixel_type_str = po.get("pixel-type");
 
   const std::string& src_dcm_path = po.pos_args()[0];
@@ -139,7 +187,44 @@ int main(int argc, char* argv[])
 
   vout << "reading DICOM metadata..." << std::endl; 
   const auto dcm_info = ReadDICOMFileBasicFields(src_dcm_path);
-  
+
+  vout << "  input modality: " << dcm_info.modality << std::endl;
+
+  const bool modality_is_xa = dcm_info.modality == "XA";
+  const bool modality_is_dx = dcm_info.modality == "DX";
+  const bool modality_is_cr = dcm_info.modality == "CR";
+  const bool modality_is_rf = dcm_info.modality == "RF";
+
+  if (!(modality_is_xa || modality_is_dx || modality_is_cr || modality_is_rf))
+  {
+    std::cerr << "WARNING: unexpected modality: " << dcm_info.modality << std::endl;
+  }
+
+  bool proj_frame_use_det_neg_z = false;
+
+  if (proj_frame_str == "auto")
+  {
+    vout << "automatically selecting proj. frame Z direction using modality..." << std::endl;
+    proj_frame_use_det_neg_z = modality_is_xa || modality_is_rf;
+  }
+  else if (proj_frame_str == "det-neg-z")
+  {
+    vout << "forcing proj. frame Z direction to det-neg-z" << std::endl;
+    proj_frame_use_det_neg_z = true;
+  }
+  else if (proj_frame_str == "det-pos-z")
+  {
+    vout << "forcing proj. frame Z direction to det-pos-z" << std::endl;
+    proj_frame_use_det_neg_z = false;
+  }
+  else
+  {
+    std::cerr << "ERROR: Unsupported \"proj-frame\" value: " << proj_frame_str << std::endl;
+    return kEXIT_VAL_BAD_USE;
+  }
+
+  vout << "  det-neg-z: " << BoolToYesNo(proj_frame_use_det_neg_z) << std::endl;
+
   vout << "setting up camera model..." << std::endl;
 
   float src_to_det_to_use = static_cast<float>(src_to_det_default);
@@ -167,8 +252,6 @@ int main(int argc, char* argv[])
     row_spacing_to_use = s[0];
     col_spacing_to_use = s[1];
   }
-  // TODO: could add some other checks based on detector tags before looking
-  //       at the pixel spacing below:
   else if ((dcm_info.row_spacing > 1.0e-6) && (dcm_info.col_spacing > 1.0e-6))
   {
     // next, use the image pixel spacing field - this is less preferred than the
@@ -182,16 +265,176 @@ int main(int argc, char* argv[])
   }
   else
   {
-    vout << "spacing not found in metadata, using default spacing: " << spacing_default << std::endl;
+    // No other tags explicitly specify the spacing, try and guess using some other metadata fields.
+
+    bool guess_made = false;
+
+    if (guess_spacing)
+    {
+      vout << "pixel spacing metadata not available - attempting to guess..." << std::endl;
+      
+      if (dcm_info.fov_shape)
+      {
+        const auto& fov_shape_str = *dcm_info.fov_shape;
+
+        vout << "  FOV shape available: " << fov_shape_str << std::endl;
+
+        if (dcm_info.fov_dims)
+        {
+          const auto& fov_dims = *dcm_info.fov_dims;
+
+          const size_type num_fov_dims = fov_dims.size();
+
+          unsigned long num_rows_for_guess = dcm_info.num_rows;
+          unsigned long num_cols_for_guess = dcm_info.num_cols;
+
+          if (dcm_info.fov_origin_off)
+          {
+            const auto& fov_origin_off = *dcm_info.fov_origin_off;
+
+            vout << "FOV origin offset available: [ " << fov_origin_off[0] << " , "
+                 << fov_origin_off[1] << " ]" << std::endl;
+
+            num_rows_for_guess -= 2 * fov_origin_off[0];
+            num_cols_for_guess -= 2 * fov_origin_off[1];
+
+            vout << "  number of rows used for spacing guess: " << num_rows_for_guess << std::endl;
+            vout << "  number of cols used for spacing guess: " << num_cols_for_guess << std::endl;
+          }
+
+          if (fov_shape_str == "ROUND")
+          {
+            if (num_fov_dims == 1)
+            {
+              if (dcm_info.num_cols != dcm_info.num_rows)
+              {
+                std::cerr << "WARNING: number of image rows and columns are not equal!"
+                             "Guessed pixels spacings may have substantial errors!" << std::endl;
+              }
+              
+              row_spacing_to_use = static_cast<float>(fov_dims[0]) /
+                                      std::max(num_cols_for_guess, num_rows_for_guess);
+              col_spacing_to_use = row_spacing_to_use;
+
+              vout << "  using round FOV diameter of " << fov_dims[0]
+                   << " mm to guess isotropic spacing of "
+                   << fmt::format("{:.3f}", row_spacing_to_use) << " mm/pixel" << std::endl;
+
+              guess_made = true;
+            }
+            else
+            {
+              std::cerr << "expected ROUND FOV dims to have length 1, got: " << num_fov_dims << std::endl;
+            }
+          }
+          else if (fov_shape_str == "RECTANGLE")
+          {
+            if (num_fov_dims == 2)
+            {
+              col_spacing_to_use = static_cast<float>(fov_dims[0]) / num_cols_for_guess;
+              row_spacing_to_use = static_cast<float>(fov_dims[1]) / num_rows_for_guess;
+
+              vout << "  using rect FOV row length of " << fov_dims[0]
+                   << " mm to guess column spacing of "
+                   << fmt::format("{:.3f}", col_spacing_to_use) << " mm/pixel" << std::endl;
+              
+              vout << "  using rect FOV column length of " << fov_dims[0]
+                   << " mm to guess row spacing of "
+                   << fmt::format("{:.3f}", row_spacing_to_use) << " mm/pixel" << std::endl;
+
+              guess_made = true;
+            }
+            else
+            {
+              std::cerr << "expected RECTANGLE FOV dims to have length 2, got: "
+                        << num_fov_dims << std::endl;
+            }
+          }
+          else
+          {
+            std::cerr << "unsupported/unknown FOV shape string: " << fov_shape_str << std::endl;
+          }
+        }
+        else
+        {
+          vout << "  FOV dims not available" << std::endl;
+        }
+      }
+
+      if (!guess_made)
+      {
+        if (dcm_info.intensifier_diameter_mm)
+        {
+          if (dcm_info.num_cols != dcm_info.num_rows)
+          {
+            std::cerr << "WARNING: number of image rows and columns are not equal!"
+                         "Guessed pixels spacings may have substantial errors!" << std::endl;
+          }
+          
+          const float d = static_cast<float>(*dcm_info.intensifier_diameter_mm);
+          
+          row_spacing_to_use = d / std::max(dcm_info.num_cols, dcm_info.num_rows);
+          col_spacing_to_use = row_spacing_to_use;
+
+          vout << "using intensifier diameter of " << d
+               << " mm to guess isotropic pixel spacing of " << row_spacing_to_use
+               << " mm / pixel" << std::endl;
+
+          guess_made = true;
+        }
+      }
+    }
+   
+    if (!guess_made)
+    { 
+      vout << "spacing not found in metadata, using default spacing: " << spacing_default << std::endl;
+    }
   }
 
   CameraModel cam;
 
-  //cam.coord_frame_type = CameraModel::kORIGIN_AT_FOCAL_PT_DET_NEG_Z;
-  cam.coord_frame_type = CameraModel::kORIGIN_AT_FOCAL_PT_DET_POS_Z;
-  cam.setup(src_to_det_to_use,
-            dcm_info.num_rows, dcm_info.num_cols,
-            row_spacing_to_use, col_spacing_to_use);
+  cam.coord_frame_type = proj_frame_use_det_neg_z ? CameraModel::kORIGIN_AT_FOCAL_PT_DET_NEG_Z :
+                                                    CameraModel::kORIGIN_AT_FOCAL_PT_DET_POS_Z;
+
+  const bool is_bayview_cios_dcm = (dcm_info.manufacturer == "SIEMENS") &&
+                                   (dcm_info.institution_name &&
+                                      (*dcm_info.institution_name == "Johns Hopkins Univ")) &&
+                                   (dcm_info.department_name &&
+                                      (*dcm_info.department_name == "Applied Physics Lab")) &&
+                                   (dcm_info.manufacturers_model_name &&
+                                      (*dcm_info.manufacturers_model_name == "Fluorospot Compact S1")) &&
+                                   dcm_info.dist_src_to_det_mm;
+
+  if (no_bayview_check || !is_bayview_cios_dcm)
+  {
+    vout << "setting camera model with naive intrinsics and identity extrinsics..." << std::endl;
+
+    cam.setup(src_to_det_to_use,
+              dcm_info.num_rows, dcm_info.num_cols,
+              row_spacing_to_use, col_spacing_to_use);
+  }
+  else
+  {
+    vout << "bayview file detected, setting up camera model with calculated extrinsics..." << std::endl;
+
+    if (cam.coord_frame_type != CameraModel::kORIGIN_AT_FOCAL_PT_DET_NEG_Z)
+    {
+      std::cerr << "WARNING: C-arm projective frame type does not match the expected value!\n "
+                   "  Expected: " << static_cast<int>(CameraModel::kORIGIN_AT_FOCAL_PT_DET_NEG_Z)
+                   << ", have: " << static_cast<int>(cam.coord_frame_type)
+                   << std::endl;
+    }
+    
+    const Mat3x3 intrins = MakeNaiveIntrins(*dcm_info.dist_src_to_det_mm,
+                                            dcm_info.num_rows, dcm_info.num_cols,
+                                            row_spacing_to_use,
+                                            col_spacing_to_use,
+                                            true);
+
+    cam.setup(intrins, CIOSFusionCBCTExtrins(),
+              dcm_info.num_rows, dcm_info.num_cols,
+              row_spacing_to_use, col_spacing_to_use);
+  }
 
   LandMap2 lands;
 
