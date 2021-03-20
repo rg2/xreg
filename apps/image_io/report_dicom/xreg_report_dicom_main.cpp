@@ -66,7 +66,7 @@ int main( int argc, char* argv[] )
          "Skip the raw printout of all DICOM fields.")
     << false;
 
-  po.add("print-xreg-fields", '-x', ProgOpts::kSTORE_TRUE, "print-xreg-fields",
+  po.add("print-xreg-fields", 'x', ProgOpts::kSTORE_TRUE, "print-xreg-fields",
          "Print basic DICOM fields as stored by the DICOMFIleBasicFields struct.")
     << false;
 
