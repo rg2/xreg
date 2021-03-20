@@ -42,46 +42,83 @@ constexpr int kEXIT_VAL_BAD_DATA = 2;
 
 template <class tPixelScalar>
 int ReadPixelsAndWriteToH5(const CameraModel& cam,
+                           const size_type num_frames,
                            const std::string& src_dcm_path,
                            const std::string& dst_pd_path,
                            std::ostream& vout,
                            const LandMap2& lands)
 {
-  ProjData<tPixelScalar> pd;
+  std::vector<ProjData<tPixelScalar>> pd(num_frames);
   
-  pd.cam = cam;
+  if (num_frames == 1)
+  {
+    vout << "1 frame - reading 2D image pixel data from DICOM..." << std::endl;
+    pd[0].img = ReadDICOM2DFromDisk<tPixelScalar>(src_dcm_path);
+  }
+  else
+  {
+    vout << num_frames << " frames - reading 3D image pixel data from DICOM..." << std::endl;
+    auto frames = ReadDICOM3DFromDisk<tPixelScalar>(src_dcm_path);
   
-  pd.landmarks = lands;
+    const auto spacing_vol = frames->GetSpacing();
+  
+    const std::array<double,2> spacing_slice = { spacing_vol[0], spacing_vol[1] };
 
-  vout << "reading image pixel data from DICOM..." << std::endl;
-  pd.img = ReadDICOM2DFromDisk<tPixelScalar>(src_dcm_path);
+    const auto origin_vol = frames->GetOrigin();
+
+    const std::array<double,2> origin_slice = { origin_vol[0], origin_vol[1] };
+
+    vout << "  converting in-plane slices to individual projection frames..." << std::endl; 
+    
+    const auto* cur_frame_buf = frames->GetBufferPointer();
+
+    const size_type num_pix_per_frame = cam.num_det_cols * cam.num_det_rows;
+    
+    for (size_type i = 0; i < num_frames; ++i, cur_frame_buf += num_pix_per_frame)
+    {
+      auto dst_frame = MakeITK2DVol<tPixelScalar>(cam.num_det_cols, cam.num_det_rows);
+
+      dst_frame->SetSpacing(spacing_slice.data());
+      dst_frame->SetOrigin(origin_slice.data());
+
+      std::copy(cur_frame_buf, cur_frame_buf + num_pix_per_frame, dst_frame->GetBufferPointer());
+
+      pd[i].img = dst_frame;
+    }
+  }
 
   {
-    auto img_spacing = pd.img->GetSpacing();
+    auto img_spacing = pd[0].img->GetSpacing();
 
-    if (std::abs(img_spacing[0] - pd.cam.det_col_spacing) > 1.0e-3)
+    if (std::abs(img_spacing[0] - cam.det_col_spacing) > 1.0e-3)
     {
       std::cerr << "WARNING: Image column spacing (" << img_spacing[0]
                 <<") differs from camera model column spacings ("
-                << pd.cam.det_col_spacing
+                << cam.det_col_spacing
                 << "). Image values will be updated to match camera model."
                 << std::endl;
     }
 
-    if (std::abs(img_spacing[1] - pd.cam.det_row_spacing) > 1.0e-3)
+    if (std::abs(img_spacing[1] - cam.det_row_spacing) > 1.0e-3)
     {
       std::cerr << "WARNING: Image row spacing (" << img_spacing[1]
                 <<") differs from camera model row spacings ("
-                << pd.cam.det_row_spacing 
+                << cam.det_row_spacing 
                 << "). Image values will be updated to match camera model."
                 << std::endl;
     }
+  }
+
+  // Always prefer the spacing obtained by interpreting DICOM fields
+  const std::array<double,2> spacing_to_use = { cam.det_col_spacing, cam.det_row_spacing };
+
+  for (size_type i = 0; i < num_frames; ++i)
+  {
+    pd[i].cam       = cam;
+    pd[i].landmarks = lands;
     
     // Always prefer the spacing obtained by interpreting DICOM fields
-    img_spacing[0] = pd.cam.det_col_spacing;
-    img_spacing[1] = pd.cam.det_row_spacing;
-    
-    pd.img->SetSpacing(img_spacing);
+    pd[i].img->SetSpacing(spacing_to_use.data());
   }
 
   vout << "saving to proj data HDF5..." << std::endl;
@@ -448,15 +485,17 @@ int main(int argc, char* argv[])
     lands = PhysPtsToInds(DropPtDim(lands_3d, 2), col_spacing_to_use, row_spacing_to_use);
   }
 
+  const size_type num_frames = dcm_info.num_frames ? * dcm_info.num_frames : 1;
+
   int ret_val = kEXIT_VAL_SUCCESS;
 
   if (pixel_type_str == "float")
   {
-    ret_val = ReadPixelsAndWriteToH5<float>(cam, src_dcm_path, dst_pd_path, vout, lands);
+    ret_val = ReadPixelsAndWriteToH5<float>(cam, num_frames, src_dcm_path, dst_pd_path, vout, lands);
   }
   else if (pixel_type_str == "uint16")
   {
-    ret_val = ReadPixelsAndWriteToH5<unsigned short>(cam, src_dcm_path, dst_pd_path, vout, lands);
+    ret_val = ReadPixelsAndWriteToH5<unsigned short>(cam, num_frames, src_dcm_path, dst_pd_path, vout, lands);
   }
   else
   {
