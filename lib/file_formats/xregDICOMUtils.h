@@ -36,6 +36,8 @@
 #include "xregCommon.h"
 #include "xregFilesystemUtils.h"
 #include "xregObjWithOStream.h"
+#include "xregPerspectiveXform.h"
+#include "xregProjData.h"
 
 namespace xreg
 {
@@ -250,6 +252,47 @@ struct ReorderAndCheckDICOMInfos : public ObjWithOStream
   bool operator()(const DICOMFIleBasicFieldsList& src_infos,
                   DICOMFIleBasicFieldsList* dst_infos);
 };
+
+struct ReadProjDataFromDICOMParams
+{
+  double src_to_det_default = 1000.0;
+  
+  double spacing_default = 1.0;
+  
+  // attempt to guess the image spacing when the DICOM metadata does not provide an explicit value.
+  bool guess_spacing = false;
+
+  // will auto-set the projective frame based on modality when no value is provided
+  boost::optional<CameraModel::CameraCoordFrame> proj_frame;
+
+  bool no_bayview_check = false;
+ 
+  // Output stream to print verbose information helpful in debugging, etc.
+  // A null (e.g. like /dev/null) output stream will be used when nullptr is provided.
+  std::ostream* vout = nullptr;
+
+  // Output stream to print warnings and error messages.
+  // std::cerr will be used when given a nullptr.
+  std::ostream* err_out = nullptr;
+};
+
+ProjDataF32List ReadProjDataFromDICOMF32(const std::string& dcm_path,
+                                         const ReadProjDataFromDICOMParams& params =
+                                           ReadProjDataFromDICOMParams());
+
+ProjDataF32List ReadProjDataFromDICOMF32(const std::string& dcm_path,
+                                         const std::string& fcsv_path,
+                                         const ReadProjDataFromDICOMParams& params =
+                                           ReadProjDataFromDICOMParams());
+
+ProjDataU16List ReadProjDataFromDICOMU16(const std::string& dcm_path,
+                                         const ReadProjDataFromDICOMParams& params =
+                                           ReadProjDataFromDICOMParams());
+
+ProjDataU16List ReadProjDataFromDICOMU16(const std::string& dcm_path,
+                                         const std::string& fcsv_path,
+                                         const ReadProjDataFromDICOMParams& params =
+                                           ReadProjDataFromDICOMParams());
 
 }  // xreg
 
