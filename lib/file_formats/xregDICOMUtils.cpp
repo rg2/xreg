@@ -40,6 +40,8 @@
 #include "xregStringUtils.h"
 #include "xregCIOSFusionDICOM.h"
 #include "xregITKIOUtils.h"
+#include "xregITKOpenCVUtils.h"
+#include "xregOpenCVUtils.h"
 #include "xregFCSVUtils.h"
 #include "xregLandmarkMapUtils.h"
 #include "xregAnatCoordFrames.h"
@@ -1695,12 +1697,56 @@ ReadProjDataFromDICOMHelper(const std::string& dcm_path, const ReadProjDataFromD
   // Always prefer the spacing obtained by interpreting DICOM fields
   const std::array<double,2> spacing_to_use = { cam.det_col_spacing, cam.det_row_spacing };
 
+  auto orig_dcm_meta = std::make_shared<DICOMFIleBasicFields>();
+  *orig_dcm_meta = dcm_info;
+        
+  const auto dcm_rot = dcm_info.fov_rot ? *dcm_info.fov_rot : DICOMFIleBasicFields::kZERO;
+        
+  const bool do_horiz_flip = dcm_info.fov_horizontal_flip && (*dcm_info.fov_horizontal_flip);
+
   for (size_type i = 0; i < num_frames; ++i)
   {
     pd[i].cam = cam;
     
     // Always prefer the spacing obtained by interpreting DICOM fields
     pd[i].img->SetSpacing(spacing_to_use.data());
+
+    pd[i].orig_dcm_meta = orig_dcm_meta;
+
+    if (!params.no_proc)
+    {
+      cv::Mat img_ocv = ShallowCopyItkToOpenCV(pd[i].img.GetPointer());
+
+      if (dcm_rot != DICOMFIleBasicFields::kZERO)
+      {
+        if (dcm_rot == DICOMFIleBasicFields::kNINETY)
+        {
+          xregASSERT(pd[i].cam.num_det_rows == pd[i].cam.num_det_cols);
+
+          cv::Mat tmp = img_ocv.clone();
+          cv::transpose(tmp, img_ocv);
+          FlipImageColumns(&img_ocv);
+        }
+        else if (dcm_rot == DICOMFIleBasicFields::kONE_EIGHTY)
+        {
+          FlipImageRows(&img_ocv);
+          FlipImageColumns(&img_ocv);
+        }
+        else if (dcm_rot == DICOMFIleBasicFields::kTWO_SEVENTY)
+        {
+          xregASSERT(pd[i].cam.num_det_rows == pd[i].cam.num_det_cols);
+          
+          cv::Mat tmp = img_ocv.clone();
+          cv::transpose(tmp, img_ocv);
+          FlipImageRows(&img_ocv);
+        }
+      }
+
+      if (do_horiz_flip)
+      {
+        FlipImageColumns(&img_ocv);
+      }
+    }
   }
 
   return pd;
@@ -1726,16 +1772,54 @@ ReadProjDataFromDICOMHelper(const std::string& dcm_path, const std::string& fcsv
     
     // TODO: actually need to use the spacings populated by ITK for converting these landmarks
     //       since the FCSV file would have been annotated in 3D Slicer which would use that
-    //       spacing.
+    //       spacing. This is particularly relevant for cases where we estimate the spacings,
+    //       in which 3D Slicer will typically just use a value of 1.0.
 
     xregASSERT(!pd.empty());
     const auto lands = PhysPtsToInds(DropPtDim(lands_3d, 2),
                                      pd[0].cam.det_col_spacing,
                                      pd[0].cam.det_row_spacing);
-
+  
     for (auto& p : pd)
     {
       p.landmarks = lands;
+      
+      if (!params.no_proc && p.orig_dcm_meta)
+      {
+        const auto& dcm_info = *p.orig_dcm_meta;
+
+        const auto dcm_rot = dcm_info.fov_rot ? *dcm_info.fov_rot : DICOMFIleBasicFields::kZERO;
+        
+        const bool do_horiz_flip = dcm_info.fov_horizontal_flip && (*dcm_info.fov_horizontal_flip);
+
+        for (auto& lkv: p.landmarks)
+        {
+          auto& l = lkv.second;
+
+          if (dcm_rot != DICOMFIleBasicFields::kZERO)
+          {
+            if (dcm_rot == DICOMFIleBasicFields::kNINETY)
+            {
+              std::swap(l(0), l(1));
+            }
+            else if (dcm_rot == DICOMFIleBasicFields::kONE_EIGHTY)
+            {
+              l(0) = p.cam.num_det_cols - 1 - l(0);
+              l(1) = p.cam.num_det_rows - 1 - l(1);
+            }
+            else if (dcm_rot == DICOMFIleBasicFields::kTWO_SEVENTY)
+            {
+              std::swap(l(0), l(1));
+              l(1) = p.cam.num_det_rows - 1 - l(1);
+            }
+          }
+
+          if (do_horiz_flip)
+          {
+            l(0) = p.cam.num_det_cols - 1 - l(0);
+          }
+        }
+      }
     }
   }
   else

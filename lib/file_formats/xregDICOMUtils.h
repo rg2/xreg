@@ -266,6 +266,10 @@ struct ReadProjDataFromDICOMParams
   boost::optional<CameraModel::CameraCoordFrame> proj_frame;
 
   bool no_bayview_check = false;
+
+  // Do not perform any pre-processing to the image pixels - e.g. do NOT flip or rotate the image
+  // using the DICOM FOV Rotation or FOV Horizontal Flip fields.
+  bool no_proc = false;
  
   // Output stream to print verbose information helpful in debugging, etc.
   // A null (e.g. like /dev/null) output stream will be used when nullptr is provided.
