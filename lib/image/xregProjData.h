@@ -36,7 +36,8 @@ namespace xreg
 
 // Forward declarations:
 struct CIOSFusionDICOMInfo;
-  
+struct DICOMFIleBasicFields;
+
 enum class ProjDataRotToPatUp
 {
   kZERO = 0,
@@ -72,6 +73,10 @@ struct ProjData
   // Original metadata from the sensor for this image - does not need
   // to be set, e.g. for the case of simulated data
   std::shared_ptr<CIOSFusionDICOMInfo> orig_meta;
+
+  // Original DICOM metadata this image - does not need
+  // to be set, e.g. for the case of simulated data
+  std::shared_ptr<DICOMFIleBasicFields> orig_dcm_meta;
 };
 
 using ProjDataF32 = ProjData<float>;
