@@ -39,7 +39,11 @@ int main(int argc, char* argv[])
 
   xregPROG_OPTS_SET_COMPILE_DATE(po);
 
-  po.set_help("TODO");
+  po.set_help("Given a directory of DICOM files, writes remapped versions (for display) of each "
+              "file to an output directory. If the output directory does not exist, it is created. "
+              "For DICOM files with more than one frame, each frame is saved as a separate remapped "
+              "file with a \"_<frame index>\" string appended before the extension (For example "
+              "multi_frame_dicom.dcm --> { multi_frame_dicom_0.png, ..., multi_frame_dicom_N.png }).");
   po.set_arg_usage("<Input Directory> <Output Directory>");
   po.set_min_num_pos_args(2);
 
