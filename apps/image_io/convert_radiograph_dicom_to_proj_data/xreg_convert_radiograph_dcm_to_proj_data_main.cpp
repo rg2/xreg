@@ -76,6 +76,11 @@ int main(int argc, char* argv[])
          "\"XA\" and \"RF\" yield \"det-neg-z\" while \"CR\" and \"DX\" yield \"det-pos-z\"")
     << "auto";
   
+  po.add("no-proc", 'n', ProgOpts::kSTORE_TRUE, "no-proc",
+         "Do not perform any pre-processing to the image pixels - e.g. do NOT flip "
+         "or rotate the image using the DICOM FOV Rotation or FOV Horizontal Flip fields.")
+    << false;
+  
   po.add("no-bayview-check", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-bayview-check",
          "Do NOT inspect metadata fields to determine that the input file was created using the "
          "Siemens CIOS Fusion C-arm in the JHMI Bayview lab. When this check IS performed and a "
@@ -141,6 +146,8 @@ int main(int argc, char* argv[])
     return kEXIT_VAL_BAD_USE;
   }
 
+  read_dcm_params.no_proc = po.get("no-proc");
+  
   read_dcm_params.no_bayview_check = po.get("no-bayview-check");
 
   const std::string pixel_type_str = po.get("pixel-type");
