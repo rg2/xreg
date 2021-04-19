@@ -22,21 +22,28 @@
 
 file(GLOB_RECURSE XREG_CUR_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 
-add_library(xreg_file_formats OBJECT ${XREG_CUR_LIB_HEADERS}
-                                     xregDICOMUtils.cpp
-                                     xregCSVUtils.cpp
-                                     xregCIOSFusionDICOM.cpp
-                                     xregACSVUtils.cpp
-                                     xregFCSVUtils.cpp
-                                     xregSTLMeshIO.cpp
-                                     xregH5MeshIO.cpp
-                                     xregMeshIO.cpp
-                                     xregH5PAOIO.cpp
-                                     xregPAOIO.cpp
-                                     xregH5CamModelIO.cpp
-                                     xregH5ProjDataIO.cpp
-                                     xregH5SE3OptVarsIO.cpp
-                                     xregWriteVideo.cpp
-                                     xregRadRawProj.cpp
-                                     xregStaRawVol.cpp)
+set(xreg_file_formats_src ${XREG_CUR_LIB_HEADERS}
+                          xregDICOMUtils.cpp
+                          xregCSVUtils.cpp
+                          xregCIOSFusionDICOM.cpp
+                          xregACSVUtils.cpp
+                          xregFCSVUtils.cpp
+                          xregSTLMeshIO.cpp
+                          xregH5MeshIO.cpp
+                          xregMeshIO.cpp
+                          xregH5PAOIO.cpp
+                          xregPAOIO.cpp
+                          xregH5CamModelIO.cpp
+                          xregH5ProjDataIO.cpp
+                          xregH5SE3OptVarsIO.cpp
+                          xregWriteVideo.cpp
+                          xregRadRawProj.cpp
+                          xregStaRawVol.cpp)
+
+if (APPLE)
+  set(xreg_file_formats_src ${xreg_file_formats_src}
+                            xregAppleAVFoundation.mm)
+endif ()
+
+add_library(xreg_file_formats OBJECT ${xreg_file_formats_src})
 

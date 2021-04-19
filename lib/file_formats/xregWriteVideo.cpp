@@ -40,6 +40,10 @@
 #include "xregAssert.h"
 #include "xregFilesystemUtils.h"
 
+#ifdef __APPLE__
+#include "xregAppleAVFoundation.h"
+#endif
+
 void xreg::WriteImageFramesToVideo::write(const std::vector<cv::Mat>& frames)
 {
   for (const cv::Mat& f : frames)
@@ -177,11 +181,19 @@ std::unique_ptr<xreg::WriteImageFramesToVideo> xreg::GetWriteImageFramesToVideo(
   else
 #endif
   {
+#ifdef __APPLE__
+    std::cerr << "WARNING: could not find FFMPEG executable, falling back to "
+                 "Apple AVFoundation video writer!" << std::endl;
+    writer.reset(new WriteImageFramesToVideoAppleAVF);
+#else
+
 #ifndef _WIN32
-    std::cerr << "WARNING: could not find FFMPEG executable, falling back to OpenCV video writer!" << std::endl;
+    std::cerr << "WARNING: could not find FFMPEG executable, falling back to "
+                 "OpenCV video writer!" << std::endl;
 #endif
 
     writer.reset(new WriteImageFramesToVideoWithOpenCV);
+#endif
   }
 
   return writer;
