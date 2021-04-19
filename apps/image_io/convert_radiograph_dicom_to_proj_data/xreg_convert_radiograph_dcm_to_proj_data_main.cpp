@@ -38,7 +38,8 @@ int main(int argc, char* argv[])
 
   xregPROG_OPTS_SET_COMPILE_DATE(po);
 
-  po.set_help("TODO");
+  po.set_help("Convert a DICOM radiograph file into a xReg HDF5 proj. data file. "
+              "Support for video fluoroscopy is provided using the number of frames DICOM tag.");
   po.set_arg_usage("<Input DICOM File> <Output Proj. Data File> [<landmarks FCSV file>]");
   po.set_min_num_pos_args(2);
 
