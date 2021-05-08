@@ -235,6 +235,8 @@ xreg::ProjDataF32 xreg::ReadRawProjAsProjData(const std::string& rad_file_path)
                info.num_rows, info.num_cols,
                info.col_spacing_mm_per_pixel, info.row_spacing_mm_per_pixel);
 
+  pd.det_spacings_from_orig_meta = true;
+
   return pd;
 }
 
