@@ -1436,7 +1436,9 @@ ReadProjDataFromDICOMHelper(const std::string& dcm_path, const ReadProjDataFromD
     err_out << "WARNING: source to detector field not present in DICOM, will use default value of "
             << params.src_to_det_default << std::endl;
   }
-  
+
+  bool spacing_in_meta = true;
+
   // prefer to use the imager spacing field when available  
   if (dcm_info.imager_pixel_spacing)
   {
@@ -1461,6 +1463,8 @@ ReadProjDataFromDICOMHelper(const std::string& dcm_path, const ReadProjDataFromD
   else
   {
     // No other tags explicitly specify the spacing, try and guess using some other metadata fields.
+    
+    spacing_in_meta = false;
 
     bool guess_made = false;
 
@@ -1710,6 +1714,8 @@ ReadProjDataFromDICOMHelper(const std::string& dcm_path, const ReadProjDataFromD
     
     // Always prefer the spacing obtained by interpreting DICOM fields
     pd[i].img->SetSpacing(spacing_to_use.data());
+    
+    pd[i].det_spacings_from_orig_meta = spacing_in_meta;
 
     pd[i].orig_dcm_meta = orig_dcm_meta;
 
@@ -1770,15 +1776,24 @@ ReadProjDataFromDICOMHelper(const std::string& dcm_path, const std::string& fcsv
     
     ConvertRASToLPS(&lands_3d);
     
-    // TODO: actually need to use the spacings populated by ITK for converting these landmarks
-    //       since the FCSV file would have been annotated in 3D Slicer which would use that
-    //       spacing. This is particularly relevant for cases where we estimate the spacings,
-    //       in which 3D Slicer will typically just use a value of 1.0.
-
     xregASSERT(!pd.empty());
+    
+    // We need to use the pixel spacing that was used by 3D Slicer to create the FCSV file
+    // when converting landmarks to pixel indices. The FCSV pixel spacing will be equal to
+    // the spacing used in our projection data camera model when the spacing was explicitly
+    // available in the DICOM metadata. Otherwise, we need to have the FCSV spacing
+    // specified. The FCSV spacing is typically 1.0 when no metadata is provided in the
+    // DICOM.
+
+    const bool det_spacings_from_orig_meta = *pd[0].det_spacings_from_orig_meta;
+
     const auto lands = PhysPtsToInds(DropPtDim(lands_3d, 2),
-                                     pd[0].cam.det_col_spacing,
-                                     pd[0].cam.det_row_spacing);
+                                     det_spacings_from_orig_meta ?
+                                        pd[0].cam.det_col_spacing :
+                                        static_cast<CoordScalar>(params.fcsv_spacing_default),
+                                     det_spacings_from_orig_meta ?
+                                        pd[0].cam.det_row_spacing :
+                                        static_cast<CoordScalar>(params.fcsv_spacing_default));
   
     for (auto& p : pd)
     {

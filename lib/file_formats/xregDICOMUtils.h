@@ -270,7 +270,13 @@ struct ReadProjDataFromDICOMParams
   // Do not perform any pre-processing to the image pixels - e.g. do NOT flip or rotate the image
   // using the DICOM FOV Rotation or FOV Horizontal Flip fields.
   bool no_proc = false;
- 
+
+  // This is used for converting landmarks in physical FCSV coordinates to pixel locations.
+  // When no metadata for row/column spacing is explicitly specified in the DICOM, 3D Slicer
+  // will typically use a default spacing of 1.0. This field exist in the event that another
+  // default FCSV spacing needs to be specified.
+  double fcsv_spacing_default = 1.0;
+
   // Output stream to print verbose information helpful in debugging, etc.
   // A null (e.g. like /dev/null) output stream will be used when nullptr is provided.
   std::ostream* vout = nullptr;
