@@ -96,6 +96,11 @@ int main(int argc, char* argv[])
          "\"float\" for 32-bit floats and \"uint16\" for unsigned 16-bit integers.")
     << "float";
 
+  po.add("fcsv-spacing", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "fcsv-spacing",
+         "Default (isotopic) pixel spacing to assume when parsing FCSV landmarks when no 2D pixel "
+         "spacing is provided by the 2D image metadata.")
+    << 1.0;
+
   try
   {
     po.parse(argc, argv);
@@ -124,6 +129,8 @@ int main(int argc, char* argv[])
   read_dcm_params.spacing_default = po.get("spacing");
 
   read_dcm_params.guess_spacing = po.get("guess-spacing");
+
+  read_dcm_params.fcsv_spacing_default = po.get("fcsv-spacing");
 
   const std::string proj_frame_str = ToLowerCase(po.get("proj-frame").as_string());
   
