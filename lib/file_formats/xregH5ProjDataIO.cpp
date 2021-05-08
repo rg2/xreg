@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -90,6 +90,13 @@ void WriteProjDataH5Helper(const std::vector<ProjData<tPixelScalar>>& proj_data,
                           static_cast<int>(*proj_data[i].rot_to_pat_up), &proj_g);
     }
 
+    if (proj_data[i].det_spacings_from_orig_meta)
+    {
+      WriteSingleScalarH5("det-spacings-from-orig-meta",
+                          *proj_data[i].det_spacings_from_orig_meta, &proj_g);
+    }
+
+    // TODO: replace this with writing original DICOM fields
     if (proj_data[i].orig_meta)
     {
       H5::Group orig_meta_g = proj_g.createGroup("orig-meta");
@@ -390,7 +397,14 @@ ReadProjDataHelper(const H5::Group& h5, const bool read_pixels)
       projs[i].rot_to_pat_up = static_cast<ProjDataRotToPatUp>(
                                   ReadSingleScalarH5Int("rot-to-pat-up", proj_g));
     }
+    
+    if (ObjectInGroupH5("det-spacings-from-orig-meta", proj_g))
+    {
+      projs[i].det_spacings_from_orig_meta = ReadSingleScalarH5Bool(
+                                                "det-spacings-from-orig-meta", proj_g);
+    }
 
+    // TODO: replace this with reading original DICOM fields
     if (ObjectInGroupH5("orig-meta", proj_g))
     {
       // TODO: check the "meta-type" attribute after more sensors are added
