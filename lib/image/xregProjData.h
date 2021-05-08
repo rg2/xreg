@@ -69,6 +69,13 @@ struct ProjData
   // of the image and the inferior portion is approximately located in
   // the bottom of the image.
   boost::optional<ProjDataRotToPatUp> rot_to_pat_up;
+  
+  // Indicates that the detector spacings specified in cam were explicitly
+  // defined from metadata fields in the original source. Examples where this
+  // can be false are when converting from DICOM and the user overrides the
+  // spacing value manually or the spacing values are guessed from other
+  // metadata values (e.g. the detector diameter).
+  boost::optional<bool> det_spacings_from_orig_meta;
 
   // Original metadata from the sensor for this image - does not need
   // to be set, e.g. for the case of simulated data
