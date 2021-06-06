@@ -66,7 +66,7 @@ curl -L -O -J https://github.com/oneapi-src/oneTBB/releases/download/v2020.3/tbb
 
 tar -xf tbb-2020.3-win.zip || EXIT /b
 
-curl -L -O -J https://dl.bintray.com/boostorg/release/1.74.0/source/boost_1_74_0.zip || EXIT /b
+curl -L -O -J https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.zip || EXIT /b
 
 tar -xf boost_1_74_0.zip || EXIT /b
 
