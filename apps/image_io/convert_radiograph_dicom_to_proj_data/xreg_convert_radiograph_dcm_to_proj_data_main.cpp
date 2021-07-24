@@ -24,7 +24,7 @@
 
 #include "xregProgOptUtils.h"
 #include "xregH5ProjDataIO.h"
-#include "xregDICOMUtils.h"
+#include "xregReadProjDataFromDICOM.h"
 #include "xregStringUtils.h"
 
 int main(int argc, char* argv[])

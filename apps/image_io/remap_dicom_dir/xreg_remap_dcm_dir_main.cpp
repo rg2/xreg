@@ -24,8 +24,9 @@
 
 #include <fmt/format.h>
 
+#include "xregFilesystemUtils.h"
 #include "xregProgOptUtils.h"
-#include "xregDICOMUtils.h"
+#include "xregReadProjDataFromDICOM.h"
 #include "xregITKIOUtils.h"
 
 int main(int argc, char* argv[])

@@ -38,7 +38,8 @@ set(xreg_file_formats_src ${XREG_CUR_LIB_HEADERS}
                           xregH5SE3OptVarsIO.cpp
                           xregWriteVideo.cpp
                           xregRadRawProj.cpp
-                          xregStaRawVol.cpp)
+                          xregStaRawVol.cpp
+                          xregReadProjDataFromDICOM.cpp)
 
 if (APPLE)
   set(xreg_file_formats_src ${xreg_file_formats_src}

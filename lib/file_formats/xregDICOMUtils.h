@@ -253,57 +253,6 @@ struct ReorderAndCheckDICOMInfos : public ObjWithOStream
                   DICOMFIleBasicFieldsList* dst_infos);
 };
 
-struct ReadProjDataFromDICOMParams
-{
-  double src_to_det_default = 1000.0;
-  
-  double spacing_default = 1.0;
-  
-  // attempt to guess the image spacing when the DICOM metadata does not provide an explicit value.
-  bool guess_spacing = false;
-
-  // will auto-set the projective frame based on modality when no value is provided
-  boost::optional<CameraModel::CameraCoordFrame> proj_frame;
-
-  bool no_bayview_check = false;
-
-  // Do not perform any pre-processing to the image pixels - e.g. do NOT flip or rotate the image
-  // using the DICOM FOV Rotation or FOV Horizontal Flip fields.
-  bool no_proc = false;
-
-  // This is used for converting landmarks in physical FCSV coordinates to pixel locations.
-  // When no metadata for row/column spacing is explicitly specified in the DICOM, 3D Slicer
-  // will typically use a default spacing of 1.0. This field exist in the event that another
-  // default FCSV spacing needs to be specified.
-  double fcsv_spacing_default = 1.0;
-
-  // Output stream to print verbose information helpful in debugging, etc.
-  // A null (e.g. like /dev/null) output stream will be used when nullptr is provided.
-  std::ostream* vout = nullptr;
-
-  // Output stream to print warnings and error messages.
-  // std::cerr will be used when given a nullptr.
-  std::ostream* err_out = nullptr;
-};
-
-ProjDataF32List ReadProjDataFromDICOMF32(const std::string& dcm_path,
-                                         const ReadProjDataFromDICOMParams& params =
-                                           ReadProjDataFromDICOMParams());
-
-ProjDataF32List ReadProjDataFromDICOMF32(const std::string& dcm_path,
-                                         const std::string& fcsv_path,
-                                         const ReadProjDataFromDICOMParams& params =
-                                           ReadProjDataFromDICOMParams());
-
-ProjDataU16List ReadProjDataFromDICOMU16(const std::string& dcm_path,
-                                         const ReadProjDataFromDICOMParams& params =
-                                           ReadProjDataFromDICOMParams());
-
-ProjDataU16List ReadProjDataFromDICOMU16(const std::string& dcm_path,
-                                         const std::string& fcsv_path,
-                                         const ReadProjDataFromDICOMParams& params =
-                                           ReadProjDataFromDICOMParams());
-
 }  // xreg
 
 #endif
