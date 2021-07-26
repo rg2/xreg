@@ -52,10 +52,10 @@ int main(int argc, char* argv[])
          "not be obtained from the DICOM metadata.")
     << 1.0;
 
-  po.add("guess-spacing", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "guess-spacing",
-         "Guess pixel spacings based on other metadata values, such FOV shape and size. "
-         "This overrides any value set by \"spacing\" unless the metadata needed to make a guess is "
-         "not available.")
+  po.add("no-guess-spacing", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-guess-spacing",
+         "Do NOT guess pixel spacings based on other metadata values, such FOV shape and size. "
+         "A guess will override any value set by \"spacing\" unless the metadata needed to make "
+         "a guess is not available.")
     << false;
 
   po.add("proj-frame", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "proj-frame",
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
   read_dcm_params.src_to_det_default = po.get("src-to-det");
   read_dcm_params.spacing_default = po.get("spacing");
 
-  read_dcm_params.guess_spacing = po.get("guess-spacing");
+  read_dcm_params.guess_spacing = !po.get("no-guess-spacing");
 
   read_dcm_params.fcsv_spacing_default = po.get("fcsv-spacing");
 
