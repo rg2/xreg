@@ -39,7 +39,7 @@ struct ReadProjDataFromDICOMParams
   double spacing_default = 1.0;
   
   // attempt to guess the image spacing when the DICOM metadata does not provide an explicit value.
-  bool guess_spacing = false;
+  bool guess_spacing = true;
 
   // will auto-set the projective frame based on modality when no value is provided
   boost::optional<CameraModel::CameraCoordFrame> proj_frame;
