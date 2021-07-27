@@ -34,6 +34,7 @@
 #include <fmt/printf.h>
 
 #include "xregAssert.h"
+#include "xregHDF5.h"
 #include "xregStringUtils.h"
 
 xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm_path)
@@ -1361,5 +1362,176 @@ bool xreg::ReorderAndCheckDICOMInfos::operator()(const DICOMFIleBasicFieldsList&
   }
 
   return single_out_of_plane_axis && const_in_plane_spacings && const_in_plane_dims;
+}
+
+namespace
+{
+
+template <class tScalar>
+void WriteOptionalScalarH5(const std::string& field_name,
+                           const boost::optional<tScalar>& opt_val,
+                           H5::Group* h5)
+{
+  if (opt_val)
+  {
+    xreg::WriteSingleScalarH5(field_name, *opt_val, h5);
+  }
+}
+
+void WriteOptionalStringH5(const std::string& field_name,
+                           const boost::optional<std::string>& opt_str,
+                           H5::Group* h5)
+{
+  if (opt_str)
+  {
+    xreg::WriteStringH5(field_name, *opt_str, h5);
+  }
+}
+
+void WriteOptionalListOfStrings(const std::string& field_name,
+                                const boost::optional<std::vector<std::string>>& opt_strs,
+                                H5::Group* h5)
+{
+  using namespace xreg;
+
+  if (opt_strs)
+  {
+    H5::Group strs_g = h5->createGroup(field_name);
+    
+    const size_type len = opt_strs->size();
+
+    SetScalarAttr("len", static_cast<long>(len), &strs_g);
+
+    for (size_type i = 0; i < len; ++i)
+    {
+      WriteStringH5(fmt::format("{:02d}", i), opt_strs->operator[](i), &strs_g);
+    }
+  }
+}
+
+}  // un-named
+
+void xreg::WriteDICOMFieldsH5(const DICOMFIleBasicFields& dcm_info, H5::Group* h5)
+{
+  WriteStringH5("file-path", dcm_info.file_path, h5);
+
+  WriteStringH5("patient-id", dcm_info.patient_id, h5);
+  WriteStringH5("series-uid", dcm_info.series_uid, h5);
+  WriteStringH5("study-uid", dcm_info.study_uid, h5);
+
+  WriteStringH5("patient-name", dcm_info.patient_name, h5);
+  
+  WriteSingleScalarH5("study-time", dcm_info.study_time, h5);
+  WriteOptionalScalarH5("series-time", dcm_info.series_time, h5);
+  WriteOptionalScalarH5("acquisition-time", dcm_info.acquisition_time, h5);
+  WriteOptionalScalarH5("content-time", dcm_info.content_time, h5);
+  
+  WriteStringH5("modality", dcm_info.modality, h5);
+  
+  WriteMatrixH5("img-pos-wrt-pat", dcm_info.img_pos_wrt_pat, h5);
+
+  WriteMatrixH5("row-dir", dcm_info.row_dir, h5);
+  WriteMatrixH5("col-dir", dcm_info.col_dir, h5);
+
+  WriteSingleScalarH5("row-spacing", dcm_info.row_spacing, h5);
+  WriteSingleScalarH5("col-spacing", dcm_info.col_spacing, h5);
+
+  WriteSingleScalarH5("num-rows", dcm_info.num_rows, h5);
+  WriteSingleScalarH5("num-cols", dcm_info.num_cols, h5);
+
+  WriteOptionalStringH5("pat-pos", dcm_info.pat_pos, h5);
+
+  if (dcm_info.pat_orient)
+  {
+    const auto& pat_orient = *dcm_info.pat_orient;
+
+    WriteStringH5("pat-orient-x", pat_orient[0], h5);
+    WriteStringH5("pat-orient-y", pat_orient[1], h5);
+  }
+  
+  WriteOptionalStringH5("study-desc", dcm_info.study_desc, h5);
+  
+  WriteOptionalStringH5("series-desc", dcm_info.series_desc, h5);
+
+  WriteOptionalListOfStrings("image-type", dcm_info.image_type, h5);
+
+  WriteStringH5("manufacturer", dcm_info.manufacturer, h5);
+
+  WriteOptionalStringH5("institution-name", dcm_info.institution_name, h5);
+  
+  WriteOptionalStringH5("department-name", dcm_info.department_name, h5);
+
+  WriteOptionalStringH5("manufacturers-model-name", dcm_info.manufacturers_model_name, h5);
+  
+  WriteOptionalStringH5("sec-cap-dev-manufacturer", dcm_info.sec_cap_dev_manufacturer, h5);
+
+  WriteOptionalStringH5("sec-cap-dev-software-versions", dcm_info.sec_cap_dev_software_versions, h5);
+
+  WriteOptionalListOfStrings("software-versions", dcm_info.software_versions, h5);
+
+  WriteOptionalStringH5("vol-props", dcm_info.vol_props, h5);
+
+  WriteOptionalScalarH5("num-frames", dcm_info.num_frames, h5);
+
+  WriteOptionalStringH5("proto-name", dcm_info.proto_name, h5);
+
+  WriteOptionalStringH5("conv-kernel", dcm_info.conv_kernel, h5);
+
+  WriteOptionalStringH5("body-part-examined", dcm_info.body_part_examined, h5);
+
+  WriteOptionalStringH5("view-position", dcm_info.view_position, h5);
+
+  WriteOptionalScalarH5("dist-src-to-det-mm", dcm_info.dist_src_to_det_mm, h5);
+
+  WriteOptionalScalarH5("dist-src-to-pat-mm", dcm_info.dist_src_to_pat_mm, h5);
+
+  WriteOptionalScalarH5("kvp", dcm_info.kvp, h5);
+
+  WriteOptionalScalarH5("tube-current-mA", dcm_info.tube_current_mA, h5);
+
+  WriteOptionalScalarH5("exposure-mAs", dcm_info.exposure_mAs, h5);
+
+  WriteOptionalScalarH5("exposure-muAs", dcm_info.exposure_muAs, h5);
+
+  WriteOptionalScalarH5("exposure-time-ms", dcm_info.exposure_time_ms, h5);
+
+  WriteOptionalScalarH5("dose-area-product-dGy-cm-sq", dcm_info.dose_area_product_dGy_cm_sq, h5);
+
+  WriteOptionalStringH5("fov-shape", dcm_info.fov_shape, h5);
+
+  if (dcm_info.fov_dims)
+  {
+    WriteVectorH5("fov-dims", *dcm_info.fov_dims, h5);
+  }
+  
+  if (dcm_info.fov_origin_off)
+  {
+    const auto origin_off = *dcm_info.fov_origin_off;
+
+    WriteSingleScalarH5("fov-origin-off-rows", origin_off[0], h5);
+    WriteSingleScalarH5("fov-origin-off-cols", origin_off[1], h5);
+  }
+
+  if (dcm_info.fov_rot)
+  {
+    WriteSingleScalarH5("fov-rot", static_cast<int>(*dcm_info.fov_rot), h5);
+  }
+
+  WriteOptionalScalarH5("fov-horizontal-flip", dcm_info.fov_horizontal_flip, h5);
+
+  WriteOptionalScalarH5("intensifier-diameter-mm", dcm_info.intensifier_diameter_mm, h5);
+
+  if (dcm_info.imager_pixel_spacing)
+  {
+    const auto& ps = *dcm_info.imager_pixel_spacing;
+
+    WriteSingleScalarH5("imager-pixel-row-spacing", ps[0], h5);
+    WriteSingleScalarH5("imager-pixel-col-spacing", ps[1], h5);
+  }
+
+  WriteOptionalScalarH5("grid-focal-dist-mm", dcm_info.grid_focal_dist_mm, h5);
+  
+  WriteOptionalScalarH5("window-center", dcm_info.window_center, h5);
+  WriteOptionalScalarH5("window-width", dcm_info.window_width, h5);
 }
 

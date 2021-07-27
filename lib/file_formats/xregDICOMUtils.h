@@ -39,6 +39,13 @@
 #include "xregPerspectiveXform.h"
 #include "xregProjData.h"
 
+// Forward declaration
+namespace H5
+{
+class Group;
+}
+// End Forward declaration
+
 namespace xreg
 {
 
@@ -252,6 +259,8 @@ struct ReorderAndCheckDICOMInfos : public ObjWithOStream
   bool operator()(const DICOMFIleBasicFieldsList& src_infos,
                   DICOMFIleBasicFieldsList* dst_infos);
 };
+
+void WriteDICOMFieldsH5(const DICOMFIleBasicFields& dcm_info, H5::Group* h5);
 
 }  // xreg
 
