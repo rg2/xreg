@@ -35,7 +35,6 @@ namespace xreg
 {
 
 // Forward declarations:
-struct CIOSFusionDICOMInfo;
 struct DICOMFIleBasicFields;
 
 enum class ProjDataRotToPatUp
@@ -76,10 +75,6 @@ struct ProjData
   // spacing value manually or the spacing values are guessed from other
   // metadata values (e.g. the detector diameter).
   boost::optional<bool> det_spacings_from_orig_meta;
-
-  // Original metadata from the sensor for this image - does not need
-  // to be set, e.g. for the case of simulated data
-  std::shared_ptr<CIOSFusionDICOMInfo> orig_meta;
 
   // Original DICOM metadata this image - does not need
   // to be set, e.g. for the case of simulated data
