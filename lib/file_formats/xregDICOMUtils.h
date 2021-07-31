@@ -262,6 +262,8 @@ struct ReorderAndCheckDICOMInfos : public ObjWithOStream
 
 void WriteDICOMFieldsH5(const DICOMFIleBasicFields& dcm_info, H5::Group* h5);
 
+DICOMFIleBasicFields ReadDICOMFieldsH5(const H5::Group& h5);
+
 }  // xreg
 
 #endif

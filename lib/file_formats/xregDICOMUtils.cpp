@@ -35,6 +35,7 @@
 
 #include "xregAssert.h"
 #include "xregHDF5.h"
+#include "xregHDF5Internal.h"
 #include "xregStringUtils.h"
 
 xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm_path)
@@ -1409,6 +1410,63 @@ void WriteOptionalListOfStrings(const std::string& field_name,
   }
 }
 
+template <class tScalar>
+boost::optional<tScalar> ReadOptionalScalarH5(const std::string& field_name,
+                                              const H5::Group& h5)
+{
+  using Scalar = tScalar;
+
+  boost::optional<Scalar> opt_val;
+
+  if (xreg::ObjectInGroupH5(field_name, h5))
+  {
+    opt_val = xreg::detail::ReadSingleScalarH5Helper<Scalar>(field_name, h5);
+  }
+
+  return opt_val;
+}
+
+boost::optional<std::string> ReadOptionalStringH5(const std::string& field_name,
+                                                  const H5::Group& h5)
+{
+  boost::optional<std::string> opt_str;
+
+  if (xreg::ObjectInGroupH5(field_name, h5))
+  {
+    opt_str = xreg::ReadStringH5(field_name, h5);
+  }
+
+  return opt_str;
+}
+
+boost::optional<std::vector<std::string>>
+ReadOptionalListOfStrings(const std::string& field_name,
+                          const H5::Group& h5)
+{
+  using namespace xreg;
+  
+  boost::optional<std::vector<std::string>> opt_strs;
+  
+  if (ObjectInGroupH5(field_name, h5))
+  {
+    H5::Group strs_g = h5.openGroup(field_name);
+    
+    const size_type len = GetScalarLongAttr("len", strs_g);
+    
+    std::vector<std::string> strs;
+    strs.reserve(len);
+
+    for (size_type i = 0; i < len; ++i)
+    {
+      strs.push_back(ReadStringH5(fmt::format("{:02d}", i), strs_g));
+    }
+
+    opt_strs = strs;
+  }
+
+  return opt_strs;
+}
+
 }  // un-named
 
 void xreg::WriteDICOMFieldsH5(const DICOMFIleBasicFields& dcm_info, H5::Group* h5)
@@ -1533,5 +1591,131 @@ void xreg::WriteDICOMFieldsH5(const DICOMFIleBasicFields& dcm_info, H5::Group* h
   
   WriteOptionalScalarH5("window-center", dcm_info.window_center, h5);
   WriteOptionalScalarH5("window-width", dcm_info.window_width, h5);
+}
+
+xreg::DICOMFIleBasicFields xreg::ReadDICOMFieldsH5(const H5::Group& h5)
+{
+  DICOMFIleBasicFields dcm_info;
+
+  dcm_info.file_path = ReadStringH5("file-path", h5);
+
+  dcm_info.patient_id = ReadStringH5("patient-id", h5);
+  dcm_info.series_uid = ReadStringH5("series-uid", h5);
+  dcm_info.study_uid = ReadStringH5("study-uid", h5);
+
+  dcm_info.patient_name = ReadStringH5("patient-name", h5);
+  
+  dcm_info.study_time = ReadSingleScalarH5Double("study-time", h5);
+  dcm_info.series_time = ReadOptionalScalarH5<double>("series-time", h5);
+  dcm_info.acquisition_time = ReadOptionalScalarH5<double>("acquisition-time", h5);
+  dcm_info.content_time = ReadOptionalScalarH5<double>("content-time", h5);
+  
+  dcm_info.modality = ReadStringH5("modality", h5);
+  
+  dcm_info.img_pos_wrt_pat = detail::ReadMatrixH5Helper<CoordScalar>("img-pos-wrt-pat", h5);
+
+  dcm_info.row_dir = detail::ReadMatrixH5Helper<CoordScalar>("row-dir", h5);
+  dcm_info.col_dir = detail::ReadMatrixH5Helper<CoordScalar>("col-dir", h5);
+
+  dcm_info.row_spacing = ReadSingleScalarH5CoordScalar("row-spacing", h5);
+  dcm_info.col_spacing = ReadSingleScalarH5CoordScalar("col-spacing", h5);
+
+  dcm_info.num_rows = ReadSingleScalarH5ULong("num-rows", h5);
+  dcm_info.num_cols = ReadSingleScalarH5ULong("num-cols", h5);
+
+  dcm_info.pat_pos = ReadOptionalStringH5("pat-pos", h5);
+
+  if (ObjectInGroupH5("pat-orient-x", h5) && ObjectInGroupH5("pat-orient-y", h5))
+  {
+    dcm_info.pat_orient = std::array<std::string,2>{ ReadStringH5("pat-orient-x", h5),
+                                                     ReadStringH5("pat-orient-y", h5) };
+  }
+
+  dcm_info.study_desc = ReadOptionalStringH5("study-desc", h5);
+  
+  dcm_info.series_desc = ReadOptionalStringH5("series-desc", h5);
+
+  dcm_info.image_type = ReadOptionalListOfStrings("image-type", h5);
+
+  dcm_info.manufacturer = ReadStringH5("manufacturer", h5);
+
+  dcm_info.institution_name = ReadOptionalStringH5("institution-name", h5);
+  
+  dcm_info.department_name = ReadOptionalStringH5("department-name", h5);
+
+  dcm_info.manufacturers_model_name = ReadOptionalStringH5("manufacturers-model-name", h5);
+  
+  dcm_info.sec_cap_dev_manufacturer = ReadOptionalStringH5("sec-cap-dev-manufacturer", h5);
+
+  dcm_info.sec_cap_dev_software_versions = ReadOptionalStringH5("sec-cap-dev-software-versions", h5);
+
+  dcm_info.software_versions = ReadOptionalListOfStrings("software-versions", h5);
+
+  dcm_info.vol_props = ReadOptionalStringH5("vol-props", h5);
+
+  dcm_info.num_frames = ReadOptionalScalarH5<unsigned long>("num-frames", h5);
+
+  dcm_info.proto_name = ReadOptionalStringH5("proto-name", h5);
+
+  dcm_info.conv_kernel = ReadOptionalStringH5("conv-kernel", h5);
+
+  dcm_info.body_part_examined = ReadOptionalStringH5("body-part-examined", h5);
+
+  dcm_info.view_position = ReadOptionalStringH5("view-position", h5);
+
+  dcm_info.dist_src_to_det_mm = ReadOptionalScalarH5<double>("dist-src-to-det-mm", h5);
+
+  dcm_info.dist_src_to_pat_mm = ReadOptionalScalarH5<double>("dist-src-to-pat-mm", h5);
+
+  dcm_info.kvp = ReadOptionalScalarH5<double>("kvp", h5);
+
+  dcm_info.tube_current_mA = ReadOptionalScalarH5<double>("tube-current-mA", h5);
+
+  dcm_info.exposure_mAs = ReadOptionalScalarH5<double>("exposure-mAs", h5);
+
+  dcm_info.exposure_muAs = ReadOptionalScalarH5<double>("exposure-muAs", h5);
+
+  dcm_info.exposure_time_ms = ReadOptionalScalarH5<double>("exposure-time-ms", h5);
+
+  dcm_info.dose_area_product_dGy_cm_sq = ReadOptionalScalarH5<double>("dose-area-product-dGy-cm-sq", h5);
+
+  dcm_info.fov_shape = ReadOptionalStringH5("fov-shape", h5);
+
+  if (ObjectInGroupH5("fov-dims", h5))
+  {
+    dcm_info.fov_dims = ReadVectorH5ULong("fov-dims", h5);
+  }
+  
+  if (ObjectInGroupH5("fov-origin-off-rows", h5) && ObjectInGroupH5("fov-origin-off-cols", h5))
+  {
+    dcm_info.fov_origin_off = std::array<unsigned long,2>{
+                                 ReadSingleScalarH5ULong("fov-origin-off-rows", h5),
+                                 ReadSingleScalarH5ULong("fov-origin-off-cols", h5) };
+  }
+
+  if (ObjectInGroupH5("fov-rot", h5))
+  {
+    dcm_info.fov_rot = static_cast<DICOMFIleBasicFields::FOVRot>(
+                                            ReadSingleScalarH5Int("fov-rot", h5));
+  }
+
+  dcm_info.fov_horizontal_flip = ReadOptionalScalarH5<unsigned char>("fov-horizontal-flip", h5);
+
+  dcm_info.intensifier_diameter_mm = ReadOptionalScalarH5<double>("intensifier-diameter-mm", h5);
+
+  if (ObjectInGroupH5("imager-pixel-row-spacing", h5) &&
+      ObjectInGroupH5("imager-pixel-col-spacing", h5))
+  {
+    dcm_info.imager_pixel_spacing = std::array<CoordScalar,2>{ 
+              ReadSingleScalarH5CoordScalar("imager-pixel-row-spacing", h5),
+              ReadSingleScalarH5CoordScalar("imager-pixel-col-spacing", h5) };
+  }
+
+  dcm_info.grid_focal_dist_mm = ReadOptionalScalarH5<double>("grid-focal-dist-mm", h5);
+  
+  dcm_info.window_center = ReadOptionalScalarH5<double>("window-center", h5);
+  dcm_info.window_width = ReadOptionalScalarH5<double>("window-width", h5);
+
+  return dcm_info;
 }
 
