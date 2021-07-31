@@ -26,10 +26,10 @@
 
 #include <fmt/format.h>
 
+#include "xregDICOMUtils.h"
 #include "xregHDF5.h"
 #include "xregHDF5Internal.h"
 #include "xregH5CamModelIO.h"
-#include "xregCIOSFusionDICOM.h"
 
 namespace
 {
@@ -96,15 +96,13 @@ void WriteProjDataH5Helper(const std::vector<ProjData<tPixelScalar>>& proj_data,
                           *proj_data[i].det_spacings_from_orig_meta, &proj_g);
     }
 
-    // TODO: replace this with writing original DICOM fields
-    if (proj_data[i].orig_meta)
+    if (proj_data[i].orig_dcm_meta)
     {
-      H5::Group orig_meta_g = proj_g.createGroup("orig-meta");
+      H5::Group orig_meta_g = proj_g.createGroup("orig-dcm-meta");
       
-      // For now we are only storing metadata from the CIOS fusion
-      SetStringAttr("meta-type", "cios-fusion", &orig_meta_g);
+      SetStringAttr("meta-type", "dicom", &orig_meta_g);
 
-      WriteCIOSMetaH5(*proj_data[i].orig_meta, &orig_meta_g);
+      WriteDICOMFieldsH5(*proj_data[i].orig_dcm_meta, &orig_meta_g);
     }
   }
 }
@@ -404,14 +402,16 @@ ReadProjDataHelper(const H5::Group& h5, const bool read_pixels)
                                                 "det-spacings-from-orig-meta", proj_g);
     }
 
-    // TODO: replace this with reading original DICOM fields
-    if (ObjectInGroupH5("orig-meta", proj_g))
+    if (ObjectInGroupH5("orig-dcm-meta", proj_g))
     {
-      // TODO: check the "meta-type" attribute after more sensors are added
+      H5::Group orig_meta_g = proj_g.openGroup("orig-dcm-meta");
+
+      // double-check that DICOM metadata was written here
+      xregASSERT(GetStringAttr("meta-type", orig_meta_g) == "dicom");
       
-      projs[i].orig_meta = std::make_shared<CIOSFusionDICOMInfo>();
+      projs[i].orig_dcm_meta = std::make_shared<DICOMFIleBasicFields>();
       
-      *projs[i].orig_meta = ReadCIOSMetaH5(proj_g.openGroup("orig-meta"));
+      *projs[i].orig_dcm_meta = ReadDICOMFieldsH5(orig_meta_g);
     }
   }
 
