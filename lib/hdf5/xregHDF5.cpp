@@ -53,7 +53,7 @@ H5::DataType xreg::GetH5StringDataType()
 
 H5::DataType xreg::GetH5StringDataType(const std::string& s)
 {
-  return H5::StrType(H5::PredType::C_S1, s.size());
+  return H5::StrType(H5::PredType::C_S1, std::max(std::string::size_type(1), s.size()));
 }
 
 bool xreg::SetStringAttr(const std::string& key, const std::string& val, H5::Group* h5)

@@ -112,7 +112,10 @@ inline H5::DataType LookupH5DataType<double>()
 template <>
 inline H5::DataType LookupH5DataType<std::string>()
 {
-  return H5::StrType(H5::PredType::C_S1);
+  H5::StrType str_type(H5::PredType::C_S1);
+  str_type.setSize(H5T_VARIABLE);
+
+  return str_type;
 }
 
 #ifdef _WIN32
