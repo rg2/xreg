@@ -121,11 +121,11 @@ typename tImage::Pointer ReadITKImageFromDisk(const std::string& path)
   return reader->GetOutput();
 }
 
-template <class tPixelType>
-typename itk::Image<tPixelType,2>::Pointer
-ReadDICOM2DFromDisk(const std::string& path)
+template <class tPixelType, unsigned int tN>
+typename itk::Image<tPixelType,tN>::Pointer
+ReadDICOMNDFromDisk(const std::string& path)
 {
-  using ImgReader = itk::ImageFileReader<itk::Image<tPixelType,2>>;
+  using ImgReader = itk::ImageFileReader<itk::Image<tPixelType,tN>>;
   typename ImgReader::Pointer img_reader = ImgReader::New();
   img_reader->SetFileName(path);
 
@@ -135,6 +135,21 @@ ReadDICOM2DFromDisk(const std::string& path)
   img_reader->Update();
 
   return img_reader->GetOutput();
+}
+
+
+template <class tPixelType>
+typename itk::Image<tPixelType,2>::Pointer
+ReadDICOM2DFromDisk(const std::string& path)
+{
+  return ReadDICOMNDFromDisk<tPixelType,2>(path);
+}
+
+template <class tPixelType>
+typename itk::Image<tPixelType,3>::Pointer
+ReadDICOM3DFromDisk(const std::string& path)
+{
+  return ReadDICOMNDFromDisk<tPixelType,3>(path);
 }
 
 template <unsigned int tN>

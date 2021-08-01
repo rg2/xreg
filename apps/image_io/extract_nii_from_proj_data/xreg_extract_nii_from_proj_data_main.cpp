@@ -38,6 +38,7 @@ void ProcessAndSave(itk::Image<tScalar,2>* img,
                     const std::string& path,
                     const boost::optional<ProjDataRotToPatUp>& rot_to_pat_up,
                     const double ds_factor,
+                    const bool discard_geom,
                     std::ostream& vout)
 {
   using Img    = itk::Image<tScalar,2>;
@@ -59,6 +60,18 @@ void ProcessAndSave(itk::Image<tScalar,2>* img,
     vout << "    downsampling..." << std::endl;
     tmp_img = DownsampleImage(img_to_save, ds_factor);
     img_to_save = tmp_img.GetPointer();
+  }
+
+  if (discard_geom)
+  {
+    const std::array<double,2> spacing = { 1.0, 1.0 };
+    const std::array<double,2> origin = { 0.0, 0.0 };
+    typename Img::DirectionType dir_mat;
+    dir_mat.SetIdentity();
+
+    img_to_save->SetSpacing(spacing.data());
+    img_to_save->SetOrigin(origin.data());
+    img_to_save->SetDirection(dir_mat);
   }
   
   vout << "    writing image..." << std::endl;
@@ -96,6 +109,12 @@ int main(int argc, char* argv[])
   po.add("ds-factor", 'd', ProgOpts::kSTORE_DOUBLE, "ds-factor",
          "Downsampling factor applied to projection data")
     << 1.0;
+  
+  po.add("no-geom", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-geom",
+         "Discard any geometric metadata (e.g. pixel spacings, origin, orientation) when writing "
+         "NIFTI files. The output file will have pixel spacings equal to one, identity orientation "
+         "and zero origin.")
+    << false;
 
   try
   {
@@ -120,6 +139,8 @@ int main(int argc, char* argv[])
   const bool ignore_pat_rot_up = po.get("no-pat-rot-up");
 
   const double proj_ds_factor = po.get("ds-factor");
+
+  const bool discard_geom = po.get("no-geom");
 
   const std::string proj_data_path = po.pos_args()[0];
   const std::string nii_prefix     = po.pos_args()[1];
@@ -191,19 +212,19 @@ int main(int argc, char* argv[])
       {
         auto img = pd_reader.read_proj_F32(src_proj_idx);
 
-        ProcessAndSave(img.GetPointer(), dst_path, rot_to_pat_up, proj_ds_factor, vout);
+        ProcessAndSave(img.GetPointer(), dst_path, rot_to_pat_up, proj_ds_factor, discard_geom, vout);
       }
       else if (scalar_type == kPROJ_DATA_TYPE_UINT16)
       {
         auto img = pd_reader.read_proj_U16(src_proj_idx);
         
-        ProcessAndSave(img.GetPointer(), dst_path, rot_to_pat_up, proj_ds_factor, vout);
+        ProcessAndSave(img.GetPointer(), dst_path, rot_to_pat_up, proj_ds_factor, discard_geom, vout);
       }
       else if (scalar_type == kPROJ_DATA_TYPE_UINT8)
       {
         auto img = pd_reader.read_proj_U8(src_proj_idx);
         
-        ProcessAndSave(img.GetPointer(), dst_path, rot_to_pat_up, proj_ds_factor, vout);
+        ProcessAndSave(img.GetPointer(), dst_path, rot_to_pat_up, proj_ds_factor, discard_geom, vout);
       }
     }
   }

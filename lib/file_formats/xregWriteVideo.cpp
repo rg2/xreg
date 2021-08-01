@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020,2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,11 @@
 
 #include "xregAssert.h"
 #include "xregFilesystemUtils.h"
-  
+
+#ifdef __APPLE__
+#include "xregAppleAVFoundation.h"
+#endif
+
 void xreg::WriteImageFramesToVideo::write(const std::vector<cv::Mat>& frames)
 {
   for (const cv::Mat& f : frames)
@@ -102,7 +106,7 @@ void xreg::WriteImageFramesToVideoWithFFMPEG::open()
                                   dst_vid_path,           // output file
                                   bp::std_in < p->ffmpeg_p_in,
                                   bp::std_out > bp::null,
-                                  bp::std_err > bp::null));  
+                                  bp::std_err > bp::null)); 
 }
 
 void xreg::WriteImageFramesToVideoWithFFMPEG::close()
@@ -177,11 +181,19 @@ std::unique_ptr<xreg::WriteImageFramesToVideo> xreg::GetWriteImageFramesToVideo(
   else
 #endif
   {
+#ifdef __APPLE__
+    std::cerr << "WARNING: could not find FFMPEG executable, falling back to "
+                 "Apple AVFoundation video writer!" << std::endl;
+    writer.reset(new WriteImageFramesToVideoAppleAVF);
+#else
+
 #ifndef _WIN32
-    std::cerr << "WARNING: could not find FFMPEG executable, falling back to OpenCV video writer!" << std::endl;
+    std::cerr << "WARNING: could not find FFMPEG executable, falling back to "
+                 "OpenCV video writer!" << std::endl;
 #endif
 
     writer.reset(new WriteImageFramesToVideoWithOpenCV);
+#endif
   }
 
   return writer;
@@ -189,17 +201,70 @@ std::unique_ptr<xreg::WriteImageFramesToVideo> xreg::GetWriteImageFramesToVideo(
 
 void xreg::WriteAllImageFramesToVideo(const std::string& vid_path,
                                       const std::vector<cv::Mat>& frames,
-                                      const double fps)
+                                      const double fps_or_len,
+                                      const bool is_fps)
 {
-  auto writer = GetWriteImageFramesToVideo();
+  if (!frames.empty())
+  {
+    auto writer = GetWriteImageFramesToVideo();
 
-  writer->dst_vid_path = vid_path;
-  writer->fps = fps;
+    writer->dst_vid_path = vid_path;
+    writer->fps = is_fps ? fps_or_len : (frames.size() / fps_or_len);
+    
+    writer->open();
+
+    writer->write(frames);
+   
+    writer->close();
+  }
+  else
+  {
+    xregThrow("No frames provided to create video!");
+  }
+}
+
+void xreg::WriteImageFilesToVideo(const std::string& vid_path,
+                                  const std::vector<std::string>& img_paths,
+                                  const double fps_or_len,
+                                  const bool is_fps)
+{
+  std::vector<cv::Mat> frames;
+
+  const size_type num_frames = img_paths.size();
+
+  frames.reserve(num_frames);
+
+  for (size_type i = 0; i < num_frames; ++i)
+  {
+    frames.push_back(cv::imread(img_paths[i]));
+  }
+
+  WriteAllImageFramesToVideo(vid_path, frames, fps_or_len, is_fps);
+}
+
+void xreg::WriteDirOfImagesToVideo(const std::string& vid_path,
+                                   const std::string& img_dir,
+                                   const bool lex_sort,
+                                   const std::vector<std::string>& img_exts,
+                                   const double fps_or_len,
+                                   const bool is_fps)
+{
+  FileExtensions file_exts;
   
-  writer->open();
+  for (const auto& ext : img_exts)
+  {
+    file_exts.add(ext);
+  }
+  
+  std::vector<std::string> img_paths;
 
-  writer->write(frames);
- 
-  writer->close();
+  GetFilePathsFromDir(img_dir, &img_paths, file_exts);
+
+  if (lex_sort)
+  {
+    std::sort(img_paths.begin(), img_paths.end());
+  }
+
+  WriteImageFilesToVideo(vid_path, img_paths, fps_or_len, is_fps);
 }
 

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,8 +35,8 @@ namespace xreg
 {
 
 // Forward declarations:
-struct CIOSFusionDICOMInfo;
-  
+struct DICOMFIleBasicFields;
+
 enum class ProjDataRotToPatUp
 {
   kZERO = 0,
@@ -68,10 +68,17 @@ struct ProjData
   // of the image and the inferior portion is approximately located in
   // the bottom of the image.
   boost::optional<ProjDataRotToPatUp> rot_to_pat_up;
+  
+  // Indicates that the detector spacings specified in cam were explicitly
+  // defined from metadata fields in the original source. Examples where this
+  // can be false are when converting from DICOM and the user overrides the
+  // spacing value manually or the spacing values are guessed from other
+  // metadata values (e.g. the detector diameter).
+  boost::optional<bool> det_spacings_from_orig_meta;
 
-  // Original metadata from the sensor for this image - does not need
+  // Original DICOM metadata this image - does not need
   // to be set, e.g. for the case of simulated data
-  std::shared_ptr<CIOSFusionDICOMInfo> orig_meta;
+  std::shared_ptr<DICOMFIleBasicFields> orig_dcm_meta;
 };
 
 using ProjDataF32 = ProjData<float>;
@@ -82,13 +89,19 @@ using ProjDataF32List = std::vector<ProjDataF32>;
 using ProjDataU16List = std::vector<ProjDataU16>;
 using ProjDataU8List  = std::vector<ProjDataU8>;
 
-ProjDataF32 DownsampleProjData(const ProjDataF32& src_proj, const CoordScalar ds_factor);
-ProjDataU16 DownsampleProjData(const ProjDataU16& src_proj, const CoordScalar ds_factor);
-ProjDataU8 DownsampleProjData(const ProjDataU8& src_proj, const CoordScalar ds_factor);
+ProjDataF32 DownsampleProjData(const ProjDataF32& src_proj, const CoordScalar ds_factor,
+                               const bool force_even_dims = false);
+ProjDataU16 DownsampleProjData(const ProjDataU16& src_proj, const CoordScalar ds_factor,
+                               const bool force_even_dims = false);
+ProjDataU8 DownsampleProjData(const ProjDataU8& src_proj, const CoordScalar ds_factor,
+                              const bool force_even_dims = false);
 
-ProjDataF32List DownsampleProjData(const ProjDataF32List& src_projs, const CoordScalar ds_factor);
-ProjDataU16List DownsampleProjData(const ProjDataU16List& src_projs, const CoordScalar ds_factor);
-ProjDataU8List DownsampleProjData(const ProjDataU8List& src_projs, const CoordScalar ds_factor);
+ProjDataF32List DownsampleProjData(const ProjDataF32List& src_projs, const CoordScalar ds_factor,
+                                   const bool force_even_dims = false);
+ProjDataU16List DownsampleProjData(const ProjDataU16List& src_projs, const CoordScalar ds_factor,
+                                   const bool force_even_dims = false);
+ProjDataU8List DownsampleProjData(const ProjDataU8List& src_projs, const CoordScalar ds_factor,
+                                  const bool force_even_dims = false);
 
 template <class tPixelScalar>
 using CamImgPair = std::tuple<CameraModel,typename itk::Image<tPixelScalar,2>::Pointer>;

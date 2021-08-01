@@ -299,7 +299,10 @@ int main(int argc, char* argv[])
                                   std::lround(3 * (((((proj_ds_factor < 1) ? -1 : 1) * 0.75) *
                                                     (proj_ds_factor - 1) * (proj_ds_factor - 1)) + 1)));
 
-    border_thickness = std::max(1l, std::lround(proj_ds_factor * border_thickness));
+    if (border_thickness > 0)
+    {
+      border_thickness = std::max(1l, std::lround(proj_ds_factor * border_thickness));
+    }
   }
 
   const std::string proj_data_path = po.pos_args()[0];

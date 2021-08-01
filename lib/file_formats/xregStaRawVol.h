@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020, 2021 Robert Grupp
+ * Copyright (c) 2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,37 +22,30 @@
  * SOFTWARE.
  */
 
-#ifndef XREGSAMPLEUTILS_H_
-#define XREGSAMPLEUTILS_H_
-
-#include <random>
+#ifndef XREGSTARAWVOL_H_
+#define XREGSTARAWVOL_H_
 
 #include "xregCommon.h"
 
 namespace xreg
 {
 
-// helper function to initialize mt rng engine with a random device, this is
-// code that I keep having to re-write everywhere.
-void SeedRNGEngWithRandDev(std::mt19937* rng);
+// Store metadata found in .sta/.raw volume files from the Ljubljana 2D/3D datasets.
+// Data is available here: http://lit.fe.uni-lj.si/tools.php?lang=eng
+struct StaVolInfo
+{
+  std::array<size_type,3> dims;
 
-// Compute binomial coefficient - e.g. n choose k.
-size_type BinCoeff(const size_type n, const size_type k);
+  std::array<CoordScalar,3> spacing;
 
-// Sample some combinations of elements
-std::vector<std::vector<size_type>>
-SampleCombos(const size_type num_elem, const size_type combo_len,
-             const size_type num_combos, std::mt19937& rng);
+  std::string data_type_str;
 
-// Return an exhaustive list of combinations of 3 elements from a collection of
-// a specified list. Each combination is represented by a list of 3 indices.
-std::vector<std::vector<size_type>>
-BruteForce3Combos(const size_type num_elem);
+  FrameTransform vol_to_world;
+};
 
-// Return an exhaustive list of combinations of 4 elements from a collection of
-// a specified list. Each combination is represented by a list of 4 indices.
-std::vector<std::vector<size_type>>
-BruteForce4Combos(const size_type num_elem);
+StaVolInfo ReadStaVolInfo(const std::string& sta_file_path);
+
+itk::Image<float,3>::Pointer ReadStaRawVol(const std::string& sta_file_path);
 
 }  // xreg
 

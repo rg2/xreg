@@ -27,67 +27,6 @@
 #include "xregAssert.h"
 #include "xregSampleUtils.h"
 
-std::vector<std::vector<xreg::size_type>>
-xreg::BruteForce3Combos(const size_type num_pts)
-{
-  std::vector<std::vector<size_type>> combos;
-
-  std::vector<size_type> tmp_arr(3);
-
-  for (size_type i = 0; i < (num_pts - 2); ++i)
-  {
-    tmp_arr[0] = i;
-
-    for (size_type j = (i + 1); j < (num_pts - 1); ++j)
-    {
-      tmp_arr[1] = j;
-
-      for (size_type k = (j + 1); k < num_pts; ++k)
-      {
-        tmp_arr[2] = k;
-
-        combos.push_back(tmp_arr);
-      }
-    }
-  }
-
-  return combos;
-}
-
-std::vector<std::vector<xreg::size_type>>
-xreg::BruteForce4Combos(const size_type num_pts)
-{
-  xregASSERT(num_pts >= 4);
-
-  std::vector<std::vector<size_type>> combos;
-
-  std::vector<size_type> tmp_arr(4);
-
-  for (size_type i = 0; i < (num_pts - 3); ++i)
-  {
-    tmp_arr[0] = i;
-
-    for (size_type j = (i + 1); j < (num_pts - 2); ++j)
-    {
-      tmp_arr[1] = j;
-
-      for (size_type k = (j + 1); k < (num_pts - 1); ++k)
-      {
-        tmp_arr[2] = k;
-        
-        for (size_type l = (k + 1); l < num_pts; ++l)
-        {
-          tmp_arr[3] = l;
-
-          combos.push_back(tmp_arr);
-        }
-      }
-    }
-  }
-
-  return combos;
-}
-  
 void xreg::RANSACPnP::run_impl()
 {
   xregASSERT(pnp_prop_ && pnp_);

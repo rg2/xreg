@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -73,8 +73,8 @@ void ReadDICOMPixelsResampleAndWriteVolume(const DICOMFIleBasicFieldsList& dcm_i
   using SliceType = itk::Image<T,2>;
   using SlicePointer = typename SliceType::Pointer;
 
-  if (dcm_infos[0].sec_cap_dev_software_versions_valid &&
-      (dcm_infos[0].sec_cap_dev_software_versions.find("Amira") != std::string::npos))
+  if (dcm_infos[0].sec_cap_dev_software_versions &&
+      (dcm_infos[0].sec_cap_dev_software_versions->find("Amira") != std::string::npos))
   {
     std::cerr << "WARNING: THIS SERIES WAS EXPORTED FROM AMIRA - "
                  "LPS DIRECTIONS MAY NOT BE CORRECT IF RESAMPLING/WARPING WAS "
@@ -95,97 +95,108 @@ void ReadDICOMPixelsResampleAndWriteVolume(const DICOMFIleBasicFieldsList& dcm_i
   Pt3 out_of_plane_dir = in_plane_col_dir.cross(in_plane_row_dir);
 
   {
-    const std::string pat_pos_str  = StringStrip(dcm_infos[0].pat_pos);
-    const std::string pat_orient_x = StringStrip(dcm_infos[0].pat_orient[0]);
-    const std::string pat_orient_y = StringStrip(dcm_infos[0].pat_orient[1]);
+    const bool has_pat_orient_strs = dcm_infos[0].pat_orient.has_value();
 
-    if (pat_pos_str == "HFS")  // head first supine, most common
+    const std::string pat_orient_x = has_pat_orient_strs ?
+                                        StringStrip((*dcm_infos[0].pat_orient)[0]) : std::string();
+    const std::string pat_orient_y = has_pat_orient_strs ?
+                                        StringStrip((*dcm_infos[0].pat_orient)[1]) : std::string();
+    
+    if (dcm_infos[0].pat_pos)
     {
-      // This should have pixels already in LPS
-      if ((pat_orient_x != "L") || (pat_orient_y != "P"))
-      {
-        std::cerr << "WARNING: Patient position (" << pat_pos_str
-                  << ") is inconsistent with patient orientation ("
-                  << pat_orient_x << " , " << pat_orient_y << ')' << std::endl;
-      }
-    }
-    else if(pat_pos_str == "HFP")  // head first prone, have seen a few of these
-    {
-      // This should have pixels in RAS
-      if ((pat_orient_x != "R") || (pat_orient_y != "A"))
-      {
-        std::cerr << "WARNING: Patient position (" << pat_pos_str
-                  << ") is inconsistent with patient orientation ("
-                  << pat_orient_x << " , " << pat_orient_y << ')' << std::endl;
-      }
-    }
-    //else if (pat_pos_str == "FFS")  // Feet first supine
-    else
-    {
-      std::cerr << "WARNING: UNCOMMON PATIENT POSITON STRING: "
-                << pat_pos_str << std::endl;
-    }
+      const std::string pat_pos_str  = StringStrip(*dcm_infos[0].pat_pos);
 
-    Pt3 std_x_axis;
-    std_x_axis[0] = 1;
-    std_x_axis[1] = 0;
-    std_x_axis[2] = 0;
-
-    Pt3 std_y_axis;
-    std_y_axis[0] = 0;
-    std_y_axis[1] = 1;
-    std_y_axis[2] = 0;
-
-    if (pat_orient_x == "L")
-    {
-      if ((in_plane_col_dir - std_x_axis).norm() > 1.0e-6)
+      if (pat_pos_str == "HFS")  // head first supine, most common
       {
-        std::cerr << "WARNING: PATIENT ORIENTATION OF X-AXIS (" << pat_orient_x
-                  << ") IS NOT CONSISTENT WITH DIRECTION VECTOR ("
-                  << in_plane_col_dir[0] << ',' << in_plane_col_dir[1]
-                  << ',' << in_plane_col_dir[2] << ')' << std::endl;
+        // This should have pixels already in LPS
+        if (has_pat_orient_strs && ((pat_orient_x != "L") || (pat_orient_y != "P")))
+        {
+          std::cerr << "WARNING: Patient position (" << pat_pos_str
+                    << ") is inconsistent with patient orientation ("
+                    << pat_orient_x << " , " << pat_orient_y << ')' << std::endl;
+        }
       }
-    }
-    else if (pat_orient_x == "R")
-    {
-      if ((in_plane_col_dir + std_x_axis).norm() > 1.0e-6)
+      else if(pat_pos_str == "HFP")  // head first prone, have seen a few of these
       {
-        std::cerr << "WARNING: PATIENT ORIENTATION OF X-AXIS (" << pat_orient_x
-                  << ") IS NOT CONSISTENT WITH DIRECTION VECTOR ("
-                  << in_plane_col_dir[0] << ',' << in_plane_col_dir[1]
-                  << ',' << in_plane_col_dir[2] << ')' << std::endl;
+        // This should have pixels in RAS
+        if (has_pat_orient_strs && ((pat_orient_x != "R") || (pat_orient_y != "A")))
+        {
+          std::cerr << "WARNING: Patient position (" << pat_pos_str
+                    << ") is inconsistent with patient orientation ("
+                    << pat_orient_x << " , " << pat_orient_y << ')' << std::endl;
+        }
       }
-    }
-    else
-    {
-      std::cerr << "WARNING: UNCOMMON PATIENT ORIENTATION OF X-AXIS ("
-                << pat_orient_x << ')' << std::endl;
+      //else if (pat_pos_str == "FFS")  // Feet first supine
+      else
+      {
+        std::cerr << "WARNING: UNCOMMON PATIENT POSITON STRING: "
+                  << pat_pos_str << std::endl;
+      }
     }
 
-    if (pat_orient_y == "P")
+    if (has_pat_orient_strs)
     {
-      if ((in_plane_row_dir - std_y_axis).norm() > 1.0e-6)
+      Pt3 std_x_axis;
+      std_x_axis[0] = 1;
+      std_x_axis[1] = 0;
+      std_x_axis[2] = 0;
+
+      Pt3 std_y_axis;
+      std_y_axis[0] = 0;
+      std_y_axis[1] = 1;
+      std_y_axis[2] = 0;
+
+      if (pat_orient_x == "L")
       {
-        std::cerr << "WARNING: PATIENT ORIENTATION OF Y-AXIS (" << pat_orient_y
-                  << ") IS NOT CONSISTENT WITH DIRECTION VECTOR ("
-                  << in_plane_row_dir[0] << ',' << in_plane_row_dir[1]
-                  << ',' << in_plane_row_dir[2] << ')' << std::endl;
+        if ((in_plane_col_dir - std_x_axis).norm() > 1.0e-6)
+        {
+          std::cerr << "WARNING: PATIENT ORIENTATION OF X-AXIS (" << pat_orient_x
+                    << ") IS NOT CONSISTENT WITH DIRECTION VECTOR ("
+                    << in_plane_col_dir[0] << ',' << in_plane_col_dir[1]
+                    << ',' << in_plane_col_dir[2] << ')' << std::endl;
+        }
       }
-    }
-    else if (pat_orient_y == "A")
-    {
-      if ((in_plane_row_dir + std_y_axis).norm() > 1.0e-6)
+      else if (pat_orient_x == "R")
       {
-        std::cerr << "WARNING: PATIENT ORIENTATION OF Y-AXIS (" << pat_orient_y
-                  << ") IS NOT CONSISTENT WITH DIRECTION VECTOR ("
-                  << in_plane_row_dir[0] << ',' << in_plane_row_dir[1]
-                  << ',' << in_plane_row_dir[2] << ')' << std::endl;
+        if ((in_plane_col_dir + std_x_axis).norm() > 1.0e-6)
+        {
+          std::cerr << "WARNING: PATIENT ORIENTATION OF X-AXIS (" << pat_orient_x
+                    << ") IS NOT CONSISTENT WITH DIRECTION VECTOR ("
+                    << in_plane_col_dir[0] << ',' << in_plane_col_dir[1]
+                    << ',' << in_plane_col_dir[2] << ')' << std::endl;
+        }
       }
-    }
-    else
-    {
-      std::cerr << "WARNING: UNCOMMON PATIENT ORIENTATION OF Y-AXIS ("
-                << pat_orient_y << ')' << std::endl;
+      else
+      {
+        std::cerr << "WARNING: UNCOMMON PATIENT ORIENTATION OF X-AXIS ("
+                  << pat_orient_x << ')' << std::endl;
+      }
+
+      if (pat_orient_y == "P")
+      {
+        if ((in_plane_row_dir - std_y_axis).norm() > 1.0e-6)
+        {
+          std::cerr << "WARNING: PATIENT ORIENTATION OF Y-AXIS (" << pat_orient_y
+                    << ") IS NOT CONSISTENT WITH DIRECTION VECTOR ("
+                    << in_plane_row_dir[0] << ',' << in_plane_row_dir[1]
+                    << ',' << in_plane_row_dir[2] << ')' << std::endl;
+        }
+      }
+      else if (pat_orient_y == "A")
+      {
+        if ((in_plane_row_dir + std_y_axis).norm() > 1.0e-6)
+        {
+          std::cerr << "WARNING: PATIENT ORIENTATION OF Y-AXIS (" << pat_orient_y
+                    << ") IS NOT CONSISTENT WITH DIRECTION VECTOR ("
+                    << in_plane_row_dir[0] << ',' << in_plane_row_dir[1]
+                    << ',' << in_plane_row_dir[2] << ')' << std::endl;
+        }
+      }
+      else
+      {
+        std::cerr << "WARNING: UNCOMMON PATIENT ORIENTATION OF Y-AXIS ("
+                  << pat_orient_y << ')' << std::endl;
+      }
     }
   }
 
@@ -735,12 +746,23 @@ int main( int argc, char* argv[] )
          "Limit processing to a specific series UID.")
     << "";
 
+  po.add("no-name-w-pat-id", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-name-w-pat-id",
+         "Do NOT include the patient ID for naming output files. Use care with this option as "
+         "datasets may have different patient IDs with the same patient name, which could "
+         "possibily result in several series mapping to the same output file. This could result "
+         "in not all series being written out to disk WITHOUT WARNING.")
+    << false;
+
+  po.add("name-w-pat-name", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "name-w-pat-name",
+         "Include patient name for naming output files.")
+    << false;
+
   po.add("name-w-desc", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "name-w-desc",
-         "Use study and series descriptions for naming output files.")
+         "Include study and series descriptions for naming output files.")
     << false;
 
   po.add("name-w-conv", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "name-w-conv",
-         "Use convolution kernel for naming output files (useful for distinguishing between "
+         "Include convolution kernel for naming output files (useful for distinguishing between "
          "soft-tissue and bone reconstructions).")
     << false;
 
@@ -754,6 +776,22 @@ int main( int argc, char* argv[] )
          "(e.g. the file contains a 3D volume compared to a 2D slice of a volume "
          "or a sequence of 2D images.)")
     << false;
+
+  po.add("exclude-derived", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "exclude-derived",
+         "Do NOT include DERIVED images (e.g. images with pixel values derived from other images).")
+    << false;
+  
+  po.add("exclude-secondary", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "exclude-secondary",
+         "Do NOT include SECONDARY images (e.g. images created after initial exam).")
+    << false;
+
+  po.add("modalities", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "modalities",
+         "A comma delimited string indicating which modalities should be considered. "
+         "An empty string (the default) considers all modalities. "
+         "This is case-sensitive - upper case strings are standard. "
+         "Examples: \"CT\" will only convert CT datasets, "
+         "\"CT,MR\" will convert CT and MR datasets.")
+    << "";
 
   po.add("pat-lut", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "pat-lut",
          "Path to a CSV file which serves as a LUT between DICOM patient IDs and strings "
@@ -876,22 +914,26 @@ int main( int argc, char* argv[] )
   const std::string single_series_uid   = po.get("series-uid");
   const bool        limit_single_series = !single_series_uid.empty();
 
+  const bool use_pat_id_for_name = !po.get("no-name-w-pat-id").as_bool();
+
+  const bool use_pat_name_for_name = po.get("name-w-pat-name");
+
   const bool use_desc_for_name = po.get("name-w-desc");
   const bool use_conv_for_name = po.get("name-w-conv");
   
-  if ((int(use_desc_for_name) + int(use_conv_for_name)) > 1)
-  {
-    std::cerr << "ERROR: can only use one flag for choosing DICOM fields for output naming!"
-              << " Choose one of \"name-w-desc\" or \"name-w-conv\"" << std::endl;
-
-    return kEXIT_VAL_BAD_USE;
-  }
-
   const bool inc_localizers = po.get("include-localizer");
 
   const bool inc_multiframe_files = po.get("include-multiframe-files");
 
+  const bool exclude_derived = po.get("exclude-derived");
+  
+  const bool exclude_secondary = po.get("exclude-secondary");
+
   const std::string pat_id_lut_path = po.get("pat-lut");
+
+  const std::string modalities_to_consider_str = po.get("modalities");
+
+  const auto modalities_to_consider = StringSplit(modalities_to_consider_str, ",");
 
   const bool use_pat_id_lut = !pat_id_lut_path.empty();
 
@@ -933,10 +975,15 @@ int main( int argc, char* argv[] )
        << "\n            Single Patient ID: " << (limit_single_pat    ? single_pat_id.c_str()     : "(All Patients)")
        << "\n             Single Study UID: " << (limit_single_study  ? single_study_uid.c_str()  : "(All Studies)")
        << "\n            Single Series UID: " << (limit_single_series ? single_series_uid.c_str() : "(All Series)")
+       << "\n      Use Patient ID for Name: " << use_pat_id_for_name
+       << "\n    Use Patient Name for Name: " << use_pat_name_for_name
        << "\n  Use Study/Series Desc. Name: " << use_desc_for_name
        << "\n         Use Conv. Kern. Name: " << use_conv_for_name
        << "\n           Include Localizers: " << inc_localizers
        << "\n    Include Multi-Frame Files: " << inc_multiframe_files
+       << "\n        Exclude Derived Files: " << exclude_derived
+       << "\n      Exclude Secondary Files: " << exclude_secondary
+       << "\n        Modalities Considered: " << (modalities_to_consider_str.empty() ? "<ALL>" : modalities_to_consider_str.c_str())
        << "\n           Use Patient ID LUT: " << use_pat_id_lut
        << "\n-----------------------------------------------------\n" << std::endl;
 
@@ -965,7 +1012,9 @@ int main( int argc, char* argv[] )
   {
     vout << "reading directory tree and organizing..." << std::endl;
     GetOrgainizedDICOMInfos(input_root_dir, &org_dcm,
-                            inc_localizers, inc_multiframe_files);
+                            inc_localizers, inc_multiframe_files,
+                            !exclude_secondary, !exclude_derived,
+                            modalities_to_consider);
   }
   else
   {
@@ -989,8 +1038,8 @@ int main( int argc, char* argv[] )
       org_dcm.root_dir = input_root_dir;
 
       // manually assign all DICOM files to a single patient and study
-      DICOMFIleBasicFields dcm_info;
-      ReadDICOMFileBasicFields(dcm_str_paths[0], &dcm_info);
+      DICOMFIleBasicFields dcm_info = ReadDICOMFileBasicFields(dcm_str_paths[0]);
+
       org_dcm.patient_infos[dcm_info.patient_id]
                         [dcm_info.study_uid][dcm_info.series_uid] = dcm_str_paths;
     }
@@ -1070,13 +1119,16 @@ int main( int argc, char* argv[] )
     vout << std::endl;
   }
 
-  auto get_valid_name_for_path = [file_name_char_remap] (const bool valid, const std::string& s)
+  // Replace invalid/undesired characters in a path string using the file_name_char_remap LUT.
+  // When the optional variable for the input string indicates the value is not available, then
+  // and empty string is returned
+  auto get_valid_name_for_path = [file_name_char_remap] (const boost::optional<std::string>& s)
   {
     std::string ss;
     
-    if (valid)
+    if (s)
     {
-      ss = MapChars(s, file_name_char_remap);
+      ss = MapChars(*s, file_name_char_remap);
     }
 
     return ss;
@@ -1158,7 +1210,7 @@ int main( int argc, char* argv[] )
 
         for (size_type dcm_idx = 0; dcm_idx < num_dcm; ++dcm_idx)
         {
-          ReadDICOMFileBasicFields(paths[dcm_idx], &dcm_infos[dcm_idx]);
+          dcm_infos[dcm_idx] = ReadDICOMFileBasicFields(paths[dcm_idx]);
         }
 
         ReorderAndCheckDICOMInfos dcm_check_reorder;
@@ -1241,31 +1293,38 @@ int main( int argc, char* argv[] )
 
             if (!one_image_input)
             {
-              std::string dst_file_name;
-             
-              const std::string pat_id_for_filename = get_valid_name_for_path(true, pat_id_str_remap);
+              std::stringstream dst_file_name_ss;
+            
+              if (use_pat_id_for_name)
+              {
+                dst_file_name_ss << get_valid_name_for_path(pat_id_str_remap);
+                dst_file_name_ss << '_';
+              }
+              
+              if (use_pat_name_for_name)
+              {
+                dst_file_name_ss << get_valid_name_for_path(first_dcm.patient_name)
+                                 << '_';
+              }
+
+              dst_file_name_ss << fmt::format("{:02d}", cur_img_idx);
 
               if (use_desc_for_name)
               {
-                dst_file_name = fmt::format("{}_{:02d}_{}_{}.{}",
-                                            pat_id_for_filename, cur_img_idx,
-                                            get_valid_name_for_path(first_dcm.study_desc_valid, first_dcm.study_desc),
-                                            get_valid_name_for_path(first_dcm.series_desc_valid, first_dcm.series_desc),
-                                            out_file_ext);
+                dst_file_name_ss << '_'
+                                 << get_valid_name_for_path(first_dcm.study_desc)
+                                 << get_valid_name_for_path(first_dcm.series_desc);
               }
-              else if (use_conv_for_name)
+              
+              if (use_conv_for_name)
               {
-                dst_file_name = fmt::format("{}_{:02d}_{}.{}",
-                                            pat_id_for_filename, cur_img_idx,
-                                            get_valid_name_for_path(first_dcm.conv_kernel_valid, first_dcm.conv_kernel),
-                                            out_file_ext);
+                dst_file_name_ss << '_'
+                                 << get_valid_name_for_path(first_dcm.conv_kernel);
               }
-              else
-              {
-                dst_file_name = fmt::sprintf("%s_%02lu.%s", pat_id_str_remap, cur_img_idx, out_file_ext);
-              }
+              
+              dst_file_name_ss << '.' << out_file_ext;
 
-              dst_file_path += dst_file_name;
+              dst_file_path += dst_file_name_ss.str();
             }
             else if (dst_file_path.file_extension().empty())
             {

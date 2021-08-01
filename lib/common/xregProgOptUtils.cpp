@@ -102,39 +102,35 @@ bool IsBooleanAction(const xreg::ProgOpts::StoreAction sa)
 }
 
 /// \brief Get the terminal dimensions in units of characters
-void GetTerminalSize(xreg::ProgOpts::size_type* width, xreg::ProgOpts::size_type* height)
+std::tuple<xreg::ProgOpts::size_type,xreg::ProgOpts::size_type>
+GetTerminalSize()
 {
+  // If either of the below calls fails to obtain terminal sizes, then dimensions
+  // of zero (e.g. no terminal) will be used.
+  xreg::ProgOpts::size_type width = 0;
+  xreg::ProgOpts::size_type height = 0;
+
 #ifdef _WIN32
   CONSOLE_SCREEN_BUFFER_INFO csbi;
   if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
   {
-    *width  = static_cast<xreg::ProgOpts::size_type>(csbi.dwSize.X);
-    *height = static_cast<xreg::ProgOpts::size_type>(csbi.dwSize.Y);
-  }
-  else
-  {
-    // TODO: determine if we have a similar case as with ioctl below, where we should
-    //       choose some reasonable values
-    xregThrow("GetConsoleScreenBufferInfo() failure!");
+    width  = static_cast<xreg::ProgOpts::size_type>(csbi.dwSize.X);
+    height = static_cast<xreg::ProgOpts::size_type>(csbi.dwSize.Y);
   }
 #else
   struct winsize w;
   if (-1 != ioctl(STDOUT_FILENO, TIOCGWINSZ, &w))
   {
-    *width  = static_cast<xreg::ProgOpts::size_type>(w.ws_col);
-    *height = static_cast<xreg::ProgOpts::size_type>(w.ws_row);
-  }
-  else
-  {
-    // set to reasonable values - this case may occur when the -h flag is passed
-    // to print help, but the standard output stream is redirected to a file.
-    *width  = 512;
-    *height = 512;
+    width  = static_cast<xreg::ProgOpts::size_type>(w.ws_col);
+    height = static_cast<xreg::ProgOpts::size_type>(w.ws_row);
   }
 #endif
+
+  return std::make_tuple(width, height);
 }
 
-std::string FormatLines(const std::string& in, const xreg::ProgOpts::size_type indent, const xreg::ProgOpts::size_type max_width)
+std::string FormatLines(const std::string& in, const xreg::ProgOpts::size_type indent,
+                        const xreg::ProgOpts::size_type max_width)
 {
   xregASSERT(indent < max_width);  // in order to print anything, we need to at least print 1 character per line
 
@@ -198,7 +194,7 @@ void WritePrettyHelp(const xreg::ProgOpts::StringList& flag_strs,
   {
     size_type term_width  = 0;
     size_type term_height = 0;
-    GetTerminalSize(&term_width, &term_height);
+    std::tie(term_width, term_height) = GetTerminalSize();
 
     size_type max_flag_str_len = flag_strs[0].size();
     for (size_type i = 1; i < num_flags; ++i)
@@ -222,7 +218,18 @@ void WritePrettyHelp(const xreg::ProgOpts::StringList& flag_strs,
       }
 
       oss << desc_strs[i];
-      out << FormatLines(oss.str(), max_flag_str_len, term_width);
+
+      // Only apply formatting when the terminal width is larger than the flag length
+      // that we would indent by. We see terminal widths of zero on Google Colab, so it
+      // is important to not attempt formatting when it is not reasonable to do so.
+      if (max_flag_str_len < term_width)
+      {
+        out << FormatLines(oss.str(), max_flag_str_len, term_width);
+      }
+      else
+      {
+        out << oss.str() << std::endl;
+      }
     }
 
     out.flush();

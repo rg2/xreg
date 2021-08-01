@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -112,7 +112,10 @@ inline H5::DataType LookupH5DataType<double>()
 template <>
 inline H5::DataType LookupH5DataType<std::string>()
 {
-  return H5::StrType(H5::PredType::C_S1);
+  H5::StrType str_type(H5::PredType::C_S1);
+  str_type.setSize(H5T_VARIABLE);
+
+  return str_type;
 }
 
 #ifdef _WIN32
@@ -124,6 +127,10 @@ inline H5::DataType LookupH5DataType<unsigned long long>()
 }
 
 #endif
+
+void SetScalarAttr(const std::string& key, const long  val, H5::Group* h5);
+
+long GetScalarLongAttr(const std::string& key, const H5::Group& h5);
 
 H5::DataType GetH5StringDataType();
 

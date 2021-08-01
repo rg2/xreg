@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,6 +55,18 @@ int main(int argc, char* argv[])
   po.add("no-pat-rot-up", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-pat-rot-up",
          "Ignore any flags for rotating the image to achieve patient \"up\" orientation.")
     << false;
+  
+  po.add("fcsv-spacing", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "fcsv-spacing",
+         "Default (isotopic) pixel spacing to assume when parsing FCSV landmarks when no 2D pixel "
+         "spacing is provided by the 2D image metadata.")
+    << 1.0;
+
+  po.add("use-pd-spacing", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "use-pd-spacing",
+         "Always use the pixel spacings encoded in the projection data file when interpreting "
+         "FCSV files, even when the pixel spacings were not explicitly provided by the source "
+         "image format. This is useful when an FCSV file was created using a NIFTI file which "
+         "was extracted from a projection data file with estimated spacings.")
+    << false;
 
   try
   {
@@ -77,6 +89,10 @@ int main(int argc, char* argv[])
   std::ostream& vout = po.vout();
 
   const bool ignore_pat_rot_up = po.get("no-pat-rot-up");
+
+  const double default_fcsv_spacing = po.get("fcsv-spacing");
+
+  const bool use_pd_spacing = po.get("use-pd-spacing");
 
   vout << "opening proj data for reading/writing..." << std::endl;
   H5::H5File h5(po.pos_args()[0], H5F_ACC_RDWR);
@@ -122,6 +138,27 @@ int main(int argc, char* argv[])
       
       CoordScalar spacing_for_phys_to_ind_x = cur_cam.det_col_spacing;
       CoordScalar spacing_for_phys_to_ind_y = cur_cam.det_row_spacing;
+
+      // The following conditional addresses the UNCOMMON problem listed below:
+      // Suppose that our source data does not have explicit metadata listing pixel spacings,
+      // so the conversion to projection data HDF5 format used some additional information to
+      // estimate the pixel spacings. Now, also suppose that 3D Slicer is not able to read in
+      // the source data - this has happened with certain DICOMs from TCIA with RF modality.
+      // In order to annotate landmarks, a NIFTI (.nii.gz) file is extracted from the projection
+      // HDF5 file and then loaded into 3D Slicer for landmark annotation. This NIFTI file has
+      // the estimated pixel spacings embedded, and therefore the FCSV annotations are physical
+      // points calculated using these spacings. When the contents of the FCSV are then loaded
+      // back into the HDF5 projection data (e.g. using THIS TOOL), the current behavior is to use
+      // a user-provided spacing when the original source data did not have explicit pixel spacings
+      // provided. Although this is the most common case and default desired behavior, for the
+      // previously identified scenario we need to use the estimated pixel spacings present in the
+      // HDF5 file.
+      if (!use_pd_spacing && cur_proj_meta.det_spacings_from_orig_meta &&
+          !*cur_proj_meta.det_spacings_from_orig_meta)
+      {
+        spacing_for_phys_to_ind_x = default_fcsv_spacing;
+        spacing_for_phys_to_ind_y = default_fcsv_spacing;
+      }
 
       bool need_to_rot = false;
 

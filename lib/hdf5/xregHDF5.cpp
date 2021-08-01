@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,25 @@
 #include "xregHDF5Internal.h"
 #include "xregITKBasicImageUtils.h"
 
+void xreg::SetScalarAttr(const std::string& key, const long val, H5::Group* h5)
+{
+  const auto dt = LookupH5DataType<long>();
+
+  H5::Attribute attr = h5->createAttribute(key, dt, H5S_SCALAR);
+
+  attr.write(dt, &val);
+}
+
+long xreg::GetScalarLongAttr(const std::string& key, const H5::Group& h5)
+{
+  const H5::Attribute attr = h5.openAttribute(key);
+  
+  long val;
+  attr.read(attr.getDataType(), &val);
+
+  return val;
+}
+
 H5::DataType xreg::GetH5StringDataType()
 {
   return LookupH5DataType<std::string>();
@@ -34,7 +53,7 @@ H5::DataType xreg::GetH5StringDataType()
 
 H5::DataType xreg::GetH5StringDataType(const std::string& s)
 {
-  return H5::StrType(H5::PredType::C_S1, s.size());
+  return H5::StrType(H5::PredType::C_S1, std::max(std::string::size_type(1), s.size()));
 }
 
 bool xreg::SetStringAttr(const std::string& key, const std::string& val, H5::Group* h5)

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020, 2021 Robert Grupp
+ * Copyright (c) 2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,37 +22,36 @@
  * SOFTWARE.
  */
 
-#ifndef XREGSAMPLEUTILS_H_
-#define XREGSAMPLEUTILS_H_
+#ifndef XREGRADRAWPROJ_H_
+#define XREGRADRAWPROJ_H_
 
-#include <random>
-
-#include "xregCommon.h"
+#include "xregProjData.h"
 
 namespace xreg
 {
 
-// helper function to initialize mt rng engine with a random device, this is
-// code that I keep having to re-write everywhere.
-void SeedRNGEngWithRandDev(std::mt19937* rng);
+// Store metadata found in .rad/.raw projection files from the Ljubljana 2D/3D datasets.
+// Data is available here: http://lit.fe.uni-lj.si/tools.php?lang=eng
+struct RadRawProjInfo
+{
+  size_type num_cols;
+  size_type num_rows;
 
-// Compute binomial coefficient - e.g. n choose k.
-size_type BinCoeff(const size_type n, const size_type k);
+  float col_spacing_mm_per_pixel;
+  float row_spacing_mm_per_pixel;
 
-// Sample some combinations of elements
-std::vector<std::vector<size_type>>
-SampleCombos(const size_type num_elem, const size_type combo_len,
-             const size_type num_combos, std::mt19937& rng);
+  std::string data_type;
 
-// Return an exhaustive list of combinations of 3 elements from a collection of
-// a specified list. Each combination is represented by a list of 3 indices.
-std::vector<std::vector<size_type>>
-BruteForce3Combos(const size_type num_elem);
+  FrameTransform proj_to_world;
 
-// Return an exhaustive list of combinations of 4 elements from a collection of
-// a specified list. Each combination is represented by a list of 4 indices.
-std::vector<std::vector<size_type>>
-BruteForce4Combos(const size_type num_elem);
+  Pt3 src_wrt_world;
+};
+
+RadRawProjInfo ReadRadRawProjInfo(const std::string& file_path);
+
+std::tuple<RadRawProjInfo,itk::Image<float,2>::Pointer> ReadRadRawProj(const std::string& rad_file_path);
+
+ProjDataF32 ReadRawProjAsProjData(const std::string& rad_file_path);
 
 }  // xreg
 

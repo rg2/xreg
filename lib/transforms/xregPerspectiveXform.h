@@ -329,7 +329,8 @@ Pt3 CalcSourcePositionDelta(const CameraModel& cam1, const CameraModel& cam2);
 ///
 /// A factor of 1 retains the original size, a factor less than 1 downsamples,
 /// and a factor greater than 1 upsamples.
-CameraModel DownsampleCameraModel(const CameraModel& src_cam, const CoordScalar ds_factor);
+CameraModel DownsampleCameraModel(const CameraModel& src_cam, const CoordScalar ds_factor,
+                                  const bool force_even_dims = false);
 
 /// \brief Create a new camera world (extrinsic) frame based on a collection of
 ///        frame transforms from each camera to the new frame.

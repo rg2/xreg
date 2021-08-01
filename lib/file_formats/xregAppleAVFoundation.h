@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020, 2021 Robert Grupp
+ * Copyright (c) 2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,37 +22,41 @@
  * SOFTWARE.
  */
 
-#ifndef XREGSAMPLEUTILS_H_
-#define XREGSAMPLEUTILS_H_
+#ifndef XREGAPPLEAVFOUNDATION_H_
+#define XREGAPPLEAVFOUNDATION_H_
 
-#include <random>
-
-#include "xregCommon.h"
+#include "xregWriteVideo.h"
 
 namespace xreg
 {
 
-// helper function to initialize mt rng engine with a random device, this is
-// code that I keep having to re-write everywhere.
-void SeedRNGEngWithRandDev(std::mt19937* rng);
+class WriteImageFramesToVideoAppleAVF : public WriteImageFramesToVideo
+{
+public:
+  void open() override;
 
-// Compute binomial coefficient - e.g. n choose k.
-size_type BinCoeff(const size_type n, const size_type k);
+  void close() override;
 
-// Sample some combinations of elements
-std::vector<std::vector<size_type>>
-SampleCombos(const size_type num_elem, const size_type combo_len,
-             const size_type num_combos, std::mt19937& rng);
+  void write(const cv::Mat& frame) override;
+  
+  ~WriteImageFramesToVideoAppleAVF() override;
 
-// Return an exhaustive list of combinations of 3 elements from a collection of
-// a specified list. Each combination is represented by a list of 3 indices.
-std::vector<std::vector<size_type>>
-BruteForce3Combos(const size_type num_elem);
+private:
+  void* av_asset_writer_ = nullptr;
+  
+  void* av_asset_writer_input_ = nullptr;
+  
+  void* av_assest_writer_pix_buf_adaptor_ = nullptr;
 
-// Return an exhaustive list of combinations of 4 elements from a collection of
-// a specified list. Each combination is represented by a list of 4 indices.
-std::vector<std::vector<size_type>>
-BruteForce4Combos(const size_type num_elem);
+  bool input_setup_ = false;
+  
+  int num_rows_ = 0;
+  int num_cols_ = 0;
+
+  int frame_type_ = 0;
+  
+  long frame_count_ = 0;
+};
 
 }  // xreg
 

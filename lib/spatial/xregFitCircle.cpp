@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020,2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
 #include "xregFitCircle.h"
 
 #include "xregCMAESInterface.h"
+#include "xregSampleUtils.h"
 
 std::tuple<xreg::Pt2,xreg::CoordScalar>
 xreg::FitCircle2D(const Pt2& x,
@@ -159,5 +160,105 @@ std::tuple<xreg::Pt2,xreg::CoordScalar> xreg::FitCircle2D(const Pt2List& pts)
   const Pt3 end_x = opt.sol();
 
   return std::make_tuple(Pt2(end_x.head(2)), end_x(2));
+}
+
+
+std::tuple<xreg::Pt2,xreg::CoordScalar>
+xreg::FitCircle2DRansac(const Pt2List& pts, const int num_proposals,
+                        const CoordScalar inlier_thresh)
+{
+  const size_type num_pts = pts.size();
+ 
+  std::vector<std::vector<size_type>> combos;
+
+  {
+    std::mt19937 rng_eng;
+    SeedRNGEngWithRandDev(&rng_eng);
+    
+    // for a small enough number of points, brute force the combos.
+    // also brute force when num_proposals indicates that all combinations should be used
+    if ((num_proposals <= 0) || (num_pts < 200))
+    {
+      combos = BruteForce3Combos(num_pts);
+      
+      // when num_prosals is less than the maximum number of combinations, randomly select
+      // the desired amount of combos to proposa
+      if ((num_proposals > 0) && (static_cast<size_type>(num_proposals) < combos.size()))
+      {
+        std::shuffle(combos.begin(), combos.end(), rng_eng);
+        
+        combos.resize(num_proposals);
+      }
+    }
+    else
+    {
+      // for a large enough number of proposals and for which we do not need all possible
+      // proposals, uniformly sample some combos
+      combos = SampleCombos(num_pts, 3, num_proposals, rng_eng);
+    }
+  }
+
+  xregASSERT(!combos.empty());
+
+  size_type cur_best_num_inliers = 0;
+  
+  CoordScalar cur_best_mean_error = std::numeric_limits<CoordScalar>::max();
+
+  Pt2 cur_best_center;
+  CoordScalar cur_best_radius;
+
+  Pt2 tmp_center;
+  CoordScalar tmp_radius;
+
+  Pt2List tmp_inliers;
+  tmp_inliers.reserve(num_pts);
+
+  for (const auto& cur_combo : combos)
+  {
+    std::tie(tmp_center,tmp_radius) = FitCircle2D(pts[cur_combo[0]], pts[cur_combo[1]],
+                                                  pts[cur_combo[2]]);
+    
+    tmp_inliers.clear();
+
+    for (const auto& p : pts)
+    {
+      const CoordScalar p_error = std::abs((p - tmp_center).norm() - tmp_radius);
+      
+      if (p_error < inlier_thresh)
+      {
+        tmp_inliers.push_back(p);
+      }
+    }
+
+    const size_type num_inliers = tmp_inliers.size();
+
+    if (num_inliers >= cur_best_num_inliers)
+    {
+      // this could be the best solution, recompute the circle using all of the inliers
+      // and recompute the errors
+      std::tie(tmp_center,tmp_radius) = FitCircle2D(tmp_inliers);
+
+      CoordScalar tmp_error = 0;
+      
+      for (const auto& p : tmp_inliers)
+      {
+        tmp_error += std::abs((p - tmp_center).norm() - tmp_radius);
+      }
+      
+      tmp_error /= static_cast<CoordScalar>(num_inliers);
+    
+      // keep this solution as the best if it has more inliers than the current best
+      // OR has a smaller error than the current best  
+      if ((num_inliers > cur_best_num_inliers) || (tmp_error < cur_best_mean_error))
+      {
+        cur_best_num_inliers = num_inliers;
+        cur_best_mean_error  = tmp_error;
+        cur_best_center      = tmp_center;
+        cur_best_radius      = tmp_radius;
+      }
+    }
+  }
+  
+  return std::make_tuple(cur_best_center,cur_best_radius);
 }
 

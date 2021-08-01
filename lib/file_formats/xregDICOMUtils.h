@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,9 +31,20 @@
 #include <unordered_map>
 #include <array>
 
+#include <boost/optional.hpp>
+
 #include "xregCommon.h"
 #include "xregFilesystemUtils.h"
 #include "xregObjWithOStream.h"
+#include "xregPerspectiveXform.h"
+#include "xregProjData.h"
+
+// Forward declaration
+namespace H5
+{
+class Group;
+}
+// End Forward declaration
 
 namespace xreg
 {
@@ -46,6 +57,13 @@ struct DICOMFIleBasicFields
   std::string patient_id;
   std::string series_uid;
   std::string study_uid;
+  
+  std::string patient_name;
+  
+  double study_time;
+  boost::optional<double> series_time;
+  boost::optional<double> acquisition_time;
+  boost::optional<double> content_time;
 
   std::string modality;
 
@@ -60,47 +78,97 @@ struct DICOMFIleBasicFields
   unsigned long num_rows;
   unsigned long num_cols;
 
-  bool pat_pos_valid;
-  std::string pat_pos;
+  boost::optional<std::string> pat_pos;
 
-  bool pat_orient_valid;
-  std::array<std::string,2> pat_orient;
+  boost::optional<std::array<std::string,2>> pat_orient;
 
-  bool study_desc_valid;
-  std::string study_desc;
+  boost::optional<std::string> study_desc;
 
-  bool series_desc_valid;
-  std::string series_desc;
+  boost::optional<std::string> series_desc;
 
-  bool image_type_valid;
-  std::vector<std::string> image_type;
+  boost::optional<std::vector<std::string>> image_type;
 
-  bool sec_cap_dev_manufacturer_valid;
-  std::string sec_cap_dev_manufacturer;
+  std::string manufacturer;
 
-  bool sec_cap_dev_software_versions_valid;
-  std::string sec_cap_dev_software_versions;
+  boost::optional<std::string> institution_name;
 
-  bool software_versions_valid;
-  std::vector<std::string> software_versions;
+  boost::optional<std::string> department_name;
 
-  bool vol_props_valid;
-  std::string vol_props;
+  boost::optional<std::string> manufacturers_model_name;
 
-  bool num_frames_valid;
-  unsigned long num_frames;
+  boost::optional<std::string> sec_cap_dev_manufacturer;
 
-  bool proto_name_valid;
-  std::string proto_name;
+  boost::optional<std::string> sec_cap_dev_software_versions;
 
-  bool conv_kernel_valid;
-  std::string conv_kernel;
+  boost::optional<std::vector<std::string>> software_versions;
+
+  boost::optional<std::string> vol_props;
+
+  boost::optional<unsigned long> num_frames;
+
+  boost::optional<std::string> proto_name;
+
+  boost::optional<std::string> conv_kernel;
+
+  // Fields that we would like to use from 2D radiographs/fluoro:
+
+  boost::optional<std::string> body_part_examined;
+
+  boost::optional<std::string> view_position;
+
+  boost::optional<double> dist_src_to_det_mm;
+  
+  boost::optional<double> dist_src_to_pat_mm;
+  
+  boost::optional<double> kvp;
+
+  boost::optional<double> tube_current_mA;
+
+  boost::optional<double> exposure_mAs;
+
+  boost::optional<double> exposure_muAs;
+
+  boost::optional<double> exposure_time_ms;
+
+  // units are dGy * cm * cm
+  boost::optional<double> dose_area_product_dGy_cm_sq;
+
+  boost::optional<std::string> fov_shape;
+  
+  boost::optional<std::vector<unsigned long>> fov_dims;
+
+  boost::optional<std::array<unsigned long,2>> fov_origin_off;
+  
+  enum FOVRot
+  {
+    kZERO = 0,
+    kNINETY = 90,
+    kONE_EIGHTY = 180,
+    kTWO_SEVENTY = 270
+  };
+  
+  boost::optional<FOVRot> fov_rot;
+
+  boost::optional<bool> fov_horizontal_flip;
+
+  boost::optional<double> intensifier_diameter_mm;
+
+  // This is usally populated for 2D X-ray images, e.g. when the standard
+  // pixel spacing fields are not appropriate as they are required to be
+  // in "patient space."
+  // row spacing , col spacing
+  boost::optional<std::array<CoordScalar,2>> imager_pixel_spacing;
+  
+  boost::optional<double> grid_focal_dist_mm;
+  
+  boost::optional<double> window_center;
+  boost::optional<double> window_width;
 };
 
 using DICOMFIleBasicFieldsList = std::vector<DICOMFIleBasicFields>;
 
 /// \brief Populates a set of basic DICOM fields from a DICOM file.
-void ReadDICOMFileBasicFields(const std::string& dcm_path, DICOMFIleBasicFields* dcm_info);
+DICOMFIleBasicFields ReadDICOMFileBasicFields(const std::string& dcm_path);
 
 /// \brief Prints a set of basic DICOM fields
 void PrintDICOMFileBasicFields(const DICOMFIleBasicFields& dcm_info, std::ostream& out,
@@ -113,6 +181,10 @@ bool IsMRLocalizer(const DICOMFIleBasicFields& dcm_info);
 bool IsVolDICOMFile(const DICOMFIleBasicFields& dcm_info);
 
 bool IsMultiFrameDICOMFile(const DICOMFIleBasicFields& dcm_info);
+
+bool IsSecondaryDICOMFile(const DICOMFIleBasicFields& dcm_info);
+
+bool IsDerivedDICOMFile(const DICOMFIleBasicFields& dcm_info);
 
 /// \brief Stores paths to DICOM files organized by patient ID, study UID, and
 ///        series UID.
@@ -146,10 +218,15 @@ void GetDICOMFilePathObjsInDir(const std::string& dir, PathList* dcm_paths);
 ///        hierarchy and store in a hierarchy of data structures.
 ///
 /// Organized as Patient ID -> Studies for each Patient ID -> Series for each study
+/// When the modalities argument is non-empty, then only the specified modalities will
+/// be included in the output.
 void GetOrgainizedDICOMInfos(const std::string& root_dir_path,
                              OrganizedDICOMFiles* org_dcm,
                              const bool inc_localizer = false,
-                             const bool inc_multi_frame_files = false);
+                             const bool inc_multi_frame_files = false,
+                             const bool inc_secondary = true,
+                             const bool inc_derived = true,
+                             const std::vector<std::string>& modalities = std::vector<std::string>());
 
 /// \brief Get basic information structs for every DICOM file in a single directory
 ///
@@ -174,9 +251,18 @@ struct ReorderAndCheckDICOMInfos : public ObjWithOStream
   // if the slice spacing is constant - default 1.0e-6
   CoordScalar out_of_plane_spacing_tol = 1.0e-6;
 
+  // Perform the reordering and verification.
+  // The input list of DICOM fields is preserved and the sorted output is populated
+  // in a separate list via a pointer supplied by the caller.
+  // This routine returns true when the data is determined to be valid and false otherwise.
+  // When false is returned, the output sorted list should not be considered to be valid in any way.
   bool operator()(const DICOMFIleBasicFieldsList& src_infos,
                   DICOMFIleBasicFieldsList* dst_infos);
 };
+
+void WriteDICOMFieldsH5(const DICOMFIleBasicFields& dcm_info, H5::Group* h5);
+
+DICOMFIleBasicFields ReadDICOMFieldsH5(const H5::Group& h5);
 
 }  // xreg
 

@@ -70,7 +70,9 @@ The [docker](docker) directory demonstrates how Docker may be used to build the 
   * Highly recomended for GPU acceleration: OpenCL (1.x)
     * Only needed at runtime on Windows and Linux and is typically provided with your graphics drivers or CUDA SDK
     * Included with MacOS
-  * Optional: [ffmpeg](https://ffmpeg.org) is used for writing videos when it is found in the system path. The OpenCV video writer is used if ffmpeg is not available.
+  * Optional: [ffmpeg](https://ffmpeg.org) is used for writing videos when it is found in the system path. When ffmpeg is not found, the following fallbacks are used:
+    * MacOS: a video writer using AVFoundation,
+    * Windows, Linux, something else: a writer using OpenCV.
 
 ## Testing
 Functional testing is available in the form of a [python script](tests/wiki_cmds.py) that runs the commands found on the [wiki walkthrough](https://github.com/rg2/xreg/wiki#walkthrough).

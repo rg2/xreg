@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,10 +26,10 @@
 
 #include <fmt/format.h>
 
+#include "xregDICOMUtils.h"
 #include "xregHDF5.h"
 #include "xregHDF5Internal.h"
 #include "xregH5CamModelIO.h"
-#include "xregCIOSFusionDICOM.h"
 
 namespace
 {
@@ -90,14 +90,19 @@ void WriteProjDataH5Helper(const std::vector<ProjData<tPixelScalar>>& proj_data,
                           static_cast<int>(*proj_data[i].rot_to_pat_up), &proj_g);
     }
 
-    if (proj_data[i].orig_meta)
+    if (proj_data[i].det_spacings_from_orig_meta)
     {
-      H5::Group orig_meta_g = proj_g.createGroup("orig-meta");
-      
-      // For now we are only storing metadata from the CIOS fusion
-      SetStringAttr("meta-type", "cios-fusion", &orig_meta_g);
+      WriteSingleScalarH5("det-spacings-from-orig-meta",
+                          *proj_data[i].det_spacings_from_orig_meta, &proj_g);
+    }
 
-      WriteCIOSMetaH5(*proj_data[i].orig_meta, &orig_meta_g);
+    if (proj_data[i].orig_dcm_meta)
+    {
+      H5::Group orig_meta_g = proj_g.createGroup("orig-dcm-meta");
+      
+      SetStringAttr("meta-type", "dicom", &orig_meta_g);
+
+      WriteDICOMFieldsH5(*proj_data[i].orig_dcm_meta, &orig_meta_g);
     }
   }
 }
@@ -390,14 +395,23 @@ ReadProjDataHelper(const H5::Group& h5, const bool read_pixels)
       projs[i].rot_to_pat_up = static_cast<ProjDataRotToPatUp>(
                                   ReadSingleScalarH5Int("rot-to-pat-up", proj_g));
     }
-
-    if (ObjectInGroupH5("orig-meta", proj_g))
+    
+    if (ObjectInGroupH5("det-spacings-from-orig-meta", proj_g))
     {
-      // TODO: check the "meta-type" attribute after more sensors are added
+      projs[i].det_spacings_from_orig_meta = ReadSingleScalarH5Bool(
+                                                "det-spacings-from-orig-meta", proj_g);
+    }
+
+    if (ObjectInGroupH5("orig-dcm-meta", proj_g))
+    {
+      H5::Group orig_meta_g = proj_g.openGroup("orig-dcm-meta");
+
+      // double-check that DICOM metadata was written here
+      xregASSERT(GetStringAttr("meta-type", orig_meta_g) == "dicom");
       
-      projs[i].orig_meta = std::make_shared<CIOSFusionDICOMInfo>();
+      projs[i].orig_dcm_meta = std::make_shared<DICOMFIleBasicFields>();
       
-      *projs[i].orig_meta = ReadCIOSMetaH5(proj_g.openGroup("orig-meta"));
+      *projs[i].orig_dcm_meta = ReadDICOMFieldsH5(orig_meta_g);
     }
   }
 

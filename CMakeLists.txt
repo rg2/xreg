@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2020 Robert Grupp
+# Copyright (c) 2020-2021 Robert Grupp
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,13 +22,13 @@
 
 cmake_minimum_required(VERSION 3.13.0 FATAL_ERROR)
 
-if (APPLE)
-  # Target MacOS 10.14, Mojave
-  set (CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "MacOS Deployment Target")
-endif ()
+#if (APPLE)
+#  # Target MacOS 10.14, Mojave
+#  set (CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "MacOS Deployment Target")
+#endif ()
 
 # Version format is YYYY.MM.DD for a release and YYYY.MM.DD.1 for devel after the release
-project(xreg VERSION 2020.12.13.0)
+project(xreg VERSION 2020.12.13.1)
 
 set (CMAKE_CXX_STANDARD "11" CACHE STRING "C++ Standard (needs at least 11)")
 mark_as_advanced(CMAKE_CXX_STANDARD)

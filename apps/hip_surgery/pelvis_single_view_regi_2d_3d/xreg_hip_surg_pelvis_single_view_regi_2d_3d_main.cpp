@@ -87,6 +87,10 @@ int main(int argc, char* argv[])
          "Do NOT convert RAS to LPS (or LPS to RAS) for the 3D landmarks; "
          "RAS to LPS conversion negates the first and second components.")
     << false;
+  
+  po.add("no-log-remap", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-log-remap",
+         "Do NOT perform log remapping of the projection intensities during pre-processing.")
+    << false;
 
   po.add_backend_flags();
 
@@ -130,6 +134,8 @@ int main(int argc, char* argv[])
 
   const unsigned char pelvis_label = static_cast<unsigned char>(po.get("pelvis-label").as_uint32());
 
+  const bool no_log_remap = po.get("no-log-remap");
+
   //////////////////////////////////////////////////////////////////////////////
   // Read in input intensity volume
   
@@ -167,6 +173,7 @@ int main(int argc, char* argv[])
   PrintLandmarkMap(lands_3d, vout);
  
   ProjPreProc proj_preproc;
+  proj_preproc.params.no_log_remap = no_log_remap;
 
   {
     vout << "reading projection data..." << std::endl;

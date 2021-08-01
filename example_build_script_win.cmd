@@ -28,7 +28,7 @@ REM Using a custom install version of CMake rather than the version available
 REM through the VS installer (3.17.20032601-MSVC_2) as the VS version resulted in
 REM the call to find_package() for ITK in xReg to fail. I do not know the reason,
 REM but using an official version downloaded from cmake.org works.
-SET "PATH=C:\cmake-3.18.3-win64-x64\bin;%PATH%"
+SET "PATH=C:\cmake-3.19.2-win64-x64\bin;%PATH%"
 
 REM Ninja may be installed during VS installation - it greatly speeds up the builds
 SET "CMAKE_GENERATOR_ARG=-G Ninja"
@@ -42,6 +42,10 @@ REM Building shared libraries currently causes a linker error when building xReg
 REM I believe this is due to xReg's unconventional use of the HDF5 libraries built
 REM for ITK. In the future, we should look at building HDF5 separately for use in xReg.
 SET "BUILD_SHARED=OFF"
+
+REM Root directory of the xReg source code. Assumed to be located in the same
+REM directory that this script was invoked from.
+SET XREG_SOURCE_DIR="%~dp0"
 
 REM create the temporary dir if necessary
 IF EXIST %BUILD_ROOT% (
@@ -66,7 +70,7 @@ curl -L -O -J https://github.com/oneapi-src/oneTBB/releases/download/v2020.3/tbb
 
 tar -xf tbb-2020.3-win.zip || EXIT /b
 
-curl -L -O -J https://dl.bintray.com/boostorg/release/1.74.0/source/boost_1_74_0.zip || EXIT /b
+curl -L -O -J https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.zip || EXIT /b
 
 tar -xf boost_1_74_0.zip || EXIT /b
 
@@ -267,12 +271,13 @@ mkdir xreg_build || EXIT /b
 
 cd xreg_build || EXIT /b
 
-cmake %CMAKE_GENERATOR_ARG% %~dp0 ^
+cmake %CMAKE_GENERATOR_ARG% ^
         -DCMAKE_PREFIX_PATH:PATH=%INSTALL_ROOT_CMAKE% ^
         -DCMAKE_INSTALL_PREFIX:PATH=%INSTALL_ROOT_CMAKE% ^
         -DCMAKE_CXX_STANDARD:STRING="11" ^
         -DCMAKE_BUILD_TYPE:STRING=%BUILD_CONFIG% ^
-        -DBUILD_SHARED_LIBS:BOOL=%BUILD_SHARED%  || EXIT /b
+        -DBUILD_SHARED_LIBS:BOOL=%BUILD_SHARED% ^
+        %XREG_SOURCE_DIR% || EXIT /b
 
 cmake --build . --config %BUILD_CONFIG% || EXIT /b
 
