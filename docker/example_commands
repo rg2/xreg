@@ -1,0 +1,31 @@
+
+# Ubuntu 
+export OS_NAME="ubuntu"
+#export OS_VERSION="16.04"
+#export OS_VERSION="18.04"
+export OS_VERSION="20.04"
+
+# CentOS
+#export OS_NAME="centos"
+#export OS_VERSION="7"
+#export OS_VERSION="8"
+
+# create the base OS image w/ compiler tools
+docker build -t xreg-dev-base-${OS_NAME}-${OS_VERSION} --build-arg os_name=${OS_NAME} --build-arg os_version=${OS_VERSION} -f ~/xreg-git/docker/Dockerfile.${OS_NAME}_dev_base .
+
+# Grab and compile dependencies when needed
+docker build -t xreg-deps-${OS_NAME}-${OS_VERSION} --build-arg os_name=${OS_NAME} --build-arg os_version=${OS_VERSION} -f ~/xreg-git/docker/Dockerfile.xreg-deps .
+
+# Build xReg
+docker build -t xreg-${OS_NAME}-${OS_VERSION} --build-arg os_name=${OS_NAME} --build-arg os_version=${OS_VERSION} -f ~/xreg-git/docker/Dockerfile.xreg ~/xreg-git
+i
+
+# Create xReg distributable
+docker build -t xreg-dist-${OS_NAME}-${OS_VERSION} --build-arg os_name=${OS_NAME} --build-arg os_version=${OS_VERSION} -f ~/xreg-git/docker/Dockerfile.xreg-dist-bin ~/xreg-git
+
+# Extract the xReg distributable
+XREG_DIST_CONT_ID=`docker create xreg-dist-${OS_NAME}-${OS_VERSION}`
+docker cp ${XREG_DIST_CONT_ID}:xreg-${OS_NAME}-${OS_VERSION}.tar.gz .
+
+
+

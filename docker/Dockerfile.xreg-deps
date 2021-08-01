@@ -18,7 +18,7 @@ RUN mkdir ffmpeg_dl && cd ffmpeg_dl && \
     wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz && \
     tar xf ffmpeg-release-amd64-static.tar.xz && \
     mkdir -p /usr/local/bin && \
-    mv ffmpeg-4.3.1-amd64-static/ffmpeg /usr/local/bin && \
+    mv ffmpeg-*-amd64-static/ffmpeg /usr/local/bin && \
     cd / && rm -rf ffmpeg_dl
 
 # Get a more recent version of TBB than what is probably in the package manager
@@ -42,7 +42,7 @@ WORKDIR /
 
 # bring in boost 1.74 header only
 RUN mkdir boost_dl && cd boost_dl && \
-    wget https://dl.bintray.com/boostorg/release/1.74.0/source/boost_1_74_0.tar.gz && \
+    wget https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.tar.gz && \
     tar xf boost_1_74_0.tar.gz && cd boost_1_74_0 && mv boost /usr/local/include && \
     cd / && rm -rf boost_dl
 
