@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-set(EXE_NAME "${XREG_EXE_PREFIX}convert-radiograph-dcm-to-proj-data")
+set(EXE_NAME "${XREG_EXE_PREFIX}convert-dicom-radiograph")
 
 add_executable(${EXE_NAME} xreg_convert_radiograph_dcm_to_proj_data_main.cpp)
 
