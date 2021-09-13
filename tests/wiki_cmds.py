@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2020 Robert Grupp
+# Copyright (c) 2020-2021 Robert Grupp
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -185,7 +185,7 @@ if __name__ == '__main__':
        
         extract_zip('ABD_LYMPH_001.zip', 'ABD_LYMPH_001')
 
-        run_cmd('xreg-convert-dicom ABD_LYMPH_001 lymph.nii.gz --one')
+        run_cmd('xreg-convert-dicom-vols ABD_LYMPH_001 lymph.nii.gz --one')
        
         view_vol('lymph.nii.gz', slicer_path)
 
