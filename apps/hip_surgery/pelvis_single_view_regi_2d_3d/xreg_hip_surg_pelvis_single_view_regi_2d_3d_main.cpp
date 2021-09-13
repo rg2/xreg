@@ -120,6 +120,8 @@ int main(int argc, char* argv[])
   const std::string proj_data_path = po.pos_args()[2];
   const std::string dst_pose_path  = po.pos_args()[3];
 
+  const bool use_identity_for_init_cam_to_vol = fcsv_3d_path == "-";
+
   const bool save_debug = po.pos_args().size() > 4;
 
   const std::string dst_debug_path = save_debug ? po.pos_args()[4] : std::string();
@@ -160,18 +162,23 @@ int main(int argc, char* argv[])
   //////////////////////////////////////////////////////////////////////////////
   // Get the landmarks
 
-  vout << "reading 3D landmarks..." << std::endl;
-  LandMap3 lands_3d = ReadFCSVFileNamePtMap(fcsv_3d_path);
+  LandMap3 lands_3d;
 
-  if (ras2lps)
+  if (!use_identity_for_init_cam_to_vol)
   {
-    vout << "converting landmarks from RAS -> LPS" << std::endl;
-    ConvertRASToLPS(&lands_3d);
+    vout << "reading 3D landmarks..." << std::endl;
+    lands_3d = ReadFCSVFileNamePtMap(fcsv_3d_path);
+
+    if (ras2lps)
+    {
+      vout << "converting landmarks from RAS -> LPS" << std::endl;
+      ConvertRASToLPS(&lands_3d);
+    }
+
+    vout << "3D Landmarks:\n";
+    PrintLandmarkMap(lands_3d, vout);
   }
 
-  vout << "3D Landmarks:\n";
-  PrintLandmarkMap(lands_3d, vout);
- 
   ProjPreProc proj_preproc;
   proj_preproc.params.no_log_remap = no_log_remap;
 
@@ -195,11 +202,19 @@ int main(int argc, char* argv[])
 
   vout << "2D Landmarks:\n";
   PrintLandmarkMap(proj_preproc.output_projs[0].landmarks, vout);
+  
+  FrameTransform init_cam_to_vol = FrameTransform::Identity();
 
-  vout << "solving PnP problem for initial regi estimate..." << std::endl;
-  const FrameTransform init_cam_to_vol = PnPPOSITAndReprojCMAES(
-                                            proj_preproc.output_projs[0].cam,
-                                            lands_3d, proj_preproc.output_projs[0].landmarks);
+  if (!use_identity_for_init_cam_to_vol)
+  {
+    vout << "solving PnP problem for initial regi estimate..." << std::endl;
+    init_cam_to_vol = PnPPOSITAndReprojCMAES(proj_preproc.output_projs[0].cam,
+                                              lands_3d, proj_preproc.output_projs[0].landmarks);
+  }
+  else
+  {
+    vout << "using identity for initial regi estimate" << std::endl;
+  }
 
   vout << "setting up multi-level regi object.." << std::endl;
 
