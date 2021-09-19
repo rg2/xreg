@@ -27,7 +27,6 @@ A copy/pastable list of shell commands is provided in [`example_commands`](examp
 Specific commands are also listed below:
 
 NOTE: all of these commands assume that the xReg repository contents are located in ~/xreg-git.
-These commands were tested on MacOS 10.14.6 with Docker Desktop (community) 2.3.0.5.
 
 ### Ubuntu 16.04 Build
 
