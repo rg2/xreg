@@ -3,7 +3,7 @@
 ## Introduction
 The files in this directory may be used to create Docker images with builds of the xReg software.
 Ubuntu and CentOS base images are supported.
-The releases of exectuable programs for CentOS 7 and Ubuntu 16.04 were created using this pipeline. 
+The releases of exectuable programs for CentOS 7 and Ubuntu 16.04, 18.04, 20.04 were created using this pipeline. 
 
 The build argument `os_name` is used to choose either Ubuntu or CentOS (e.g. passing `--build-arg os_name=ubuntu` or `--build-arg os_name=centos` to `docker build`).
 The operating system version is specified using the `os_version` build argument (e.g. passing `--build-arg os_version=7` or `--build-arg os_version=16.04` to `docker build`).
@@ -26,7 +26,7 @@ A copy/pastable list of shell commands is provided in [`example_commands`](examp
 
 Specific commands are also listed below:
 
-NOTE: all of these commands assume that the xReg repository contents are located in ~/xreg-git.
+NOTE: all of these commands assume that the xReg repository contents are located in `~/xreg-git`.
 
 ### Ubuntu 16.04 Build
 
