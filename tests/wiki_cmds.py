@@ -132,8 +132,26 @@ def macos_check_for_dyld_vars():
             time.sleep(5)
 
 if __name__ == '__main__':
+    mac_slicer_default_path = '/Applications/Slicer.app/Contents/MacOS/Slicer'
+    win_slicer_default_path = 'C:\\Program Files\\Slicer 4.10.2\\Slicer.exe'
+    linux_slicer_default_path = '$HOME/Slicer-4.10.2-linux-amd64/Slicer'
+    
     if ('--help' in sys.argv) or ('-h' in sys.argv):
-        print('TODO: help message')
+        print('This script exists for semi-automatic functional testing by executing the commands '
+              'found on the xReg wiki walkthrough and having the user manually verify the outputs.\n'
+              'Usage: python {} [<xReg bin directory>]\n'
+              'xReg binaries will be found via the PATH environment variable when an xReg bin '
+              'directory is not provided.\n'
+              'When available on the system, 3D Slicer is automatically invoked to visualize volumes.'
+              'Depending on the operating system, 3D Slicer is assumed to reside in one of the '
+              'following locations:\n'
+              '  *   MacOS: {}\n'
+              '  * Windows: {}\n'
+              '  *   Linux: {}'.format(
+                  os.path.basename(sys.argv[0]),
+                  mac_slicer_default_path,
+                  win_slicer_default_path,
+                  linux_slicer_default_path))
         sys.exit(0)
     elif len(sys.argv) > 1:
         xreg_bin_dir = sys.argv[1]
@@ -155,18 +173,14 @@ if __name__ == '__main__':
     slicer_path = None
 
     if platform.system() == 'Darwin':
-        mac_slicer_default_path = '/Applications/Slicer.app/Contents/MacOS/Slicer'
-        
         if os.path.exists(mac_slicer_default_path):
             slicer_path = mac_slicer_default_path
     elif platform.system() == 'Windows':
-        win_slicer_default_path = 'C:\\Program Files\\Slicer 4.10.2\\Slicer.exe'
-        
         if os.path.exists(win_slicer_default_path):
             # enclose the path in quotes to handle any spaces
             slicer_path = '\"{}\"'.format(win_slicer_default_path)
     elif platform.system() == 'Linux':
-        linux_slicer_default_path = os.path.expandvars('$HOME/Slicer-4.10.2-linux-amd64/Slicer')
+        linux_slicer_default_path = os.path.expandvars(linux_slicer_default_path)
         
         if os.path.exists(linux_slicer_default_path):
             slicer_path = linux_slicer_default_path
