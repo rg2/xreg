@@ -9,6 +9,11 @@ The build argument `os_name` is used to choose either Ubuntu or CentOS (e.g. pas
 The operating system version is specified using the `os_version` build argument (e.g. passing `--build-arg os_version=7` or `--build-arg os_version=16.04` to `docker build`).
 When these arguments are not provided, Ubuntu 16.04 is used by default.
 
+## GitHub Packages
+The images containing all xReg dependencies are available as GitHub packages [here](https://github.com/rg2?tab=packages&repo_name=xreg).
+Although these are primarily intended to be used as part of a continuous integration pipeline, others may find them useful for developing or building xReg.
+More images may be made available as needed/requested.
+
 ## List of Files
 * `Dockerfile.centos_dev_base`
   * Installs packages needed for xReg build on *CentOS* and also builds a recent version of CMake
