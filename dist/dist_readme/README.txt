@@ -3,7 +3,7 @@
             | xReg: Modeling and Registration Software for Surgery |
             |                                                      |
             |                  Executable Programs                 |
-            |                     v2020.12.13.0                    |
+            |                     v2021.09.19.0                    |
             |                                                      |
             |              Robert Grupp (grupp@jhu.edu)            |
             +------------------------------------------------------+
@@ -17,7 +17,7 @@ See the following pages for more information about the library and tools:
 The walkthrough link above contains demonstrations (with data) on example usages of these tools.
 
 Included in this release is a "bin" directory which contains the xReg executable files. Each xReg
-program name is prefixed with "xreg-" (e.g. "xreg-convert-dicom"). The help message of each
+program name is prefixed with "xreg-" (e.g. "xreg-convert-dicom-vols"). The help message of each
 program, obtained by passing the "--help" or "-h" flags, documents the program's interface and
 the available options.
 

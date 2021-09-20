@@ -18,7 +18,6 @@ docker build -t xreg-deps-${OS_NAME}-${OS_VERSION} --build-arg os_name=${OS_NAME
 
 # Build xReg
 docker build -t xreg-${OS_NAME}-${OS_VERSION} --build-arg os_name=${OS_NAME} --build-arg os_version=${OS_VERSION} -f ~/xreg-git/docker/Dockerfile.xreg ~/xreg-git
-i
 
 # Create xReg distributable
 docker build -t xreg-dist-${OS_NAME}-${OS_VERSION} --build-arg os_name=${OS_NAME} --build-arg os_version=${OS_VERSION} -f ~/xreg-git/docker/Dockerfile.xreg-dist-bin ~/xreg-git

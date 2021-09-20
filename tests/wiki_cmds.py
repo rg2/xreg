@@ -132,8 +132,26 @@ def macos_check_for_dyld_vars():
             time.sleep(5)
 
 if __name__ == '__main__':
+    mac_slicer_default_path = '/Applications/Slicer.app/Contents/MacOS/Slicer'
+    win_slicer_default_path = 'C:\\Program Files\\Slicer 4.10.2\\Slicer.exe'
+    linux_slicer_default_path = '$HOME/Slicer-4.10.2-linux-amd64/Slicer'
+    
     if ('--help' in sys.argv) or ('-h' in sys.argv):
-        print('TODO: help message')
+        print('This script exists for semi-automatic functional testing by executing the commands '
+              'found on the xReg wiki walkthrough and having the user manually verify the outputs.\n'
+              'Usage: python {} [<xReg bin directory>]\n'
+              'xReg binaries will be found via the PATH environment variable when an xReg bin '
+              'directory is not provided.\n'
+              'When available on the system, 3D Slicer is automatically invoked to visualize volumes.'
+              'Depending on the operating system, 3D Slicer is assumed to reside in one of the '
+              'following locations:\n'
+              '  *   MacOS: {}\n'
+              '  * Windows: {}\n'
+              '  *   Linux: {}'.format(
+                  os.path.basename(sys.argv[0]),
+                  mac_slicer_default_path,
+                  win_slicer_default_path,
+                  linux_slicer_default_path))
         sys.exit(0)
     elif len(sys.argv) > 1:
         xreg_bin_dir = sys.argv[1]
@@ -155,18 +173,14 @@ if __name__ == '__main__':
     slicer_path = None
 
     if platform.system() == 'Darwin':
-        mac_slicer_default_path = '/Applications/Slicer.app/Contents/MacOS/Slicer'
-        
         if os.path.exists(mac_slicer_default_path):
             slicer_path = mac_slicer_default_path
     elif platform.system() == 'Windows':
-        win_slicer_default_path = 'C:\\Program Files\\Slicer 4.10.2\\Slicer.exe'
-        
         if os.path.exists(win_slicer_default_path):
             # enclose the path in quotes to handle any spaces
             slicer_path = '\"{}\"'.format(win_slicer_default_path)
     elif platform.system() == 'Linux':
-        linux_slicer_default_path = os.path.expandvars('$HOME/Slicer-4.10.2-linux-amd64/Slicer')
+        linux_slicer_default_path = os.path.expandvars(linux_slicer_default_path)
         
         if os.path.exists(linux_slicer_default_path):
             slicer_path = linux_slicer_default_path
@@ -350,6 +364,55 @@ if __name__ == '__main__':
         run_cmd('xreg-pao-draw-bones pao_cuts_seg.nii.gz pelvis_app_lands.fcsv left --femur-frag-xform rel_pose_frag.h5 --femur-only-xform rel_pose_femur.h5 --femur-not-rel-to-frag --cam-view ap --bg-color 1 1 1')
 
         run_cmd('xreg-regi2d3d-replay --video-fps 10 --proj-ds 0.5 multi_obj_multi_view_debug.h5')
+        
+        view_movie('edges.mp4')
+        view_movie('mov.mp4')
+
+    #################################################################
+    # Based off: https://github.com/rg2/xreg/wiki/Example%3A-TCIA-Hip-Radiograph-Rigid-Registration
+    if True:
+        print('Workflow for 2D/3D registration to real pelvis radiograph...')
+        
+        print('3D DICOM conversion/resampling...')
+        
+        download_file('https://services.cancerimagingarchive.net/services/v4/TCIA/query/getImage?SeriesInstanceUID=1.3.6.1.4.1.14519.5.2.1.1706.4016.124291161306415775701317569638', 'TCGA-G2-A3VY_ct.zip', True)
+       
+        extract_zip('TCGA-G2-A3VY_ct.zip', 'TCGA-G2-A3VY_ct_dcm')
+
+        run_cmd('xreg-convert-dicom-vols --one TCGA-G2-A3VY_ct_dcm TCGA-G2-A3VY_ct.nii.gz')
+       
+        view_vol('TCGA-G2-A3VY_ct.nii.gz', slicer_path)
+        
+        download_file('https://raw.githubusercontent.com/wiki/rg2/xreg/examples/tcia_hip_radiograph_rigid_2d_3d/TCGA-G2-A3VY_ct_full_pelvis-label.nii.gz', use_existing=True)
+
+        download_file('https://github.com/rg2/xreg/wiki/examples/tcia_hip_radiograph_rigid_2d_3d/pelvis_3d_lands.fcsv', use_existing=True)
+
+        print('Creating 3D mesh of pelvis...')
+        run_cmd('xreg-create-mesh TCGA-G2-A3VY_ct_full_pelvis-label.nii.gz pelvis.ply 1 2')
+
+        print('2D DICOM conversion...')
+
+        download_file('https://services.cancerimagingarchive.net/services/v4/TCIA/query/getImage?SeriesInstanceUID=1.3.6.1.4.1.14519.5.2.1.1706.4016.146872675804132000774592060313', 'TCGA-G2-A3VY_radiographs_1.zip', True)
+        
+        extract_zip('TCGA-G2-A3VY_radiographs_1.zip', 'TCGA-G2-A3VY_radiographs')
+
+        download_file('https://github.com/rg2/xreg/wiki/examples/tcia_hip_radiograph_rigid_2d_3d/2-c73e.fcsv', use_existing=True)
+
+        run_cmd('xreg-convert-dicom-radiograph TCGA-G2-A3VY_radiographs/2-c73e4bdf6c7d19772d00acd2891965fa.dcm 2-c73e_pd.h5 2-c73e.fcsv')
+
+        run_cmd('xreg-remap-tile-proj-data -d 0.25 -o 2-c73e_pd.h5 2-c73e_remap.png')
+
+        view_image('2-c73e_remap.png')
+
+        run_cmd('xreg-draw-xray-scene -i -l 2-c73e_pd.h5 pelvis.ply - pelvis_3d_lands.fcsv -')
+
+        print('2D/3D registration of pelvis..')
+
+        run_cmd('xreg-hip-surg-pelvis-single-view-regi-2d-3d TCGA-G2-A3VY_ct.nii.gz pelvis_3d_lands.fcsv 2-c73e_pd.h5 2-c73e_pelvis_regi.h5 2-c73e_regi_debug.h5 --no-log-remap -s TCGA-G2-A3VY_ct_full_pelvis-label.nii.gz')
+        
+        run_cmd('xreg-draw-xray-scene -i -l 2-c73e_pd.h5 pelvis.ply 2-c73e_pelvis_regi.h5 pelvis_3d_lands.fcsv 2-c73e_pelvis_regi.h5')
+
+        run_cmd('xreg-regi2d3d-replay --proj-ds 0.5 --video-fps 10 2-c73e_regi_debug.h5')
         
         view_movie('edges.mp4')
         view_movie('mov.mp4')
