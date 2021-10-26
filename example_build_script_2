@@ -65,6 +65,18 @@ mkdir -p $DEPS_INSTALL_DIR
 
 cd $DEPS_DIR
 
+if ! [ -x "$(command -v wget)" ]; then
+  echo "wget is not available, using a wrapper to curl instead."
+
+  function wget()
+  {
+    FILENAME_TO_DOWNLOAD=`basename $1`
+    echo "Downloading $FILENAME_TO_DOWNLOAD ..."
+
+    curl -L -O $1
+  }
+fi
+
 # Operating system name
 OS_STR=`uname -s`
 
