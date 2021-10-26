@@ -577,7 +577,19 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
         {
           xregASSERT(dist_src_to_det_attr.GetNumberOfValues() == 1);
           
-          dcm_info.dist_src_to_det_mm = dist_src_to_det_attr.GetValue();
+          const auto src_to_det_mm = dist_src_to_det_attr.GetValue();
+
+          // Some datasets have this value, but it is set to zero and is not useful.
+          // Only populate this field when the value is non-zero.
+          if (src_to_det_mm > 1.0e-8)
+          {
+            dcm_info.dist_src_to_det_mm = src_to_det_mm;
+          }
+          else
+          {
+            std::cerr << "WARNING: source-to-detector distance field present, "
+              "but not a positive value. Discarding." << std::endl;
+          }
         }
       }
 
@@ -590,7 +602,19 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFileBasicFields(const std::string& dcm
         {
           xregASSERT(dist_src_to_pat_attr.GetNumberOfValues() == 1);
           
-          dcm_info.dist_src_to_pat_mm = dist_src_to_pat_attr.GetValue();
+          const auto src_to_pat_mm = dist_src_to_pat_attr.GetValue();
+
+          // Some datasets have this value, but it is set to zero and is not useful.
+          // Only populate this field when the value is non-zero.
+          if (src_to_pat_mm > 1.0e-8)
+          {
+            dcm_info.dist_src_to_pat_mm = src_to_pat_mm;
+          }
+          else
+          {
+            std::cerr << "WARNING: source-to-patient distance field present, "
+              "but not a positive value. Discarding." << std::endl;
+          }
         }
       }
 
