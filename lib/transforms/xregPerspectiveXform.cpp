@@ -122,7 +122,7 @@ xreg::DecompProjMatQR(const Mat3x4& P)
   perm(2,0) = 1;
 
   const Mat3x3 A = P.block(0,0,3,3).transpose() * perm;
-  xregASSERT(A.determinant() > 1.0e-8);
+  xregASSERT(std::abs(A.determinant()) > 1.0e-8);
 
   Eigen::HouseholderQR<Mat3x3> qr(A);
 
@@ -134,30 +134,41 @@ xreg::DecompProjMatQR(const Mat3x4& P)
   CoordScalar rho = intrins(2,2);
 
   Mat3x3 rot_mat = perm * Q.transpose();
-
+  
+  Mat3x3 N = Mat3x3::Identity();
+  
   if (rot_mat.determinant() < 0)
   {
-    // rotation matrix is actually a reflection; flip the direction of one column, guess which
-    // column to flip based on negative signs in intrins.
-    
-    Mat3x3 N = Mat3x3::Identity();
+    // rotation matrix is actually a reflection; flip the direction of the last column
+    N(2,2) = -1;
+  }
 
+  if ((intrins(0,0) * intrins(1,1)) < 0)
+  {
+    // when the first two diagonal elements do not agree on sign
+    // flip one direction to get them both in agreement, but flip the direction
+    // needed to have the first two elements positive.
     if (intrins(0,0) < 0)
     {
       N(0,0) = -1;
     }
-    else if (intrins(1,1) < 0)
+    else
     {
       N(1,1) = -1;
     }
-    else
-    {
-      N(2,2) = -1;
-    }
-
-    intrins = intrins * N;
-    rot_mat = N * rot_mat;
+    
+    // also flip the third element to maintain handedness
+    N(2,2) = -1;
   }
+  else if (intrins(0,0) < 0)
+  {
+    // the first two elements agree on sign, but are negative, flip both
+    N(0,0) = -1;
+    N(1,1) = -1;
+  }
+  
+  intrins = intrins * N;
+  rot_mat = N * rot_mat;
 
   // set rotation in extrinsic
   Mat4x4 extrins = Mat4x4::Identity();
@@ -165,9 +176,9 @@ xreg::DecompProjMatQR(const Mat3x4& P)
  
   // recover translation
   extrins.block(0,3,3,1) = intrins.jacobiSvd(Eigen::ComputeThinU|Eigen::ComputeThinV).solve(P.block(0,3,3,1));
-
-  // make sure the bottom right element of intrinsics is 1
-  intrins /= rho;
+ 
+  // make sure the bottom right element of intrinsics has magnitude 1
+  intrins /= std::abs(rho);
 
   return std::make_tuple(intrins, extrins, rho);
 }
