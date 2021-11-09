@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -186,7 +186,7 @@ xreg::DecompProjMatQR(const Mat3x4& P)
 xreg::CoordScalar xreg::FocalLenFromIntrins(const Mat3x3& K, CoordScalar xps, CoordScalar yps)
 {
   // Average of the focal lengths
-  return std::abs((K(0,0) * xps) + (K(1,1) * ((yps < 0) ? xps : yps))) * 0.5;
+  return (std::abs((K(0,0) * xps)) + std::abs((K(1,1) * ((yps < 0) ? xps : yps)))) / CoordScalar(2);
 }
 
 xreg::Mat3x4 xreg::ProjMat3x4FromIntrinsExtrins(const Mat3x3& intrins, const Mat4x4& extrins)
