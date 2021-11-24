@@ -102,6 +102,11 @@ void AbsImg(const cv::Mat& src, cv::Mat* dst);
 /// A temporary buffer image is required.
 void ComputeGradMag(cv::Mat& src_img, cv::Mat& grad_img, cv::Mat& tmp_img);
 
+/// \brief Smooths an image and then computes the gradient magnitude of the
+///        smoothed image.
+void SmoothAndGradMag(cv::Mat& src_img, cv::Mat& smooth_img, cv::Mat& grad_img,
+                      cv::Mat& tmp_img, const int smooth_kernel_width_pix = 3);
+
 /// \brief Scales an image to 8bpp (unsigned char) using ONLY the maximum
 ///        value of the input.
 ///
