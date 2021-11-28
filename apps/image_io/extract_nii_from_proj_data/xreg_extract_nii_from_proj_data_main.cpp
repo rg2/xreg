@@ -151,6 +151,8 @@ int main(int argc, char* argv[])
   }
 
   std::ostream& vout = po.vout();
+  
+  const std::string proj_inds_str = po.get("projs");
 
   const bool ignore_pat_rot_up = po.get("no-pat-rot-up");
 
@@ -180,7 +182,6 @@ int main(int argc, char* argv[])
 
   const std::string proj_data_path = po.pos_args()[0];
   const std::string nii_prefix     = po.pos_args()[1];
-  const std::string proj_inds_str  = (po.pos_args().size()) > 2 ? po.pos_args()[2] : std::string();
 
   vout << "creating proj data reader obj..." << std::endl;
   DeferredProjReader pd_reader(proj_data_path);
