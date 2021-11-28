@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,9 @@
 #include "xregCSVUtils.h"
 #include "xregITKResampleUtils.h"
 #include "xregITKIOUtils.h"
+#include "xregITKOpenCVUtils.h"
+#include "xregLocalContrastNorm.h"
+#include "xregOpenCVUtils.h"
 
 using namespace xreg;
 
@@ -115,6 +118,19 @@ int main(int argc, char* argv[])
          "NIFTI files. The output file will have pixel spacings equal to one, identity orientation "
          "and zero origin.")
     << false;
+  
+  po.add("grad-mag", 'g', ProgOpts::kSTORE_TRUE, "grad-mag",
+         "Prior to remap and any other LCN, smooth the image and replace it with the "
+         "gradient magnitude.")
+    << false;
+  
+  po.add("lcn", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "lcn",
+         "Local contrast normalization (LCN) method to apply on each projection. "
+         "\"none\" --> no LCN. "
+         "\"norm\" --> Standard Normal LCN. "
+         "\"jarrett\" --> Method of Jarrett, et al. "
+         "Windows of 5x5 pixels are used for all methods.")
+    << "none";
 
   try
   {
@@ -141,6 +157,26 @@ int main(int argc, char* argv[])
   const double proj_ds_factor = po.get("ds-factor");
 
   const bool discard_geom = po.get("no-geom");
+  
+  const bool do_grad_mag = po.get("grad-mag");
+  
+  const std::string lcn_str = ToLowerCase(po.get("lcn").as_string());
+
+  bool do_std_norm_lcn = false;
+  bool do_jarrett_lcn   = false;
+
+  if (lcn_str == "norm")
+  {
+    do_std_norm_lcn = true;
+  }
+  else if (lcn_str == "jarrett")
+  {
+    do_jarrett_lcn = true;
+  }
+
+  const bool adjust_proj_intens = do_grad_mag ||
+                                  do_std_norm_lcn ||
+                                  do_jarrett_lcn;
 
   const std::string proj_data_path = po.pos_args()[0];
   const std::string nii_prefix     = po.pos_args()[1];
@@ -208,9 +244,37 @@ int main(int argc, char* argv[])
         rot_to_pat_up = cur_meta.rot_to_pat_up;
       }
 
-      if (scalar_type == kPROJ_DATA_TYPE_FLOAT32)
+      // always read the images in as float when adjusting pixel intensities
+      if (adjust_proj_intens || (scalar_type == kPROJ_DATA_TYPE_FLOAT32))
       {
         auto img = pd_reader.read_proj_F32(src_proj_idx);
+
+        if (adjust_proj_intens)
+        {
+          cv::Mat img_ocv = ShallowCopyItkToOpenCV(img.GetPointer());
+            
+          if (do_grad_mag)
+          {
+            vout << "      grad. mag. calc. ..." << std::endl;
+            cv::Mat smooth_img(img_ocv.rows, img_ocv.cols, img_ocv.type());
+            cv::Mat tmp_img(img_ocv.rows, img_ocv.cols, img_ocv.type());
+            cv::Mat grad_img(img_ocv.rows, img_ocv.cols, img_ocv.type());
+            
+            SmoothAndGradMag(img_ocv, smooth_img, grad_img, tmp_img, 5);
+            grad_img.copyTo(img_ocv);
+          }
+
+          if (do_std_norm_lcn)
+          {
+            vout << "      performing LCN: std. norm. ..." << std::endl; 
+            LocalContrastNormStdNorm(img_ocv, 5, 5, 0.0f).copyTo(img_ocv);
+          }
+          else if (do_jarrett_lcn)
+          {
+            vout << "      performing LCN: jarrett..." << std::endl;
+            LocalContrastNormJarrett(img_ocv, 5, 5, 0.0f).copyTo(img_ocv);
+          }
+        }
 
         ProcessAndSave(img.GetPointer(), dst_path, rot_to_pat_up, proj_ds_factor, discard_geom, vout);
       }
