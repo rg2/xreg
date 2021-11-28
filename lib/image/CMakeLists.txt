@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2020 Robert Grupp
+# Copyright (c) 2020-2021 Robert Grupp
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -29,5 +29,6 @@ add_library(xreg_image OBJECT ${XREG_CUR_LIB_HEADERS}
                               xregProjData.cpp
                               xregImageIntensLogTrans.cpp
                               xregImageAddPoissonNoise.cpp
-                              xregProjPreProc.cpp)
+                              xregProjPreProc.cpp
+                              xregLocalContrastNorm.cpp)
 
