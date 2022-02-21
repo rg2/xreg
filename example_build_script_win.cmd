@@ -15,7 +15,8 @@ SET "NEED_TO_BUILD_THIRD_PARTY=true"
 SET "NEED_TO_START_XREG=true"
 
 REM Use the drive where this script currently resides
-SET CUR_DRIVE_LETTER="%~d0"
+SET CUR_DRIVE="%~d0"
+ECHO CUR_DRIVE = %CUR_DRIVE%
 
 REM Build everything in a temporary directory, e.g. C:\tmp.
 REM Change this to the directory of your choice
@@ -62,7 +63,13 @@ ECHO Creating %BUILD_ROOT%
 MKDIR %BUILD_ROOT% || EXIT /b
 )
 
+ECHO before switing dirs
+dir
+
 cd %BUILD_ROOT% || EXIT /b
+
+ECHO after switching dirs
+dir
 
 MKDIR %INSTALL_ROOT%\include
 MKDIR %INSTALL_ROOT%\bin
