@@ -5,8 +5,8 @@ REM This should be run from a command prompt loaded with the appropriate environ
 REM for building Visual Studio solutions (e.g. x64 Native Tools Command Prompt).
 
 REM Leaving echo on is useful for debugging continuous integration issues.
-REM Enable the following line to supress printing the commands:
-REM @ECHO OFF
+REM Disable the following line to enable printing the commands:
+@ECHO OFF
 
 setlocal
 
@@ -64,22 +64,31 @@ MKDIR %INSTALL_ROOT%\bin
 
 if %NEED_TO_DOWNLOAD% == true (
 
+ECHO Downloading ffmpeg
 curl -L -O -J https://github.com/GyanD/codexffmpeg/releases/download/4.3.1-2020-11-19/ffmpeg-4.3.1-2020-11-19-full_build.zip || EXIT /b
 
+ECHO Extracing ffmpeg
 tar -xf ffmpeg-4.3.1-2020-11-19-full_build.zip || EXIT /b
 
+ECHO Downloading TBB
 curl -L -O -J https://github.com/oneapi-src/oneTBB/releases/download/v2020.3/tbb-2020.3-win.zip || EXIT /b
 
+ECHO Extracting TBB
 tar -xf tbb-2020.3-win.zip || EXIT /b
 
+ECHO Downloading boost
 curl -L -O -J https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.zip || EXIT /b
 
+ECHO Extracting boost
 tar -xf boost_1_74_0.zip || EXIT /b
 
+ECHO Downloading Eigen
 curl -L -O -J https://gitlab.com/libeigen/eigen/-/archive/3.3.4/eigen-3.3.4.zip || EXIT /b
 
+ECHO Extracting Eigen
 tar -xf eigen-3.3.4.zip || EXIT /b
 
+ECHO Downloading ViennaCL
 curl -L -O -J https://github.com/viennacl/viennacl-dev/archive/release-1.7.1.zip || EXIT /b
 
 REM This command will complete but return with errors, so we are not checking the return code.
@@ -87,28 +96,39 @@ REM Several of the CUDA backend files fail to extract. However, as we do not use
 REM backend and may proceed. Using the standard file explorer right-click extract functionality
 REM works fine. This can be investigated in the future
 
+ECHO Extracting ViennaCL
 tar -xf viennacl-dev-release-1.7.1.zip
 
+ECHO Downloading fmt
 curl -L -O -J https://github.com/fmtlib/fmt/archive/5.3.0.zip || EXIT /b
 
+ECHO Extracting fmt
 tar -xf fmt-5.3.0.zip || EXIT /b
 
+ECHO Downloading nlopt
 curl -L -O -J https://github.com/stevengj/nlopt/archive/v2.5.0.zip || EXIT /b
 
 REM This command also returns with errors, similar to the case described above for Vienna CL.
 REM In this case a PNG file could not be extracted.
+ECHO Extracting nlopt
 tar -xf nlopt-2.5.0.zip
 
+ECHO Downloading VTK
 curl -L -O -J https://www.vtk.org/files/release/8.2/VTK-8.2.0.zip || EXIT /b
 
+ECHO Extracting VTK
 tar -xf VTK-8.2.0.zip || EXIT /b
 
+ECHO Downloading ITK
 curl -L -O -J https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.1.1/InsightToolkit-5.1.1.zip || EXIT /b
 
+ECHO Extracting ITK
 tar -xf InsightToolkit-5.1.1.zip || EXIT /b
 
+ECHO Downloading OpenCV
 curl -L -O -J https://github.com/opencv/opencv/archive/3.4.12.zip || EXIT /b
 
+ECHO Extracting OpenCV
 tar -xf opencv-3.4.12.zip || EXIT /b
 
 )
