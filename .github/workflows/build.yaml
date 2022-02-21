@@ -1,0 +1,13 @@
+# GitHub action to build software.
+# Linux builds include pre-built dependencies via containers.
+
+name: Build
+on: pull_request
+
+jobs:
+  ubuntu_20_04_build:
+    runs-on: ubuntu-latest
+    container: ghcr.io/rg2/xreg-deps-ubuntu-20.04:latest
+
+    steps:
+      - uses: actions/checkout@v2
