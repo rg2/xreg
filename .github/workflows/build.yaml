@@ -14,5 +14,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - run: ls
+      - run: |
+        mkdir build
+        cd build
+        cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
+          -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON \
+          -DTBB_DIR:PATH="/opt/tbb/cmake" \
+          -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
+          ..
+        cmake --build .
+        cmake --build . --target install
       - run: echo "done!"
