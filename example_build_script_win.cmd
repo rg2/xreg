@@ -1,12 +1,14 @@
-@ECHO OFF
-
-setlocal
-
 REM Example script for building dependencies and xReg on Windows.
 REM This is not pretty, but can be used in a pinch and serves well to illustrate
 REM the settings used for achieving a successful build.
 REM This should be run from a command prompt loaded with the appropriate environment
 REM for building Visual Studio solutions (e.g. x64 Native Tools Command Prompt).
+
+REM Leaving echo on is useful for debugging continuous integration issues.
+REM Enable the following line to supress printing the commands:
+REM @ECHO OFF
+
+setlocal
 
 SET "NEED_TO_DOWNLOAD=true"
 SET "NEED_TO_BUILD_THIRD_PARTY=true"
@@ -84,6 +86,7 @@ REM This command will complete but return with errors, so we are not checking th
 REM Several of the CUDA backend files fail to extract. However, as we do not use the CUDA
 REM backend and may proceed. Using the standard file explorer right-click extract functionality
 REM works fine. This can be investigated in the future
+
 tar -xf viennacl-dev-release-1.7.1.zip
 
 curl -L -O -J https://github.com/fmtlib/fmt/archive/5.3.0.zip || EXIT /b
