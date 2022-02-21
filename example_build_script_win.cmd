@@ -69,7 +69,7 @@ MKDIR %INSTALL_ROOT%\include
 MKDIR %INSTALL_ROOT%\bin
 
 REM TODO: detect when ninja is present or not
-SET "NEED_TO_DOWNLOAD_NINJA = true"
+SET "NEED_TO_DOWNLOAD_NINJA=true"
 
 if %NEED_TO_DOWNLOAD_NINJA% == true (
 REM Update the PATH so that cmake can find the downloaded version of ninja
