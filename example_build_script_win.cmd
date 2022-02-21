@@ -63,13 +63,7 @@ ECHO Creating %BUILD_ROOT%
 MKDIR %BUILD_ROOT% || EXIT /b
 )
 
-ECHO before switing dirs
-dir
-
 cd %BUILD_ROOT% || EXIT /b
-
-ECHO after switching dirs
-dir
 
 MKDIR %INSTALL_ROOT%\include
 MKDIR %INSTALL_ROOT%\bin
