@@ -14,16 +14,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - run: pwd
       - run: ./.github/workflows/linux_cmake_build
         shell: bash
-      - run: pwd
       - run: ./dist/ubuntu_dist_pkgs
         shell: bash
-      - run: pwd
       - run: ./.github/workflows/linux_make_dist ubuntu-20.04
         shell: bash
-      - run: pwd
       - uses: actions/upload-artifact@v2
         with:
           name: ubuntu-20.04-build
