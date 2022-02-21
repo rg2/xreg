@@ -68,10 +68,18 @@ cd %BUILD_ROOT% || EXIT /b
 MKDIR %INSTALL_ROOT%\include
 MKDIR %INSTALL_ROOT%\bin
 
+REM TODO: detect when ninja is present or not
+SET "NEED_TO_DOWNLOAD_NINJA = true"
+
+if %NEED_TO_DOWNLOAD_NINJA% == true (
+REM Update the PATH so that cmake can find the downloaded version of ninja
+SET "PATH=%BUILD_ROOT%\ninja-bin;%PATH%"
+)
+
 if %NEED_TO_DOWNLOAD% == true (
 
 REM Download Ninja when needed
-if true (
+if %NEED_TO_DOWNLOAD_NINJA% == true (
 ECHO Downloading Ninja
 curl -L -O -J https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip || EXIT /b
 
@@ -86,9 +94,6 @@ MKDIR %BUILD_ROOT%\ninja-bin || EXIT /b
 )
 
 MOVE ninja.exe %BUILD_ROOT%\ninja-bin || EXIT /b
-
-REM Update the PATH so that cmake can find this version of ninja
-SET "PATH=%BUILD_ROOT%\ninja-bin;%PATH%"
 )
 
 ECHO Downloading ffmpeg
