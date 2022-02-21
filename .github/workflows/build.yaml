@@ -14,16 +14,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - run: |
-          mkdir build
-          cd build
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
-            -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON \
-            -DTBB_DIR:PATH="/opt/tbb/cmake" \
-            -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
-            ..
-          cmake --build .
-          cmake --build . --target install
+      - run: ./.github/workflows/linux_cmake_build
+        shell: bash
   
   ubuntu_18_04_build:
     runs-on: ubuntu-latest
@@ -31,16 +23,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - run: |
-          mkdir build
-          cd build
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
-            -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON \
-            -DTBB_DIR:PATH="/opt/tbb/cmake" \
-            -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
-            ..
-          cmake --build .
-          cmake --build . --target install
+      - run: ./.github/workflows/linux_cmake_build
+        shell: bash
   
   ubuntu_16_04_build:
     runs-on: ubuntu-latest
@@ -48,16 +32,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - run: |
-          mkdir build
-          cd build
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
-            -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON \
-            -DTBB_DIR:PATH="/opt/tbb/cmake" \
-            -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
-            ..
-          cmake --build .
-          cmake --build . --target install
+      - run: ./.github/workflows/linux_cmake_build
+        shell: bash
   
   centos_7_build:
     runs-on: ubuntu-latest
@@ -65,13 +41,5 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - run: |
-          mkdir build
-          cd build
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
-            -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON \
-            -DTBB_DIR:PATH="/opt/tbb/cmake" \
-            -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
-            ..
-          cmake --build .
-          cmake --build . --target install
+      - run: ./.github/workflows/linux_cmake_build
+        shell: bash
