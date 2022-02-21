@@ -81,5 +81,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - run: curl -L -O -J https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip
+        shell: cmd
+      - run: tar -xf ninja-win.zip
+        shell: cmd
+      - run: dir
+        shell: cmd
       - run: example_build_script_win.cmd
         shell: cmd
