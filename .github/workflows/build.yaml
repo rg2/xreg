@@ -14,8 +14,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - run: pwd
       - run: ./.github/workflows/linux_cmake_build
         shell: bash
+      - run: pwd
+      - run: ./dist/ubuntu_dist_pkgs
+        shell: bash
+      - run: pwd
   
   ubuntu_18_04_build:
     runs-on: ubuntu-latest
@@ -24,6 +29,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: ./.github/workflows/linux_cmake_build
+        shell: bash
+      - run: ./dist/ubuntu_dist_pkgs
         shell: bash
   
   ubuntu_16_04_build:
@@ -34,6 +41,8 @@ jobs:
       - uses: actions/checkout@v2
       - run: ./.github/workflows/linux_cmake_build
         shell: bash
+      - run: ./dist/ubuntu_dist_pkgs
+        shell: bash
   
   centos_7_build:
     runs-on: ubuntu-latest
@@ -42,4 +51,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: ./.github/workflows/linux_cmake_build
+        shell: bash
+      - run: ./dist/centos_dist_pkgs
         shell: bash
