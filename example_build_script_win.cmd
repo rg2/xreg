@@ -6,7 +6,7 @@ REM for building Visual Studio solutions (e.g. x64 Native Tools Command Prompt).
 
 REM Leaving echo on is useful for debugging continuous integration issues.
 REM Disable the following line to enable printing the commands:
-@ECHO OFF
+@ECHO ON
 
 setlocal
 
