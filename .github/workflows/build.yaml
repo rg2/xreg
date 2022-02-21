@@ -21,9 +21,13 @@ jobs:
       - run: ./dist/ubuntu_dist_pkgs
         shell: bash
       - run: pwd
-      - run: ./.github/workflows/linux_make_dist
+      - run: ./.github/workflows/linux_make_dist ubuntu-20.04
         shell: bash
       - run: pwd
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ubuntu-20.04-build
+          path: xreg-ubuntu-20.04.tar.gz
   
   ubuntu_18_04_build:
     runs-on: ubuntu-latest
@@ -35,6 +39,12 @@ jobs:
         shell: bash
       - run: ./dist/ubuntu_dist_pkgs
         shell: bash
+      - run: ./.github/workflows/linux_make_dist ubuntu-18.04
+        shell: bash
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ubuntu-18.04-build
+          path: xreg-ubuntu-18.04.tar.gz
   
   ubuntu_16_04_build:
     runs-on: ubuntu-latest
@@ -46,6 +56,12 @@ jobs:
         shell: bash
       - run: ./dist/ubuntu_dist_pkgs
         shell: bash
+      - run: ./.github/workflows/linux_make_dist ubuntu-16.04
+        shell: bash
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ubuntu-16.04-build
+          path: xreg-ubuntu-16.04.tar.gz
   
   centos_7_build:
     runs-on: ubuntu-latest
@@ -57,3 +73,9 @@ jobs:
         shell: bash
       - run: ./dist/centos_dist_pkgs
         shell: bash
+      - run: ./.github/workflows/linux_make_dist centos-7
+        shell: bash
+      - uses: actions/upload-artifact@v2
+        with:
+          name: centos-7-build
+          path: xreg-centos-7.tar.gz
