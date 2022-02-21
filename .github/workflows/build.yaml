@@ -24,4 +24,54 @@ jobs:
             ..
           cmake --build .
           cmake --build . --target install
-      - run: echo "done!"
+  
+  ubuntu_18_04_build:
+    runs-on: ubuntu-latest
+    container: ghcr.io/rg2/xreg-deps-ubuntu-18.04:latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          mkdir build
+          cd build
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
+            -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON \
+            -DTBB_DIR:PATH="/opt/tbb/cmake" \
+            -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
+            ..
+          cmake --build .
+          cmake --build . --target install
+  
+  ubuntu_16_04_build:
+    runs-on: ubuntu-latest
+    container: ghcr.io/rg2/xreg-deps-ubuntu-16.04:latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          mkdir build
+          cd build
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
+            -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON \
+            -DTBB_DIR:PATH="/opt/tbb/cmake" \
+            -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
+            ..
+          cmake --build .
+          cmake --build . --target install
+  
+  centos_7_build:
+    runs-on: ubuntu-latest
+    container: ghcr.io/rg2/xreg-deps-centos-7:latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          mkdir build
+          cd build
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
+            -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON \
+            -DTBB_DIR:PATH="/opt/tbb/cmake" \
+            -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
+            ..
+          cmake --build .
+          cmake --build . --target install
