@@ -70,6 +70,27 @@ MKDIR %INSTALL_ROOT%\bin
 
 if %NEED_TO_DOWNLOAD% == true (
 
+REM Download Ninja when needed
+if true (
+ECHO Downloading Ninja
+curl -L -O -J https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip || EXIT /b
+
+ECHO Extracting Ninja
+tar -xf ninja-win.zip || EXIT /b
+
+IF EXIST %BUILD_ROOT%\ninja-bin (
+ECHO %BUILD_ROOT%\ninja-bin exists
+) ELSE (
+ECHO Creating %BUILD_ROOT%\ninja-bin
+MKDIR %BUILD_ROOT%\ninja-bin || EXIT /b
+)
+
+MOVE ninja.exe %BUILD_ROOT%\ninja-bin || EXIT /b
+
+REM Update the PATH so that cmake can find this version of ninja
+SET "PATH=%BUILD_ROOT%\ninja-bin;%PATH%"
+)
+
 ECHO Downloading ffmpeg
 curl -L -O -J https://github.com/GyanD/codexffmpeg/releases/download/4.3.1-2020-11-19/ffmpeg-4.3.1-2020-11-19-full_build.zip || EXIT /b
 
@@ -141,12 +162,10 @@ tar -xf opencv-3.4.12.zip || EXIT /b
 
 if %NEED_TO_BUILD_THIRD_PARTY% == true (
 
-dir
 ECHO Installing ffpeg
 MOVE ffmpeg-4.3.1-2020-11-19-full_build\bin\ffmpeg.exe %INSTALL_ROOT%\bin || EXIT /b
 
 ECHO Installing TBB (1/2)
-dir
 MOVE tbb %INSTALL_ROOT%\tbb || EXIT /b
 
 ECHO Installing TBB (2/2)
