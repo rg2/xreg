@@ -135,20 +135,27 @@ tar -xf opencv-3.4.12.zip || EXIT /b
 
 if %NEED_TO_BUILD_THIRD_PARTY% == true (
 
+ECHO Installing ffpeg
 MOVE ffmpeg-4.3.1-2020-11-19-full_build\bin\ffmpeg.exe %INSTALL_ROOT%\bin || EXIT /b
 
+ECHO Installing TBB (1/2)
 MOVE tbb %INSTALL_ROOT%\tbb || EXIT /b
 
+ECHO Installing TBB (2/2)
 COPY %INSTALL_ROOT%\tbb\bin\intel64\vc14\tbb.dll %INSTALL_ROOT%\bin || EXIT /b
 
+ECHO Installing boost
 MOVE boost_1_74_0\boost %INSTALL_ROOT%\include\boost || EXIT /b
 
+ECHO Installing Eigen
 MOVE eigen-3.3.4\Eigen %INSTALL_ROOT%\include\Eigen || EXIT /b
 MOVE eigen-3.3.4\unsupported %INSTALL_ROOT%\include\unsupported || EXIT /b
 MOVE eigen-3.3.4\signature_of_eigen3_matrix_library %INSTALL_ROOT%\include\signature_of_eigen3_matrix_library || EXIT /b
 
+ECHO Installing ViennaCL
 MOVE viennacl-dev-release-1.7.1\viennacl %INSTALL_ROOT%\include\viennacl || EXIT /b
 
+ECHO Building fmt, setting up...
 cd fmt-5.3.0 || EXIT /b
 
 mkdir build || EXIT /b
@@ -158,6 +165,7 @@ cd build || EXIT /b
 REM Note that we are opting to always link fmt statically -
 REM it is small and should not cause executable sizes to balloon.
 
+ECHO fmt CMake configuring
 cmake %CMAKE_GENERATOR_ARG% .. ^
     -DCMAKE_INSTALL_PREFIX:PATH=%INSTALL_ROOT_CMAKE% ^
     -DCMAKE_CXX_STANDARD:STRING="11" ^
@@ -168,12 +176,15 @@ cmake %CMAKE_GENERATOR_ARG% .. ^
     -DFMT_INSTALL:BOOL=ON ^
     -DFMT_DOC:BOOL=OFF || EXIT /b
 
+ECHO fmt building
 cmake --build . --config %BUILD_CONFIG% || EXIT /b
 
+ECHO Installing fmt
 cmake --install . || EXIT /b
 
 cd ..\.. || EXIT /b
 
+ECHO Buidling nlopt, setting up...
 cd nlopt-2.5.0 || EXIT /b
 
 mkdir build || EXIT /b
@@ -184,6 +195,7 @@ REM For some reason this command fails with the following message:
 REM "The filename, directory name, or volume label syntax is incorrect."
 REM However, the CMake configuration succeeds and the project may still be build.
 
+ECHO nlopt CMake configuring (1/2)
 cmake %CMAKE_GENERATOR_ARG% .. ^
     -DCMAKE_INSTALL_PREFIX:PATH=%INSTALL_ROOT_CMAKE% ^
     -DCMAKE_CXX_STANDARD:STRING="11" ^
@@ -199,20 +211,25 @@ cmake %CMAKE_GENERATOR_ARG% .. ^
 
 REM The nlopt initial configure processs overrides the value passed for CMAKE_INSTALL_PREFIX.
 REM Let's delete the existing cache variable and set it again.
+ECHO nlopt CMake configuring (2/2)
 cmake -UCMAKE_INSTALL_PREFIX -DCMAKE_INSTALL_PREFIX:PATH=%INSTALL_ROOT_CMAKE% . || EXIT /b
 
+ECHO nlopt building
 cmake --build . --config %BUILD_CONFIG% || EXIT /b
 
+ECHO Install nlopt
 cmake --install . || EXIT /b
 
 cd ..\.. || EXIT /b
 
+ECHO Building VTK, setting up...
 cd VTK-8.2.0 || EXIT /b
 
 mkdir build || EXIT /b
 
 cd build || EXIT /b
 
+ECHO VTK CMake configuring
 cmake %CMAKE_GENERATOR_ARG% .. ^
     -DCMAKE_INSTALL_PREFIX:PATH=%INSTALL_ROOT_CMAKE% ^
     -DCMAKE_CXX_STANDARD:STRING="11" ^
@@ -222,18 +239,22 @@ cmake %CMAKE_GENERATOR_ARG% .. ^
     -DVTK_Group_Views:BOOL=ON ^
     -DBUILD_TESTING:BOOL=OFF || EXIT /b
 
+ECHO VTK building
 cmake --build . --config %BUILD_CONFIG% || EXIT /b
 
+ECHO Install VTK
 cmake --install . || EXIT /b
 
 cd ..\.. || EXIT /b
 
+ECHO Building ITK, setting up...
 cd InsightToolkit-5.1.1 || EXIT /b
 
 mkdir build || EXIT /b
 
 cd build || EXIT /b
 
+ECHO ITK CMake configuring
 cmake %CMAKE_GENERATOR_ARG% .. ^
       -DCMAKE_INSTALL_PREFIX:PATH=%INSTALL_ROOT_CMAKE% ^
       -DCMAKE_CXX_STANDARD:STRING="11" ^
@@ -245,18 +266,22 @@ cmake %CMAKE_GENERATOR_ARG% .. ^
       -DModule_ITKReview:BOOL=ON ^
       -DModule_LabelErodeDilate:BOOL=ON || EXIT /b
 
+ECHO ITK building
 cmake --build . --config %BUILD_CONFIG% || EXIT /b
 
+ECHO Install ITK
 cmake --install . || EXIT /b
 
 cd ..\.. || EXIT /b
 
+ECHO Building OpenCV, setting up...
 cd opencv-3.4.12 || EXIT /b
 
 mkdir build || EXIT /b
 
 cd build || EXIT /b
 
+EHCO OpenCV CMake configuring
 cmake %CMAKE_GENERATOR_ARG% .. ^
         -DCMAKE_INSTALL_PREFIX:PATH=%INSTALL_ROOT_CMAKE% ^
         -DCMAKE_CXX_STANDARD:STRING="11" ^
@@ -278,8 +303,10 @@ cmake %CMAKE_GENERATOR_ARG% .. ^
         -DBUILD_opencv_python2:BOOL=OFF ^
         -DBUILD_opencv_python3:BOOL=OFF || EXIT /b
 
+ECHO OpenCV building
 cmake --build . --config %BUILD_CONFIG% || EXIT /b
 
+ECHO Install OpenCV
 cmake --install . || EXIT /b
 
 REM COPY %INSTALL_ROOT%\x64\vc16\bin\*.dll %INSTALL_ROOT%\bin
@@ -290,10 +317,12 @@ cd ..\.. || EXIT /b
 
 if %NEED_TO_START_XREG% == true (
 
+ECHO Building xReg, setting up...
 mkdir xreg_build || EXIT /b
 
 cd xreg_build || EXIT /b
 
+ECHO xReg CMake configuring
 cmake %CMAKE_GENERATOR_ARG% ^
         -DCMAKE_PREFIX_PATH:PATH=%INSTALL_ROOT_CMAKE% ^
         -DCMAKE_INSTALL_PREFIX:PATH=%INSTALL_ROOT_CMAKE% ^
@@ -302,8 +331,10 @@ cmake %CMAKE_GENERATOR_ARG% ^
         -DBUILD_SHARED_LIBS:BOOL=%BUILD_SHARED% ^
         %XREG_SOURCE_DIR% || EXIT /b
 
+ECHO xReg building
 cmake --build . --config %BUILD_CONFIG% || EXIT /b
 
+ECHO Install xReg
 cmake --install . || EXIT /b
 
 cd .. || EXIT /b
