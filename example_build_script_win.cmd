@@ -15,7 +15,7 @@ SET "NEED_TO_BUILD_THIRD_PARTY=true"
 SET "NEED_TO_START_XREG=true"
 
 REM Use the drive where this script currently resides
-SET "CUR_DRIVE_LETTER=%~d0"
+SET CUR_DRIVE_LETTER="%~d0"
 
 REM Build everything in a temporary directory, e.g. C:\tmp.
 REM Change this to the directory of your choice
