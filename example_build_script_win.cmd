@@ -135,10 +135,12 @@ tar -xf opencv-3.4.12.zip || EXIT /b
 
 if %NEED_TO_BUILD_THIRD_PARTY% == true (
 
+dir
 ECHO Installing ffpeg
 MOVE ffmpeg-4.3.1-2020-11-19-full_build\bin\ffmpeg.exe %INSTALL_ROOT%\bin || EXIT /b
 
 ECHO Installing TBB (1/2)
+dir
 MOVE tbb %INSTALL_ROOT%\tbb || EXIT /b
 
 ECHO Installing TBB (2/2)
