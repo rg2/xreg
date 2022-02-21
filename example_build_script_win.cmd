@@ -14,13 +14,18 @@ SET "NEED_TO_DOWNLOAD=true"
 SET "NEED_TO_BUILD_THIRD_PARTY=true"
 SET "NEED_TO_START_XREG=true"
 
+REM Use the drive where this script currently resides
+SET "CUR_DRIVE_LETTER=%~d0"
+
 REM Build everything in a temporary directory, e.g. C:\tmp.
 REM Change this to the directory of your choice
-SET "BUILD_ROOT=C:\tmp"
+SET "BUILD_ROOT=%CUR_DRIVE%\tmp"
+ECHO BUILD_ROOT = %BUILD_ROOT%
 
 REM Everything will be installed here using the standard
 REM bin, include, lib layout
-SET "INSTALL_ROOT=C:\usr\local"
+SET "INSTALL_ROOT=%CUR_DRIVE%\usr\local"
+ECHO INSTALL_ROOT = %INSTALL_ROOT%
 
 REM Use forward slashes for paths given to CMake, this converts the
 REM backslashes (\) to forward (/)
