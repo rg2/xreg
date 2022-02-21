@@ -21,6 +21,9 @@ jobs:
       - run: ./dist/ubuntu_dist_pkgs
         shell: bash
       - run: pwd
+      - run: ./.github/workflows/linux_make_dist
+        shell: bash
+      - run: pwd
   
   ubuntu_18_04_build:
     runs-on: ubuntu-latest

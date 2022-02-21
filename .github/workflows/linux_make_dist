@@ -1,0 +1,13 @@
+
+XREG_NAME="xreg-${1}"
+
+mkdir $XREG_NAME
+
+LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64:/opt/tbb/lib/intel64/gcc4.7:$LD_LIBRARY_PATH" \
+    python3 ./dist/make_linux_dist.py /usr/local $XREG_NAME
+
+cp ./dist/dist_readme/README.txt $XREG_NAME
+
+cp ./LICENSE $XREG_NAME
+
+tar czf ${XREG_NAME}.tar.gz $XREG_NAME
