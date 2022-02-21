@@ -75,3 +75,11 @@ jobs:
         with:
           name: centos-7-build
           path: xreg-centos-7.tar.gz
+  
+  windows_build:
+    runs-on: windows-2019
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: example_build_script_win.cmd
+        shell: cmd
