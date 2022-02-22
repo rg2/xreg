@@ -84,3 +84,9 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       - run: example_build_script_win.cmd
         shell: cmd
+      - run: .github\workflows\win_make_dist.cmd
+        shell: cmd
+      - uses: actions/upload-artifact@v2
+        with:
+          name: win-64-build
+          path: xreg-win64.zip
