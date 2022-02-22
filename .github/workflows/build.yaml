@@ -94,11 +94,20 @@ jobs:
   macos_build:
     runs-on: macos-10.15
     env:
-      XREG_INSTALL_DIR: $HOME/xreg-macos
+      XREG_INSTALL_DIR: $HOME/xreg_install
 
     steps:
       - uses: actions/checkout@v2
       - run: brew install ninja
-        shell: bash
+      - run: python3 --version
+      - run: ls $HOME
       - run: ./example_build_script_2
         shell: bash
+      - run: mkdir $HOME/xreg-macos-10.15
+      - run: python3 ./dist/make_macos_dist.py $HOME/xreg_install $HOME/xreg-macos-10.15 ../xreg_deps_install
+      - run: cp LICENSE $HOME/xreg-macos-10.15 && cp ./dist/dist_readme/README.txt $HOME/xreg-macos-10.15
+      - run: cd $HOME && tar czf xreg-macos-10.15.tar.gz xreg-macos-10.15
+      - uses: actions/upload-artifact@v2
+        with:
+          name: macos-10.15-build
+          path: $HOME/xreg-macos-10.15.tar.gz
