@@ -90,3 +90,11 @@ jobs:
         with:
           name: win-64-build
           path: xreg-win64.zip
+
+  macos_build:
+    runs-on: macos-10.15
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: example_build_script_2
+        shell: bash
