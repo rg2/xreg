@@ -39,10 +39,10 @@ XREG_BUILD_DIR="$XREG_DIR/build"
 # use this to build the xreg library and apps in a tmp directory:
 #XREG_BUILD_DIR="$HOME/tmp/xreg_build"
 
-# leave blank to not install xreg, otherwise set to installation prefix
-#XREG_INSTALL_DIR=""
-XREG_INSTALL_DIR="$HOME/xreg"
-#XREG_INSTALL_DIR="$HOME/tmp/xreg_install"
+# set as blank to not install xreg, otherwise set to installation prefix
+# The value here is the default value and is overriden by a XREG_INSTALL_DIR environment variable
+: ${XREG_INSTALL_DIR:="$HOME/xreg"}
+echo "XREG_INSTALL_DIR = $XREG_INSTALL_DIR"
 
 # Set DEPS_DIR to a directory outside of the xReg repo in which to download and build dependencies
 
