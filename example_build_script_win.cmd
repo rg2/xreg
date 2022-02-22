@@ -170,10 +170,10 @@ ECHO Extracting VTK
 tar -xf VTK-8.2.0.zip || EXIT /b
 
 ECHO Downloading ITK
-curl -L -O -J https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.1.1/InsightToolkit-5.1.1.zip || EXIT /b
+curl -L -O -J https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.2.1/InsightToolkit-5.2.1.zip || EXIT /b
 
 ECHO Extracting ITK
-tar -xf InsightToolkit-5.1.1.zip || EXIT /b
+tar -xf InsightToolkit-5.2.1.zip || EXIT /b
 
 ECHO Downloading OpenCV
 curl -L -O -J https://github.com/opencv/opencv/archive/3.4.12.zip || EXIT /b
@@ -273,7 +273,7 @@ cmake --install . || EXIT /b
 cd ..\.. || EXIT /b
 
 ECHO Building ITK, setting up...
-cd InsightToolkit-5.1.1 || EXIT /b
+cd InsightToolkit-5.2.1 || EXIT /b
 
 mkdir build || EXIT /b
 
