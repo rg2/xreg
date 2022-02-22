@@ -81,5 +81,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - uses: ilammy/msvc-dev-cmd@v1
       - run: example_build_script_win.cmd
         shell: cmd
