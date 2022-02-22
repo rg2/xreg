@@ -96,5 +96,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - run: pwd
+      - run: ls
       - run: example_build_script_2
         shell: bash
