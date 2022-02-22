@@ -32,15 +32,12 @@ REM Use forward slashes for paths given to CMake, this converts the
 REM backslashes (\) to forward (/)
 SET "INSTALL_ROOT_CMAKE=%INSTALL_ROOT:\=/%"
 
-REM Using a custom install version of CMake rather than the version available
+REM Here is where you can specify a custom install version of CMake rather than the version available
 REM through the VS installer (3.17.20032601-MSVC_2) as the VS version resulted in
 REM the call to find_package() for ITK in xReg to fail. I do not know the reason,
 REM but using an official version downloaded from cmake.org works.
-SET "PATH=C:\cmake-3.19.2-win64-x64\bin;%PATH%"
-
-REM Ninja may be installed during VS installation - it greatly speeds up the builds
-SET "CMAKE_GENERATOR_ARG=-G Ninja"
-REM SET "CMAKE_GENERATOR_ARG="
+REM If you want to use this, make sure that NEED_TO_DOWNLOAD_CMAKE is set to false later in this script.
+REM SET "PATH=C:\cmake-3.19.2-win64-x64\bin;%PATH%"
 
 REM SET "BUILD_CONFIG=Debug"
 SET "BUILD_CONFIG=Release"
@@ -68,15 +65,36 @@ cd %BUILD_ROOT% || EXIT /b
 MKDIR %INSTALL_ROOT%\include
 MKDIR %INSTALL_ROOT%\bin
 
+REM TODO: detect when CMake is present or not
+SET "NEED_TO_DOWNLOAD_CMAKE=true"
+
+if %NEED_TO_DOWNLOAD_CMAKE% == true (
+REM Update the PATH so cmake commands can be run
+SET "PATH=%BUILD_ROOT%\cmake-3.22.2-windows-x86_64\bin;%PATH%"
+)
+
+REM Ninja may be installed during VS installation - it greatly speeds up the builds
+SET "CMAKE_GENERATOR_ARG="
+
 REM TODO: detect when ninja is present or not
 SET "NEED_TO_DOWNLOAD_NINJA=true"
 
 if %NEED_TO_DOWNLOAD_NINJA% == true (
 REM Update the PATH so that cmake can find the downloaded version of ninja
 SET "PATH=%BUILD_ROOT%\ninja-bin;%PATH%"
+SET "CMAKE_GENERATOR_ARG=-G Ninja -DCMAKE_MAKE_PROGRAM:PATH=%BUILD_ROOT%\ninja-bin\ninja.exe"
 )
 
 if %NEED_TO_DOWNLOAD% == true (
+
+REM Download CMake when needed
+if %NEED_TO_DOWNLOAD_CMAKE% == true (
+ECHO Downloading CMake
+curl -L -O -J https://github.com/Kitware/CMake/releases/download/v3.22.2/cmake-3.22.2-windows-x86_64.zip || EXIT /b
+
+ECHO Extracting CMake
+tar -xf cmake-3.22.2-windows-x86_64.zip || EXIT /b
+)
 
 REM Download Ninja when needed
 if %NEED_TO_DOWNLOAD_NINJA% == true (
