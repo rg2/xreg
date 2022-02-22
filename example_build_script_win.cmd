@@ -272,31 +272,6 @@ cmake --install . || EXIT /b
 
 cd ..\.. || EXIT /b
 
-ECHO Building VTK, setting up...
-cd VTK-8.2.0 || EXIT /b
-
-mkdir build || EXIT /b
-
-cd build || EXIT /b
-
-ECHO VTK CMake configuring
-cmake %CMAKE_GENERATOR_ARG% .. ^
-    -DCMAKE_INSTALL_PREFIX:PATH=%INSTALL_ROOT_CMAKE% ^
-    -DCMAKE_CXX_STANDARD:STRING="11" ^
-    -DCMAKE_BUILD_TYPE:STRING=%BUILD_CONFIG% ^
-    -DBUILD_SHARED_LIBS:BOOL=%BUILD_SHARED% ^
-    -DVTK_Group_Imaging:BOOL=ON ^
-    -DVTK_Group_Views:BOOL=ON ^
-    -DBUILD_TESTING:BOOL=OFF || EXIT /b
-
-ECHO VTK building
-cmake --build . --config %BUILD_CONFIG% || EXIT /b
-
-ECHO Install VTK
-cmake --install . || EXIT /b
-
-cd ..\.. || EXIT /b
-
 ECHO Building ITK, setting up...
 cd InsightToolkit-5.1.1 || EXIT /b
 
@@ -320,6 +295,31 @@ ECHO ITK building
 cmake --build . --config %BUILD_CONFIG% || EXIT /b
 
 ECHO Install ITK
+cmake --install . || EXIT /b
+
+cd ..\.. || EXIT /b
+
+ECHO Building VTK, setting up...
+cd VTK-8.2.0 || EXIT /b
+
+mkdir build || EXIT /b
+
+cd build || EXIT /b
+
+ECHO VTK CMake configuring
+cmake %CMAKE_GENERATOR_ARG% .. ^
+    -DCMAKE_INSTALL_PREFIX:PATH=%INSTALL_ROOT_CMAKE% ^
+    -DCMAKE_CXX_STANDARD:STRING="11" ^
+    -DCMAKE_BUILD_TYPE:STRING=%BUILD_CONFIG% ^
+    -DBUILD_SHARED_LIBS:BOOL=%BUILD_SHARED% ^
+    -DVTK_Group_Imaging:BOOL=ON ^
+    -DVTK_Group_Views:BOOL=ON ^
+    -DBUILD_TESTING:BOOL=OFF || EXIT /b
+
+ECHO VTK building
+cmake --build . --config %BUILD_CONFIG% || EXIT /b
+
+ECHO Install VTK
 cmake --install . || EXIT /b
 
 cd ..\.. || EXIT /b
