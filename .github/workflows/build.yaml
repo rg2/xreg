@@ -93,13 +93,11 @@ jobs:
 
   macos_build:
     runs-on: macos-10.15
-    env:
-      XREG_INSTALL_DIR: $HOME/xreg_install
 
     steps:
       - uses: actions/checkout@v2
       - run: brew install ninja
-      - run: ./example_build_script_2
+      - run: XREG_INSTALL_DIR="$HOME/xreg_install" ./example_build_script_2
         shell: bash
       - run: mkdir xreg-macos-10.15
       - run: python3 ./dist/make_macos_dist.py $HOME/xreg_install xreg-macos-10.15 ../xreg_deps_install $HOME/xreg_install/lib
