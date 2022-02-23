@@ -101,11 +101,11 @@ jobs:
       - run: brew install ninja
       - run: ./example_build_script_2
         shell: bash
-      - run: mkdir $HOME/xreg-macos-10.15
-      - run: python3 ./dist/make_macos_dist.py $HOME/xreg_install $HOME/xreg-macos-10.15 ../xreg_deps_install
-      - run: cp LICENSE $HOME/xreg-macos-10.15 && cp ./dist/dist_readme/README.txt $HOME/xreg-macos-10.15
-      - run: cd $HOME && tar czf xreg-macos-10.15.tar.gz xreg-macos-10.15
+      - run: mkdir xreg-macos-10.15
+      - run: python3 ./dist/make_macos_dist.py $HOME/xreg_install xreg-macos-10.15 ../xreg_deps_install $HOME/xreg_install/lib
+      - run: cp LICENSE xreg-macos-10.15 && cp ./dist/dist_readme/README.txt xreg-macos-10.15
+      - run: tar czf xreg-macos-10.15.tar.gz xreg-macos-10.15
       - uses: actions/upload-artifact@v2
         with:
           name: macos-10.15-build
-          path: $HOME/xreg-macos-10.15.tar.gz
+          path: xreg-macos-10.15.tar.gz
