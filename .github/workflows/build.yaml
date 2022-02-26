@@ -1,0 +1,108 @@
+# GitHub action to build software.
+# Linux builds include pre-built dependencies via containers.
+# The Windows and MacOS builds build dependencies each run.
+
+name: Build
+on:
+  pull_request:
+
+jobs:
+  ubuntu_20_04_build:
+    runs-on: ubuntu-latest
+    container: ghcr.io/rg2/xreg-deps-ubuntu-20.04:latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: ./.github/workflows/linux_cmake_build
+        shell: bash
+      - run: ./dist/ubuntu_dist_pkgs
+        shell: bash
+      - run: ./.github/workflows/linux_make_dist ubuntu-20.04
+        shell: bash
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ubuntu-20.04-build
+          path: xreg-ubuntu-20.04.tar.gz
+  
+  ubuntu_18_04_build:
+    runs-on: ubuntu-latest
+    container: ghcr.io/rg2/xreg-deps-ubuntu-18.04:latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: ./.github/workflows/linux_cmake_build
+        shell: bash
+      - run: ./dist/ubuntu_dist_pkgs
+        shell: bash
+      - run: ./.github/workflows/linux_make_dist ubuntu-18.04
+        shell: bash
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ubuntu-18.04-build
+          path: xreg-ubuntu-18.04.tar.gz
+  
+  ubuntu_16_04_build:
+    runs-on: ubuntu-latest
+    container: ghcr.io/rg2/xreg-deps-ubuntu-16.04:latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: ./.github/workflows/linux_cmake_build
+        shell: bash
+      - run: ./dist/ubuntu_dist_pkgs
+        shell: bash
+      - run: ./.github/workflows/linux_make_dist ubuntu-16.04
+        shell: bash
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ubuntu-16.04-build
+          path: xreg-ubuntu-16.04.tar.gz
+  
+  centos_7_build:
+    runs-on: ubuntu-latest
+    container: ghcr.io/rg2/xreg-deps-centos-7:latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: ./.github/workflows/linux_cmake_build
+        shell: bash
+      - run: ./dist/centos_dist_pkgs
+        shell: bash
+      - run: ./.github/workflows/linux_make_dist centos-7
+        shell: bash
+      - uses: actions/upload-artifact@v2
+        with:
+          name: centos-7-build
+          path: xreg-centos-7.tar.gz
+  
+  windows_build:
+    runs-on: windows-2019
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ilammy/msvc-dev-cmd@v1
+      - run: example_build_script_win.cmd
+        shell: cmd
+      - run: .github\workflows\win_make_dist.cmd
+        shell: cmd
+      - uses: actions/upload-artifact@v2
+        with:
+          name: win-64-build
+          path: xreg-win64.zip
+
+  macos_build:
+    runs-on: macos-10.15
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: brew install ninja
+      - run: XREG_INSTALL_DIR="$HOME/xreg_install" ./example_build_script_2
+        shell: bash
+      - run: mkdir xreg-macos-10.15
+      - run: python3 ./dist/make_macos_dist.py $HOME/xreg_install xreg-macos-10.15 ../xreg_deps_install
+      - run: cp LICENSE xreg-macos-10.15 && cp ./dist/dist_readme/README.txt xreg-macos-10.15
+      - run: tar czf xreg-macos-10.15.tar.gz xreg-macos-10.15
+      - uses: actions/upload-artifact@v2
+        with:
+          name: macos-10.15-build
+          path: xreg-macos-10.15.tar.gz
