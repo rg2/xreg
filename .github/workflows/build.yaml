@@ -1,5 +1,6 @@
 # GitHub action to build software.
 # Linux builds include pre-built dependencies via containers.
+# The Windows and MacOS builds build dependencies each run.
 
 name: Build
 on:
@@ -100,7 +101,7 @@ jobs:
       - run: XREG_INSTALL_DIR="$HOME/xreg_install" ./example_build_script_2
         shell: bash
       - run: mkdir xreg-macos-10.15
-      - run: python3 ./dist/make_macos_dist.py $HOME/xreg_install xreg-macos-10.15 ../xreg_deps_install $HOME/xreg_install/lib
+      - run: python3 ./dist/make_macos_dist.py $HOME/xreg_install xreg-macos-10.15 ../xreg_deps_install
       - run: cp LICENSE xreg-macos-10.15 && cp ./dist/dist_readme/README.txt xreg-macos-10.15
       - run: tar czf xreg-macos-10.15.tar.gz xreg-macos-10.15
       - uses: actions/upload-artifact@v2
