@@ -5,8 +5,6 @@
 name: Build
 on:
   pull_request:
-  push:
-    branches: [github-actions]
 
 jobs:
   ubuntu_20_04_build:
