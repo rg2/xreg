@@ -28,6 +28,18 @@ DEPS_DIR="$(cd "$(dirname "$DEPS_DIR")"; pwd)/$(basename "$DEPS_DIR")"
 mkdir -p $DEPS_DIR
 cd $DEPS_DIR
 
+if ! [ -x "$(command -v wget)" ]; then
+  echo "wget is not available, using a wrapper to curl instead."
+
+  function wget()
+  {
+    FILENAME_TO_DOWNLOAD=`basename $1`
+    echo "Downloading $FILENAME_TO_DOWNLOAD ..."
+
+    curl -L -O $1
+  }
+fi
+
 if [ "$NEED_TO_DOWNLOAD" = true ]; then
   echo "Downloading third party libraries..."
   

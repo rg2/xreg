@@ -31,12 +31,12 @@
 #include "xregHDF5Internal.h"
 #include "xregH5CamModelIO.h"
 
+const char* xreg::kXREG_PROJ_DATA_ATTR_STR = "proj-data";
+
 namespace
 {
 
 using namespace xreg;
-
-const char* kXREG_PROJ_DATA_ATTR_STR = "proj-data";
 
 void AddProjDataLandsHelper(const LandMap2& lands, H5::Group* h5,
                             const bool delete_existing = false)

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2021 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -1384,6 +1384,19 @@ void xreg::ComputeGradMag(cv::Mat& src_img, cv::Mat& grad_img, cv::Mat& tmp_img)
   cv::Sobel(src_img, tmp_img, -1, 0, 1);
 
   cv::magnitude(grad_img, tmp_img, grad_img);
+}
+
+void xreg::SmoothAndGradMag(cv::Mat& src_img, cv::Mat& smooth_img, cv::Mat& grad_img,
+                            cv::Mat& tmp_img, const int smooth_kernel_width_pix)
+{
+  xregASSERT(smooth_kernel_width_pix > 0);
+  xregASSERT((smooth_kernel_width_pix % 2) == 1);
+
+  cv::GaussianBlur(src_img, smooth_img,
+                   cv::Size(smooth_kernel_width_pix, smooth_kernel_width_pix),
+                   0, 0);
+
+  ComputeGradMag(smooth_img, grad_img, tmp_img);
 }
 
 void xreg::ScaleTo8bppWithMax(const cv::Mat& src, cv::Mat* dst)

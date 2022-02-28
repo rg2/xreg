@@ -38,6 +38,8 @@ class Group;
 namespace xreg
 {
 
+extern const char* kXREG_PROJ_DATA_ATTR_STR;
+
 void CopyProjDataH5(const H5::Group& src_proj_h5, H5::Group* dst_proj_h5);
 
 void ReadProjDataFromH5AndWriteToDisk(const H5::Group& h5, const std::string& dst_disk_path);
