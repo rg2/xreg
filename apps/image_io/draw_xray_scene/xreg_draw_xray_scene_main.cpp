@@ -817,11 +817,7 @@ int main(int argc, char* argv[])
       // convert from RAS
       if (fcsv_ras2lps)
       {
-        for (auto& p : pts_3d)
-        {
-          p(0) *= -1;
-          p(1) *= -1;
-        }
+        ConvertRASToLPS(&pts_3d);
       }
 
       ApplyTransform(xform_cam_wrt_ct.inverse(), pts_3d, &pts_3d);
