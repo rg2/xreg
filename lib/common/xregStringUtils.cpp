@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -277,6 +277,32 @@ std::vector<double> xreg::ParseMatlabStyleRange(const std::string& range_str)
   // else if zero increment, range is empty
 
   return vals;
+}
+
+bool xreg::StringStartsWith(const std::string& s, const std::string& beginning)
+{
+  bool to_ret = true;
+
+  if (beginning.size() <= s.size())
+  {
+    auto beg_it = beginning.begin();
+    auto s_it = s.begin();
+
+    for (; beg_it != beginning.end(); ++beg_it, ++s_it)
+    {
+      if (*beg_it != *s_it)
+      {
+        to_ret = false;
+        break;
+      }
+    }
+  }
+  else
+  {
+    to_ret = false;
+  }
+
+  return to_ret;
 }
 
 bool xreg::StringEndsWith(const std::string& s, const std::string& ending)
