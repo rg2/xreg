@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -78,8 +78,7 @@ LandMultiMap3 ReadFCSVFileNamePtMultiMap(const std::string& fcsv_path);
 ///
 /// Cannot simply use the cat command as there are three leading "header lines"
 /// that must be stripped after the first file.
-/// \param path_begin_it Begin iterator to the collection of FCSV file paths
-/// \param path_end_it End iterator to the collection of FCSV file paths
+/// \param fcsv_paths Collection of FCSV file paths
 /// \param out The output stream to write the merged FCSV contents
 void MergeFCSVFiles(const std::vector<std::string>& fcsv_paths, std::ostream& out);
 
