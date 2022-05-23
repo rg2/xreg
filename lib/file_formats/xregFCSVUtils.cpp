@@ -209,7 +209,8 @@ namespace
 
 template <class tIt>
 void WriteFCSVFileFromNamePtMapHelper(const std::string& fcsv_path,
-                                      tIt pts_begin, tIt pts_end)
+                                      tIt pts_begin, tIt pts_end,
+                                      const bool input_is_lps)
 {
   std::ofstream out(fcsv_path);
 
@@ -217,10 +218,24 @@ void WriteFCSVFileFromNamePtMapHelper(const std::string& fcsv_path,
       << "# CoordinateSystem = 0\n"
       << "# columns = id,x,y,z,ow,ox,oy,oz,vis,sel,lock,label,desc,associatedNodeID";
 
+  CoordScalar tmp_x = 0;
+  CoordScalar tmp_y = 0;
+
   for (tIt pts_it = pts_begin; pts_it != pts_end; ++pts_it)
   {
+    tmp_x = pts_it->second[0];
+    tmp_y = pts_it->second[1];
+
+    if (input_is_lps)
+    {
+      // inputs are LPS, but we are writing out to an older FCSV version which stores data in RAS
+      // Therefore, convert to RAS
+      tmp_x *= -1;
+      tmp_y *= -1;
+    }
+
     out << fmt::sprintf("\n,%.8f,%.8f,%.8f,0,0,0,1,1,1,0,%s,,",
-                        pts_it->second[0], pts_it->second[1], pts_it->second[2], pts_it->first);
+                        tmp_x, tmp_y, pts_it->second[2], pts_it->first);
   }
 
   out << std::endl;
@@ -228,18 +243,23 @@ void WriteFCSVFileFromNamePtMapHelper(const std::string& fcsv_path,
 
 }  // un-named
 
-void xreg::WriteFCSVFileFromNamePtMap(const std::string& fcsv_path, const LandMap3& pts)
+void xreg::WriteFCSVFileFromNamePtMap(const std::string& fcsv_path,
+                                      const LandMap3& pts,
+                                      const bool input_is_lps)
 {
-  WriteFCSVFileFromNamePtMapHelper(fcsv_path, pts.begin(), pts.end());
+  WriteFCSVFileFromNamePtMapHelper(fcsv_path, pts.begin(), pts.end(), input_is_lps);
 }
 
 void xreg::WriteFCSVFileFromNamePtMap(const std::string& fcsv_path,
-                                      const LandMultiMap3& pts)
+                                      const LandMultiMap3& pts,
+                                      const bool input_is_lps)
 {
-  WriteFCSVFileFromNamePtMapHelper(fcsv_path, pts.begin(), pts.end());
+  WriteFCSVFileFromNamePtMapHelper(fcsv_path, pts.begin(), pts.end(), input_is_lps);
 }
 
-void xreg::WriteFCSVFilePts(const std::string& fcsv_path, const Pt3List& pts,
+void xreg::WriteFCSVFilePts(const std::string& fcsv_path,
+                            const Pt3List& pts,
+                            const bool input_is_lps,
                             const bool use_empty_names)
 {
   auto create_name_str_from_idx = [](const size_type idx)
@@ -270,7 +290,7 @@ void xreg::WriteFCSVFilePts(const std::string& fcsv_path, const Pt3List& pts,
     tmp_pt_map.emplace(create_name_str(i), pts[i]);
   }
 
-  WriteFCSVFileFromNamePtMap(fcsv_path, tmp_pt_map);
+  WriteFCSVFileFromNamePtMap(fcsv_path, tmp_pt_map, input_is_lps);
 }
 
 void MergeFCSVFiles(const std::vector<std::string>& fcsv_paths, std::ostream& out)

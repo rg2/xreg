@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
     name_pt.second = xform * name_pt.second;
   }
 
-  WriteFCSVFileFromNamePtMap(po.pos_args()[2], fcsv_map);
+  WriteFCSVFileFromNamePtMap(po.pos_args()[2], fcsv_map, !use_ras);
 
   return kEXIT_VAL_SUCCESS;
 }
