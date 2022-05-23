@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,9 +51,8 @@ int main(int argc, char* argv[])
   po.set_arg_usage("<Label Map> <APP Landmarks> <side> [<PNG Path>]");
   po.set_min_num_pos_args(3);
 
-  po.add("no-ras2lps", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-ras2lps",
-         "Do NOT convert RAS to LPS (or LPS to RAS) for the landmarks; "
-         "RAS to LPS conversion negates the first and second components.")
+  po.add("lands-ras", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "lands-ras",
+         "Landmark and point clouds should be populated in RAS coordinates, otherwise they are populated in LPS coordinates.")
     << false;
 
   po.add("pelvis-label", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_UINT32,
@@ -141,7 +140,7 @@ int main(int argc, char* argv[])
 
   po.add("other-fcsv", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "other-fcsv",
          "A set of 3D landmarks to draw; these should be in the label map space."
-         " The RAS/LPS transform will be applied to these if that flag is specified.")
+         " These points will be loaded in LPS or RAS coordinates according to the \"lands-ras\" flag.")
     << "";
 
   po.add("no-frag", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-frag",
@@ -248,7 +247,7 @@ int main(int argc, char* argv[])
 
   draw_bones.set_debug_output_stream(vout, verbose);
 
-  const bool ras2lps = !po.get("no-ras2lps").as_bool();
+  const bool lands_in_ras = !po.get("lands-ras");
 
   const std::string src_labels_path = po.pos_args()[0];
 
@@ -371,25 +370,13 @@ int main(int argc, char* argv[])
   //////////////////////////////////////////////////////////////////////////////
   // Get the landmarks
 
-  draw_bones.app_pts = ReadFCSVFileNamePtMap(app_fcsv_path);
-
-  if (ras2lps)
-  {
-    vout << "converting landmarks from RAS -> LPS" << std::endl;
-    ConvertRASToLPS(&draw_bones.app_pts);
-  }
-
+  draw_bones.app_pts = ReadFCSVFileNamePtMap(app_fcsv_path, !lands_in_ras);
 
   // Read other FCSV Landmarks
   if (draw_other_fcsv)
   {
     vout << "reading other FCSV points..." << std::endl;
-    draw_bones.other_pts = ReadFCSVFilePts(other_fcsv_path);
-  
-    if (ras2lps)
-    {
-      ConvertRASToLPS(&*draw_bones.other_pts);
-    }
+    draw_bones.other_pts = ReadFCSVFilePts(other_fcsv_path, !lands_in_ras);
   }
 
   //////////////////////////////////////////////////////////////////////////////

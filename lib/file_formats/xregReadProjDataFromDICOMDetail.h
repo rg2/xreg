@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021 Robert Grupp
+ * Copyright (c) 2021-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -438,11 +438,9 @@ ReadProjDataFromDICOMHelper(const std::string& dcm_path, const std::string& fcsv
   
   if (!fcsv_path.empty())
   {
-    vout << "reading landmarks from FCSV and converting to pixels..." << std::endl;
-    auto lands_3d = ReadFCSVFileNamePtMap(fcsv_path);
-    
-    ConvertRASToLPS(&lands_3d);
-    
+    vout << "reading landmarks from FCSV (to LPS coords) and converting to pixels..." << std::endl;
+    const auto lands_3d = ReadFCSVFileNamePtMap(fcsv_path, true);
+        
     xregASSERT(!pd.empty());
     
     // We need to use the pixel spacing that was used by 3D Slicer to create the FCSV file

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -83,9 +83,8 @@ int main(int argc, char* argv[])
          "Label of the pelvis in the label map.")
     << ProgOpts::uint32(1);
 
-  po.add("no-ras2lps", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-ras2lps",
-         "Do NOT convert RAS to LPS (or LPS to RAS) for the 3D landmarks; "
-         "RAS to LPS conversion negates the first and second components.")
+  po.add("lands-ras", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "lands-ras",
+         "Read landmarks in RAS coordinates instead of LPS.")
     << false;
   
   po.add("no-log-remap", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-log-remap",
@@ -126,7 +125,7 @@ int main(int argc, char* argv[])
 
   const std::string dst_debug_path = save_debug ? po.pos_args()[4] : std::string();
 
-  const bool ras2lps = !po.get("no-ras2lps").as_bool();
+  const bool lands_ras = po.get("lands-ras");
 
   const size_type proj_idx = po.get("proj-idx").as_uint32();
 
@@ -167,13 +166,7 @@ int main(int argc, char* argv[])
   if (!use_identity_for_init_cam_to_vol)
   {
     vout << "reading 3D landmarks..." << std::endl;
-    lands_3d = ReadFCSVFileNamePtMap(fcsv_3d_path);
-
-    if (ras2lps)
-    {
-      vout << "converting landmarks from RAS -> LPS" << std::endl;
-      ConvertRASToLPS(&lands_3d);
-    }
+    lands_3d = ReadFCSVFileNamePtMap(fcsv_3d_path, !lands_ras);
 
     vout << "3D Landmarks:\n";
     PrintLandmarkMap(lands_3d, vout);

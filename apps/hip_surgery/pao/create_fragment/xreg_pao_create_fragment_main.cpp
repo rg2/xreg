@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -75,9 +75,8 @@ int main(int argc, char* argv[])
                    "<Output Fragment Segmentation with Cuts> [<Cuts File>]");
   po.set_min_num_pos_args(6);
 
-  po.add("no-ras2lps", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-ras2lps",
-         "Do NOT convert RAS to LPS (or LPS to RAS) for the landmarks; "
-         "RAS to LPS conversion negates the first and second components.")
+  po.add("lands-ras", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "lands-ras",
+         "Read landmarks in RAS coordinates instead of LPS.")
     << false;
 
   po.add("cut-width", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "cut-width",
@@ -381,7 +380,7 @@ int main(int argc, char* argv[])
 
   vout << "Will create fragment on " << side_str << " side." << std::endl;
 
-  const bool ras2lps = !po.get("no-ras2lps").as_bool();
+  const bool lands_ras = po.get("lands-ras");
 
   const bool debug_disp = po.get("debug-display");
   const bool debug_show_slabs = po.get("debug-show-slabs");
@@ -482,24 +481,13 @@ int main(int argc, char* argv[])
   //////////////////////////////////////////////////////////////////////////////
   // Get the landmarks
 
-  LandMap3 app_pts = ReadFCSVFileNamePtMap(app_fcsv_path);
+  const LandMap3 app_pts = ReadFCSVFileNamePtMap(app_fcsv_path, !lands_ras);
 
   LandMap3 cut_pts;
 
   if (input_is_cut_landmarks)
   {
-    cut_pts = ReadFCSVFileNamePtMap(cut_fcsv_path);
-  }
-
-  if (ras2lps)
-  {
-    vout << "converting landmarks from RAS -> LPS" << std::endl;
-    ConvertRASToLPS(&app_pts);
-
-    if (input_is_cut_landmarks)
-    {
-      ConvertRASToLPS(&cut_pts);
-    }
+    cut_pts = ReadFCSVFileNamePtMap(cut_fcsv_path, !lands_ras);
   }
 
   vout << "APP Landmarks:\n";

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -82,9 +82,8 @@ int main(int argc, char* argv[])
          "Index of the projection used for solving the PnP problem.")
     << ProgOpts::uint32(0);
 
-  po.add("no-ras2lps", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-ras2lps",
-         "Do NOT convert RAS to LPS (or LPS to RAS) for the 3D landmarks; "
-         "RAS to LPS conversion negates the first and second components.")
+  po.add("lands-ras", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "lands-ras",
+         "Read landmarks in RAS coordinates instead of LPS.")
     << false;
 
   po.add_backend_flags();
@@ -126,7 +125,7 @@ int main(int argc, char* argv[])
 
   const std::string dst_debug_path = save_debug ? po.pos_args()[11] : std::string();
 
-  const bool ras2lps = !po.get("no-ras2lps").as_bool();
+  const bool lands_ras = po.get("lands-ras");
 
   const size_type pnp_proj_idx = po.get("pnp-proj-idx").as_uint32();
 
@@ -143,17 +142,10 @@ int main(int argc, char* argv[])
   // Get the landmarks
 
   vout << "reading 3D landmarks for regi..." << std::endl;
-  LandMap3 regi_lands_3d = ReadFCSVFileNamePtMap(regi_lands_path);
+  const LandMap3 regi_lands_3d = ReadFCSVFileNamePtMap(regi_lands_path, !lands_ras);
 
   vout << "reading landmarks for establishing APP..." << std::endl;
-  LandMap3 app_lands_3d = ReadFCSVFileNamePtMap(app_lands_path);
-
-  if (ras2lps)
-  {
-    vout << "converting landmarks from RAS -> LPS" << std::endl;
-    ConvertRASToLPS(&regi_lands_3d);
-    ConvertRASToLPS(&app_lands_3d);
-  }
+  const LandMap3 app_lands_3d = ReadFCSVFileNamePtMap(app_lands_path, !lands_ras);
 
   vout << "3D Landmarks For Registration:\n";
   PrintLandmarkMap(regi_lands_3d, vout);

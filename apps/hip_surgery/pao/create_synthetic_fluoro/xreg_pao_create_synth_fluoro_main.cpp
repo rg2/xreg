@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -67,9 +67,8 @@ int main(int argc, char* argv[])
                    "<output proj. data prefix> <output pose prefix>");
   po.set_min_num_pos_args(6);
 
-  po.add("no-ras2lps", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-ras2lps",
-         "Do NOT convert RAS to LPS (or LPS to RAS) for the landmarks; "
-         "RAS to LPS conversion negates the first and second components.")
+  po.add("lands-ras", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "lands-ras",
+         "Read landmarks in RAS coordinates instead of LPS.")
     << false;
 
   po.add("lands", 'l', ProgOpts::kSTORE_STRING, "lands",
@@ -179,7 +178,7 @@ int main(int argc, char* argv[])
 
   vout << "Ipsilateral side is the " << side_str << " side." << std::endl;
 
-  const bool ras2lps = !po.get("no-ras2lps").as_bool();
+  const bool lands_ras = po.get("lands-ras");
 
   const std::string fcsv_to_proj = po.get("lands");
 
@@ -214,13 +213,7 @@ int main(int argc, char* argv[])
   // Get the landmarks
 
   vout << "reading APP landmarks..." << std::endl;
-  LandMap3 app_pts = ReadFCSVFileNamePtMap(app_fcsv_path);
-
-  if (ras2lps)
-  {
-    vout << "converting landmarks from RAS -> LPS" << std::endl;
-    ConvertRASToLPS(&app_pts);
-  }
+  const LandMap3 app_pts = ReadFCSVFileNamePtMap(app_fcsv_path, !lands_ras);
 
   vout << "APP Landmarks:\n";
   PrintLandmarkMap(app_pts, vout);
@@ -244,13 +237,7 @@ int main(int argc, char* argv[])
   {
     vout << "Reading landmarks to project..." << std::endl;
 
-    lands_to_proj = ReadFCSVFileNamePtMap(fcsv_to_proj);
-
-    if (ras2lps)
-    {
-      vout << "  RAS -> LPS" << std::endl;
-      ConvertRASToLPS(&lands_to_proj);
-    }
+    lands_to_proj = ReadFCSVFileNamePtMap(fcsv_to_proj, !lands_ras);
 
     vout << "Landmarks to project:\n";
     PrintLandmarkMap(lands_to_proj, vout);

@@ -148,17 +148,17 @@ xreg::FCSVDuplicatePointNameException::FCSVDuplicatePointNameException(const cha
   : StringMessageException(dup_landmark_name)
 { }
 
-xreg::Pt3List xreg::ReadFCSVFilePts(const std::string& fcsv_path)
+xreg::Pt3List xreg::ReadFCSVFilePts(const std::string& fcsv_path, const bool output_in_lps)
 {
   Pt3List pts;
-  std::tie(pts, std::ignore) = ReadFCSVFileAllTxt(fcsv_path, false, false);
+  std::tie(pts, std::ignore) = ReadFCSVFileAllTxt(fcsv_path, false, output_in_lps);
 
   return pts;
 }
 
-xreg::LandMap3 xreg::ReadFCSVFileNamePtMap(const std::string& fcsv_path)
+xreg::LandMap3 xreg::ReadFCSVFileNamePtMap(const std::string& fcsv_path, const bool output_in_lps)
 {
-  const auto pts_and_names = ReadFCSVFileAllTxt(fcsv_path, true, false);
+  const auto pts_and_names = ReadFCSVFileAllTxt(fcsv_path, true, output_in_lps);
 
   const auto& pts = std::get<0>(pts_and_names);
   const auto& names = std::get<1>(pts_and_names);
@@ -183,9 +183,9 @@ xreg::LandMap3 xreg::ReadFCSVFileNamePtMap(const std::string& fcsv_path)
 }
 
 xreg::LandMultiMap3
-xreg::ReadFCSVFileNamePtMultiMap(const std::string& fcsv_path)
+xreg::ReadFCSVFileNamePtMultiMap(const std::string& fcsv_path, const bool output_in_lps)
 {
-  const auto pts_and_names = ReadFCSVFileAllTxt(fcsv_path, true, false);
+  const auto pts_and_names = ReadFCSVFileAllTxt(fcsv_path, true, output_in_lps);
 
   const auto& pts = std::get<0>(pts_and_names);
   const auto& names = std::get<1>(pts_and_names);

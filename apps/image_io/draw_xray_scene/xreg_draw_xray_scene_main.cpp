@@ -190,9 +190,9 @@ int main(int argc, char* argv[])
          "without the clutter of the camera/c-arm objects.")
     << false;
 
-  po.add("no-fcsv-ras2lps", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-fcsv-ras2lps",
-         "Do NOT perform an RAS->LPS (or LPS->RAS) conversion of any 3D point clouds supplied "
-         "as positional arguments.")
+  po.add("fcsv-as-ras", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "fcsv-as-ras",
+         "Any 3D point clouds supplied as positional arguments should be populated in RAS coordinates, "
+         "otherwise they are populated in LPS coordinates.")
     << false;
 
   po.add("fcsv-rad", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "fcsv-rad",
@@ -377,7 +377,7 @@ int main(int argc, char* argv[])
 
   const bool no_cam = po.get("no-cam");
 
-  const bool fcsv_ras2lps = !po.get("no-fcsv-ras2lps").as_bool();
+  const bool fcsv_as_ras = po.get("fcsv-as-ras");
 
   std::vector<double> fcsv_rads;
 
@@ -528,11 +528,9 @@ int main(int argc, char* argv[])
   {
     vout << "will use a custom pelvis view" << std::endl;
 
-    vout << "reading landmarks to compute APP..." << std::endl;
+    vout << "reading landmarks to compute APP (wrt LPS)..." << std::endl;
     xregASSERT(!app_lands_fcsv_path.empty());
-    auto fcsv_lands = ReadFCSVFileNamePtMap(app_lands_fcsv_path);
-    
-    ConvertRASToLPS(&fcsv_lands);
+    auto fcsv_lands = ReadFCSVFileNamePtMap(app_lands_fcsv_path, true);
     
     vout << "compute app --> pelvis vol..." << std::endl;
     const FrameTransform app_to_vol = AnteriorPelvicPlaneFromLandmarksMap(fcsv_lands);
@@ -812,13 +810,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-      auto pts_3d = ReadFCSVFilePts(next_sur_or_pts_path);
-      
-      // convert from RAS
-      if (fcsv_ras2lps)
-      {
-        ConvertRASToLPS(&pts_3d);
-      }
+      auto pts_3d = ReadFCSVFilePts(next_sur_or_pts_path, !fcsv_as_ras);
 
       ApplyTransform(xform_cam_wrt_ct.inverse(), pts_3d, &pts_3d);
     

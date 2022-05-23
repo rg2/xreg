@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,8 +53,8 @@ int main(int argc, char* argv[])
               "The point cloud (second positional argument) is assumed to be in CSV format "
               "(x,y,z) with no header, unless an FCSV file is passed (determined by file extension).");
 
-  po.add("no-ras2lps", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-ras2lps",
-         "Do NOT convert RAS/LPS landmark and point cloud points to LPS/RAS")
+  po.add("lands-ras", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "lands-ras",
+         "Landmark and point cloud points should be populated in RAS coordinates, otherwise they are populated in LPS coordinates")
     << false;
 
   po.add("mesh-lands", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "mesh-lands",
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
   const std::string pt_cloud_path = po.pos_args()[1];
   const std::string dst_xform     = po.pos_args()[2];
 
-  const bool ras2lps = !po.get("no-ras2lps").as_bool();
+  const bool lands_as_ras = po.get("lands-ras").as_bool();
 
   icp.max_its = po.get("max-its").as_int32();
 
@@ -145,31 +145,18 @@ int main(int argc, char* argv[])
   vout << "Point Cloud is FCSV: " << BoolToYesNo(pt_cloud_is_fcsv) << std::endl;
 
   vout << "reading point cloud from disk..." << std::endl;
-  auto pt_cloud = pt_cloud_is_fcsv ? ReadFCSVFilePts(pt_cloud_path) : Read3DPtCloudCSV(pt_cloud_path, false);
+  auto pt_cloud = pt_cloud_is_fcsv ? ReadFCSVFilePts(pt_cloud_path, !lands_as_ras) : Read3DPtCloudCSV(pt_cloud_path, false);
   vout << "  complete." << std::endl;
-  
-  if (ras2lps && pt_cloud_is_fcsv)
-  {
-    vout << "converting FCSV point cloud RAS --> LPS..." << std::endl;
-    ConvertRASToLPS(&pt_cloud);
-  }
 
   if (!mesh_lands_path.empty())
   {
     vout << "reading mesh landmarks..." << std::endl;
-    auto mesh_lands_map = ReadFCSVFileNamePtMap(mesh_lands_path);
+    auto mesh_lands_map = ReadFCSVFileNamePtMap(mesh_lands_path, !lands_as_ras);
     PrintLandmarkMap(mesh_lands_map, vout);
 
     vout << "reading point cloud landmarks..." << std::endl;
-    auto pt_cloud_lands_map = ReadFCSVFileNamePtMap(pts_lands_path);
+    auto pt_cloud_lands_map = ReadFCSVFileNamePtMap(pts_lands_path, !lands_as_ras);
     PrintLandmarkMap(pt_cloud_lands_map, vout);
-
-    if (ras2lps)
-    {
-      vout << "landmarks RAS --> LPS..." << std::endl;
-      ConvertRASToLPS(&mesh_lands_map);
-      ConvertRASToLPS(&pt_cloud_lands_map);
-    }
 
     vout << "estimating initial transformation using corresponding paired points..." << std::endl;
     icp.init_pts_to_sur_xform = PairedPointRegi3D3D(pt_cloud_lands_map, mesh_lands_map,

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2021 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -183,9 +183,8 @@ int main(int argc, char* argv[])
         }
       }
       
-      vout << "    reading landmarks from file and converting RAS --> LPS..." << std::endl;
-      auto lands_fcsv = ReadFCSVFileNamePtMap(*cur_lands_path);
-      ConvertRASToLPS(&lands_fcsv);
+      vout << "    reading landmarks from file into LPS coords..." << std::endl;
+      const auto lands_fcsv = ReadFCSVFileNamePtMap(*cur_lands_path, true);
       
       vout << "\n    FCSV contents:\n";
       PrintLandmarkMap(lands_fcsv, vout);
