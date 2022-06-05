@@ -41,7 +41,8 @@ set(xreg_file_formats_src ${XREG_CUR_LIB_HEADERS}
                           xregStaRawVol.cpp
                           xregReadProjDataFromDICOM.cpp
                           xregRTKGeom.cpp
-                          xregSlicerMarkupsJSON.cpp)
+                          xregSlicerMarkupsJSON.cpp
+                          xregLandmarkFiles.cpp)
 
 if (APPLE)
   set(xreg_file_formats_src ${xreg_file_formats_src}
