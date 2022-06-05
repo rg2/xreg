@@ -29,6 +29,7 @@
 
 #include "xregFCSVUtils.h"
 #include "xregSlicerMarkupsJSON.h"
+#include "xregCSVUtils.h"
 
 xreg::Pt3List xreg::ReadLandmarksFilePts(const std::string& path, const bool output_in_lps)
 {
@@ -43,6 +44,12 @@ xreg::Pt3List xreg::ReadLandmarksFilePts(const std::string& path, const bool out
   else if (file_ext == ".json")
   {
     pts = ReadSlicerMarkupsJSONFilePts(path, output_in_lps);
+  }
+  else if (file_ext == ".csv")
+  {
+    std::cerr << "WARNING: reading a .csv 3D point cloud file, ignoring \"output_in_lps\" parameter!" << std::endl;
+
+    pts = Read3DPtCloudCSV(path, false);
   }
   else
   {
