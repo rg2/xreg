@@ -38,7 +38,7 @@
 std::string xreg::ToUpperCase(const std::string& s)
 {
   std::string u = s;
-  boost::algorithm::to_lower(u);
+  boost::algorithm::to_upper(u);
   return u;
 }
 
