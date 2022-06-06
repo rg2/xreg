@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2021 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@
 #include "xregStringUtils.h"
 #include "xregH5ProjDataIO.h"
 #include "xregHDF5.h"
-#include "xregFCSVUtils.h"
+#include "xregLandmarkFiles.h"
 #include "xregLandmarkMapUtils.h"
 #include "xregAnatCoordFrames.h"
 
@@ -49,22 +49,22 @@ int main(int argc, char* argv[])
               "is used when no index is provided for the first landmark file. "
               "When no index is provided for subsequent files, the last used "
               "index + 1 is used.");
-  po.set_arg_usage("<Proj. Data File> <[proj. index:]FCSV path #1> [<[proj. index:]FCSV path #2> [... <[proj. index:]FCSV path #N>]]");
+  po.set_arg_usage("<Proj. Data File> <[proj. index:]Landmarks path #1> [<[proj. index:]Landmarks path #2> [... <[proj. index:]Landmarks path #N>]]");
   po.set_min_num_pos_args(2);
 
   po.add("no-pat-rot-up", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-pat-rot-up",
          "Ignore any flags for rotating the image to achieve patient \"up\" orientation.")
     << false;
   
-  po.add("fcsv-spacing", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "fcsv-spacing",
-         "Default (isotopic) pixel spacing to assume when parsing FCSV landmarks when no 2D pixel "
+  po.add("lands-spacing", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "lands-spacing",
+         "Default (isotopic) pixel spacing to assume when parsing landmarks when no 2D pixel "
          "spacing is provided by the 2D image metadata.")
     << 1.0;
 
   po.add("use-pd-spacing", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "use-pd-spacing",
          "Always use the pixel spacings encoded in the projection data file when interpreting "
-         "FCSV files, even when the pixel spacings were not explicitly provided by the source "
-         "image format. This is useful when an FCSV file was created using a NIFTI file which "
+         "landmark files, even when the pixel spacings were not explicitly provided by the source "
+         "image format. This is useful when a landmarks file was created using a NIFTI file which "
          "was extracted from a projection data file with estimated spacings.")
     << false;
 
@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
 
   const bool ignore_pat_rot_up = po.get("no-pat-rot-up");
 
-  const double default_fcsv_spacing = po.get("fcsv-spacing");
+  const double default_fcsv_spacing = po.get("lands-spacing");
 
   const bool use_pd_spacing = po.get("use-pd-spacing");
 
@@ -146,13 +146,13 @@ int main(int argc, char* argv[])
       // the source data - this has happened with certain DICOMs from TCIA with RF modality.
       // In order to annotate landmarks, a NIFTI (.nii.gz) file is extracted from the projection
       // HDF5 file and then loaded into 3D Slicer for landmark annotation. This NIFTI file has
-      // the estimated pixel spacings embedded, and therefore the FCSV annotations are physical
-      // points calculated using these spacings. When the contents of the FCSV are then loaded
-      // back into the HDF5 projection data (e.g. using THIS TOOL), the current behavior is to use
-      // a user-provided spacing when the original source data did not have explicit pixel spacings
-      // provided. Although this is the most common case and default desired behavior, for the
-      // previously identified scenario we need to use the estimated pixel spacings present in the
-      // HDF5 file.
+      // the estimated pixel spacings embedded, and therefore the landmark file annotations are
+      // physical points calculated using these spacings. When the contents of the landmarks file
+      // are then loaded back into the HDF5 projection data (e.g. using THIS TOOL), the current
+      // behavior is to use a user-provided spacing when the original source data did not have
+      // explicit pixel spacings provided. Although this is the most common case and default desired
+      // behavior, for the previously identified scenario we need to use the estimated pixel spacings
+      // present in the HDF5 file.
       if (!use_pd_spacing && cur_proj_meta.det_spacings_from_orig_meta &&
           !*cur_proj_meta.det_spacings_from_orig_meta)
       {
@@ -183,11 +183,10 @@ int main(int argc, char* argv[])
         }
       }
       
-      vout << "    reading landmarks from file and converting RAS --> LPS..." << std::endl;
-      auto lands_fcsv = ReadFCSVFileNamePtMap(*cur_lands_path);
-      ConvertRASToLPS(&lands_fcsv);
+      vout << "    reading landmarks from file into LPS coords..." << std::endl;
+      const auto lands_fcsv = ReadLandmarksFileNamePtMap(*cur_lands_path, true);
       
-      vout << "\n    FCSV contents:\n";
+      vout << "\n    Landmarks file contents:\n";
       PrintLandmarkMap(lands_fcsv, vout);
       vout << "-------------------------------------\n" << std::endl;
 

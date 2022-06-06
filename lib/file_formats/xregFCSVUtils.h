@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -46,14 +46,18 @@ public:
 ///        is discarded
 ///
 /// \param fcsv_path The path on disk to the FCSV file
-/// \param pts The list of points to populate
-Pt3List ReadFCSVFilePts(const std::string& fcsv_path);
+/// \param output_in_lps Output points are in LPS coordinates when true, RAS when false
+/// \return pts The list of points to populate
+Pt3List ReadFCSVFilePts(const std::string& fcsv_path, const bool output_in_lps = true);
 
 /// \brief Writes a name -> point (3D) mapping to disk in FCSV format
-void WriteFCSVFileFromNamePtMap(const std::string& fcsv_path, const LandMap3& pts);
+void WriteFCSVFileFromNamePtMap(const std::string& fcsv_path,
+                                const LandMap3& pts,
+                                const bool input_is_lps = true);
 
 void WriteFCSVFileFromNamePtMap(const std::string& fcsv_path,
-                                const LandMultiMap3& pts);
+                                const LandMultiMap3& pts,
+                                const bool input_is_lps = true);
 
 /// \brief Writes list of 3D points to a FCSV file, name name for each
 ///        point is simply the index converted to a string.
@@ -61,25 +65,31 @@ void WriteFCSVFileFromNamePtMap(const std::string& fcsv_path,
 /// \param fcsv_path The path on disk to the FCSV file
 /// \param pts The list of points
 void WriteFCSVFilePts(const std::string& fcsv_path, const Pt3List& pts,
+                      const bool input_is_lps = true,
                       const bool use_empty_names = false);
 
 /// \brief Reads a FCSV file into a mapping from point names/labels to
 ///        the point 3D data.
 ///
 /// \param fcsv_path The path on disk to the FCSV file
-LandMap3 ReadFCSVFileNamePtMap(const std::string& fcsv_path);
+/// \param output_in_lps Output points are in LPS coordinates when true, RAS when false
+LandMap3 ReadFCSVFileNamePtMap(const std::string& fcsv_path, const bool output_in_lps = true);
 
 /// \brief Read a FCSV file into a multi-mapping from point names/labels to the point 3D data.
 ///
 /// This allows for duplicate names, but different point mappings.
-LandMultiMap3 ReadFCSVFileNamePtMultiMap(const std::string& fcsv_path);
+///
+/// \param fcsv_path The path on disk to the FCSV file
+/// \param output_in_lps Output points are in LPS coordinates when true, RAS when false
+LandMultiMap3 ReadFCSVFileNamePtMultiMap(const std::string& fcsv_path, const bool output_in_lps = true);
 
 /// \brief Concatenates the contents of several FCSV files.
 ///
 /// Cannot simply use the cat command as there are three leading "header lines"
 /// that must be stripped after the first file.
-/// \param path_begin_it Begin iterator to the collection of FCSV file paths
-/// \param path_end_it End iterator to the collection of FCSV file paths
+/// NOTE: that this routine assumes that all FCSV files use the same coordinate frame. All data will be
+/// copied and pasted and the first file's coordinate frame will be used.
+/// \param fcsv_paths Collection of FCSV file paths
 /// \param out The output stream to write the merged FCSV contents
 void MergeFCSVFiles(const std::vector<std::string>& fcsv_paths, std::ostream& out);
 

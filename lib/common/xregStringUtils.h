@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -180,6 +180,9 @@ std::vector<double> ParseMatlabStyleRange(const std::string& range_str);
 
 /// \brief Determines if a string ends with another string
 bool StringEndsWith(const std::string& s, const std::string& ending);
+
+/// \brief Determines if a string starts with another string
+bool StringStartsWith(const std::string& s, const std::string& beginning);
 
 /// \brief Generically converts an instance to a string using std::ostringstream.
 template <class T>

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
 #include <itkBinaryBallStructuringElement.h>
 
 #include "xregProgOptUtils.h"
-#include "xregFCSVUtils.h"
+#include "xregLandmarkFiles.h"
 #include "xregAnatCoordFrames.h"
 #include "xregLandmarkMapUtils.h"
 #include "xregITKIOUtils.h"
@@ -68,9 +68,8 @@ int main(int argc, char* argv[])
                    "<Number of Transforms> <Output Transform Prefix>");
   po.set_min_num_pos_args(5);
 
-  po.add("no-ras2lps", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-ras2lps",
-         "Do NOT convert RAS to LPS (or LPS to RAS) for the landmarks; "
-         "RAS to LPS negates the first and second components.")
+  po.add("lands-ras", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "lands-ras",
+         "Read landmarks in RAS coordinates instead of LPS.")
     << false;
 
   po.add("no-medialize", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-medialize",
@@ -269,7 +268,7 @@ int main(int argc, char* argv[])
 
   vout << "Fragment specified on the " << side_str << " side." << std::endl;
 
-  const bool ras2lps = !po.get("no-ras2lps").as_bool();
+  const bool lands_ras = po.get("lands-ras");
 
   const bool no_trans = po.get("no-trans");
   const bool no_rot   = po.get("no-rot");
@@ -305,13 +304,7 @@ int main(int argc, char* argv[])
   //////////////////////////////////////////////////////////////////////////////
   // Get the landmarks
 
-  auto app_pts = ReadFCSVFileNamePtMap(app_fcsv_path);
-
-  if (ras2lps)
-  {
-    vout << "converting landmarks from RAS -> LPS" << std::endl;
-    ConvertRASToLPS(&app_pts);
-  }
+  const auto app_pts = ReadLandmarksFileNamePtMap(app_fcsv_path, !lands_ras);
 
   vout << "APP Landmarks:\n";
   PrintLandmarkMap(app_pts, vout);

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021 Robert Grupp
+ * Copyright (c) 2021-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
 
   po.set_help("Convert a DICOM radiograph file into a xReg HDF5 proj. data file. "
               "Support for video fluoroscopy is provided using the number of frames DICOM tag.");
-  po.set_arg_usage("<Input DICOM File> <Output Proj. Data File> [<landmarks FCSV file>]");
+  po.set_arg_usage("<Input DICOM File> <Output Proj. Data File> [<landmarks file>]");
   po.set_min_num_pos_args(2);
 
   po.add("src-to-det", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "src-to-det",
@@ -96,8 +96,8 @@ int main(int argc, char* argv[])
          "\"float\" for 32-bit floats and \"uint16\" for unsigned 16-bit integers.")
     << "float";
 
-  po.add("fcsv-spacing", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "fcsv-spacing",
-         "Default (isotopic) pixel spacing to assume when parsing FCSV landmarks when no 2D pixel "
+  po.add("lands-spacing", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "lands-spacing",
+         "Default (isotopic) pixel spacing to assume when parsing landmark files when no 2D pixel "
          "spacing is provided by the 2D image metadata.")
     << 1.0;
 
@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
 
   read_dcm_params.guess_spacing = !po.get("no-guess-spacing");
 
-  read_dcm_params.fcsv_spacing_default = po.get("fcsv-spacing");
+  read_dcm_params.fcsv_spacing_default = po.get("lands-spacing");
 
   const std::string proj_frame_str = ToLowerCase(po.get("proj-frame").as_string());
   

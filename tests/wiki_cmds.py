@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2020-2021 Robert Grupp
+# Copyright (c) 2020-2022 Robert Grupp
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -132,9 +132,9 @@ def macos_check_for_dyld_vars():
             time.sleep(5)
 
 if __name__ == '__main__':
-    mac_slicer_default_path = '/Applications/Slicer.app/Contents/MacOS/Slicer'
-    win_slicer_default_path = 'C:\\Program Files\\Slicer 4.10.2\\Slicer.exe'
-    linux_slicer_default_path = '$HOME/Slicer-4.10.2-linux-amd64/Slicer'
+    mac_slicer_default_paths = ['/Applications/Slicer.app/Contents/MacOS/Slicer']
+    win_slicer_default_paths = ['%LOCALAPPDATA%\\NA-MIC\\{}\\Slicer.exe'.format(sn) for sn in ['Slicer 5.0.2', 'Slicer 4.11.20210226']] + ['C:\\Program Files\\Slicer 4.10.2\\Slicer.exe']
+    linux_slicer_default_paths = ['{}/Slicer'.format(sd) for sd in ['$HOME/Slicer-5.0.2-linux-amd64', '$HOME/Slicer-4.11.20210226-linux-amd64', '$HOME/Slicer-4.10.2-linux-amd64']]
     
     if ('--help' in sys.argv) or ('-h' in sys.argv):
         print('This script exists for semi-automatic functional testing by executing the commands '
@@ -149,9 +149,9 @@ if __name__ == '__main__':
               '  * Windows: {}\n'
               '  *   Linux: {}'.format(
                   os.path.basename(sys.argv[0]),
-                  mac_slicer_default_path,
-                  win_slicer_default_path,
-                  linux_slicer_default_path))
+                  ' , '.join(mac_slicer_default_paths),
+                  ' , '.join(win_slicer_default_paths),
+                  ' , '.join(linux_slicer_default_paths)))
         sys.exit(0)
     elif len(sys.argv) > 1:
         xreg_bin_dir = sys.argv[1]
@@ -173,17 +173,24 @@ if __name__ == '__main__':
     slicer_path = None
 
     if platform.system() == 'Darwin':
-        if os.path.exists(mac_slicer_default_path):
-            slicer_path = mac_slicer_default_path
+        for p in mac_slicer_default_paths:
+            if os.path.exists(p):
+                slicer_path = p
+                break
     elif platform.system() == 'Windows':
-        if os.path.exists(win_slicer_default_path):
-            # enclose the path in quotes to handle any spaces
-            slicer_path = '\"{}\"'.format(win_slicer_default_path)
+        for p in win_slicer_default_paths:
+            pp = os.path.expandvars(p)
+            if os.path.exists(pp):
+                # enclose the path in quotes to handle any spaces
+                slicer_path = '\"{}\"'.format(pp)
+                break
     elif platform.system() == 'Linux':
-        linux_slicer_default_path = os.path.expandvars(linux_slicer_default_path)
+        for p in linux_slicer_default_paths:
+            linux_slicer_default_path = os.path.expandvars(p)
         
-        if os.path.exists(linux_slicer_default_path):
-            slicer_path = linux_slicer_default_path
+            if os.path.exists(linux_slicer_default_path):
+                slicer_path = linux_slicer_default_path
+                break
 
     if slicer_path:
         print('Found Slicer at: {} -- will use for volume visualization!'.format(slicer_path))
@@ -319,14 +326,14 @@ if __name__ == '__main__':
         download_file('https://github.com/rg2/xreg/wiki/walkthrough/point_cloud_to_surface_regi/pelvis_intraop_point_cloud.fcsv')
         
         wait_prompt('The next visualization will show the pelvis and intraop. point cloud BEFORE registration.')
-        run_cmd('xreg-pao-draw-bones --no-frag --no-femurs --pelvis-mesh pelvis_sur.ply pelvis_seg.nii.gz pelvis_app_lands.fcsv left --other-fcsv pelvis_intraop_point_cloud.fcsv')
+        run_cmd('xreg-pao-draw-bones --no-frag --no-femurs --pelvis-mesh pelvis_sur.ply pelvis_seg.nii.gz pelvis_app_lands.fcsv left --other-pts pelvis_intraop_point_cloud.fcsv')
 
         run_cmd('xreg-sur-regi pelvis_sur.ply pelvis_intraop_point_cloud.fcsv pelvis_regi.h5 --mesh-lands pelvis_preop_lands.fcsv --pts-lands pelvis_intraop_lands.fcsv')
         
         run_cmd('xreg-xform-fcsv pelvis_intraop_point_cloud.fcsv pelvis_regi.h5 pelvis_intraop_point_cloud_regi.fcsv')
         
         wait_prompt('The next visualization will show the pelvis and intraop. point cloud AFTER registration.')
-        run_cmd('xreg-pao-draw-bones --no-frag --no-femurs --pelvis-mesh pelvis_sur.ply pelvis_seg.nii.gz pelvis_app_lands.fcsv left --other-fcsv pelvis_intraop_point_cloud_regi.fcsv')
+        run_cmd('xreg-pao-draw-bones --no-frag --no-femurs --pelvis-mesh pelvis_sur.ply pelvis_seg.nii.gz pelvis_app_lands.fcsv left --other-pts pelvis_intraop_point_cloud_regi.fcsv')
     
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Single-View-Pelvis-Registration

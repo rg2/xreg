@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,8 @@
 
 #include <fstream>
 
+#include "xregAssert.h"
+#include "xregAnatCoordFrames.h"
 #include "xregCSVUtils.h"
 #include "xregFilesystemUtils.h"
 #include "xregStringUtils.h"
@@ -38,17 +40,108 @@ using namespace xreg;
 /// \brief Reads a FCSV file into a CSV string structure - all fields are read.
 ///
 /// \param fcsv_path The path on disk to the FCSV file
-/// \param csv_vals The CSV structure to populate
-CSVFileStringValued ReadFCSVFileAllTxt(const std::string& fcsv_path)
+/// \param pop_names_list True indicates the names of each fiducial should be extracted and returned
+/// \param output_in_lps Output points in LPS coordinate frame when true, otherwise points are output in RAS
+/// \return A tuple consisting of the list of 3D points stored in the FCSV and potentially a list of the points' corresponding names
+std::tuple<Pt3List, std::vector<std::string>>
+ReadFCSVFileAllTxt(const std::string& fcsv_path, const bool pop_names_list, const bool output_in_lps)
 {
   std::ifstream fin(fcsv_path.c_str());
 
-  auto lines = GetNonEmptyLinesFromStream(fin);
+  const auto lines = GetNonEmptyLinesFromStream(fin);
 
-  // first three lines are comments - they do have some information, but let's
-  // just assume it's constant for now
+  // Check for sufficient number of lines to contain the header information
+  if (lines.size() < 3)
+  {
+    xregThrow("Expected at least 3 lines in FCSV, got %lu", lines.size());
+  }
 
-  return ReadCSVFileStr(std::vector<std::string>(lines.begin() + 3, lines.end()), false);
+  // Determine the version of the FCSV file, this is needed to determine the
+  // coordinate frame of the data
+
+  const auto& version_line = lines[0];
+
+  xregASSERT(StringStartsWith(version_line, "# Markups fiducial file version"));
+
+  const auto version_line_toks = StringSplit(version_line, "=");
+  xregASSERT(version_line_toks.size() == 2);
+
+  const auto version_str = StringStrip(version_line_toks[1]);
+
+  // Now determine whether the coordinate frame is either RAS or LPS
+
+  bool input_is_lps = true;
+
+  const bool is_version_5 = version_str == "5.0";
+
+  if ((version_str == "4.10") || (version_str == "4.8") || (version_str == "4.6"))
+  {
+    xregASSERT(lines[1] == "# CoordinateSystem = 0");
+    input_is_lps = false;
+  }
+  else if ((version_str == "4.11") || is_version_5)
+  {
+    const auto& coord_frame_line = lines[1];
+
+    xregASSERT(StringStartsWith(coord_frame_line, "# CoordinateSystem"));
+
+    const auto coord_frame_line_toks = StringSplit(coord_frame_line, "=");
+    xregASSERT(coord_frame_line_toks.size() == 2);
+
+    const auto coord_frame_str = StringStrip(coord_frame_line_toks[1]);
+
+    if (coord_frame_str == "RAS")
+    {
+      input_is_lps = false;
+    }
+    else
+    {
+      xregASSERT(coord_frame_str == "LPS");
+    }
+  }
+  else
+  {
+    xregThrow("Unsupported FCSV version: %s", version_str.c_str());
+  }
+
+  // Tokenize the remaining CSV-formated data
+  const auto csv_data = ReadCSVFileStr(std::vector<std::string>(lines.begin() + 3, lines.end()), false);
+
+  const size_type num_pts = csv_data.size();
+
+  Pt3List pts;
+  pts.reserve(num_pts);
+
+  std::vector<std::string> pt_names;
+  if (pop_names_list)
+  {
+    pt_names.reserve(num_pts);
+  }
+
+  // Parse the point data to numeric types and optionally save the fiducial point names
+
+  for (const auto& csv_line : csv_data)
+  {
+    xregASSERT(csv_line.size() == (is_version_5 ? 16 : 14));
+
+    pts.push_back(Pt3(
+      StringCast<CoordScalar>(csv_line[1]),
+      StringCast<CoordScalar>(csv_line[2]),
+      StringCast<CoordScalar>(csv_line[3])));
+
+    if (pop_names_list)
+    {
+      pt_names.push_back(csv_line[11]);
+    }
+  }
+
+  if (input_is_lps != output_in_lps)
+  {
+    // input coordinate frame differs from desired output, need to rotate by 180 degrees
+    ConvertRASToLPS(&pts);
+  }
+
+  return std::make_tuple(pts, pt_names);
 }
 
 }  // un-named
@@ -57,42 +150,30 @@ xreg::FCSVDuplicatePointNameException::FCSVDuplicatePointNameException(const cha
   : StringMessageException(dup_landmark_name)
 { }
 
-xreg::Pt3List xreg::ReadFCSVFilePts(const std::string& fcsv_path)
+xreg::Pt3List xreg::ReadFCSVFilePts(const std::string& fcsv_path, const bool output_in_lps)
 {
-  const CSVFileStringValued csv_vals = ReadFCSVFileAllTxt(fcsv_path);
-
-  const size_type num_pts = csv_vals.size();
-
-  Pt3List pts(num_pts);
-
-  for (size_type i = 0; i < num_pts; ++i)
-  {
-    auto& cur_pt = pts[i];
-    cur_pt[0] = StringCast<CoordScalar>(csv_vals[i][1]);
-    cur_pt[1] = StringCast<CoordScalar>(csv_vals[i][2]);
-    cur_pt[2] = StringCast<CoordScalar>(csv_vals[i][3]);
-  }
+  Pt3List pts;
+  std::tie(pts, std::ignore) = ReadFCSVFileAllTxt(fcsv_path, false, output_in_lps);
 
   return pts;
 }
 
-xreg::LandMap3 xreg::ReadFCSVFileNamePtMap(const std::string& fcsv_path)
+xreg::LandMap3 xreg::ReadFCSVFileNamePtMap(const std::string& fcsv_path, const bool output_in_lps)
 {
-  const auto csv_vals = ReadFCSVFileAllTxt(fcsv_path);
+  const auto pts_and_names = ReadFCSVFileAllTxt(fcsv_path, true, output_in_lps);
 
-  const size_type num_pts = csv_vals.size();
+  const auto& pts = std::get<0>(pts_and_names);
+  const auto& names = std::get<1>(pts_and_names);
+
+  const size_type num_pts = pts.size();
+
+  xregASSERT(num_pts == names.size());
 
   LandMap3 m;
 
-  Pt3 tmp_pt;
-
   for (size_type i = 0; i < num_pts; ++i)
   {
-    tmp_pt[0] = StringCast<CoordScalar>(csv_vals[i][1]);
-    tmp_pt[1] = StringCast<CoordScalar>(csv_vals[i][2]);
-    tmp_pt[2] = StringCast<CoordScalar>(csv_vals[i][3]);
-
-    auto insert_val = m.emplace(csv_vals[i][11], tmp_pt);
+    auto insert_val = m.emplace(names[i], pts[i]);
 
     if (!insert_val.second)
     {
@@ -104,23 +185,22 @@ xreg::LandMap3 xreg::ReadFCSVFileNamePtMap(const std::string& fcsv_path)
 }
 
 xreg::LandMultiMap3
-xreg::ReadFCSVFileNamePtMultiMap(const std::string& fcsv_path)
+xreg::ReadFCSVFileNamePtMultiMap(const std::string& fcsv_path, const bool output_in_lps)
 {
-  const CSVFileStringValued csv_vals = ReadFCSVFileAllTxt(fcsv_path);
+  const auto pts_and_names = ReadFCSVFileAllTxt(fcsv_path, true, output_in_lps);
 
-  const size_type num_pts = csv_vals.size();
+  const auto& pts = std::get<0>(pts_and_names);
+  const auto& names = std::get<1>(pts_and_names);
+
+  const size_type num_pts = pts.size();
+
+  xregASSERT(num_pts == names.size());
 
   LandMultiMap3 m;
 
-  Pt3 tmp_pt;
-
   for (size_type i = 0; i < num_pts; ++i)
   {
-    tmp_pt[0] = StringCast<CoordScalar>(csv_vals[i][1]);
-    tmp_pt[1] = StringCast<CoordScalar>(csv_vals[i][2]);
-    tmp_pt[2] = StringCast<CoordScalar>(csv_vals[i][3]);
-
-    m.emplace(csv_vals[i][11], tmp_pt);
+    m.emplace(names[i], pts[i]);
   }
 
   return m;
@@ -131,7 +211,8 @@ namespace
 
 template <class tIt>
 void WriteFCSVFileFromNamePtMapHelper(const std::string& fcsv_path,
-                                      tIt pts_begin, tIt pts_end)
+                                      tIt pts_begin, tIt pts_end,
+                                      const bool input_is_lps)
 {
   std::ofstream out(fcsv_path);
 
@@ -139,10 +220,24 @@ void WriteFCSVFileFromNamePtMapHelper(const std::string& fcsv_path,
       << "# CoordinateSystem = 0\n"
       << "# columns = id,x,y,z,ow,ox,oy,oz,vis,sel,lock,label,desc,associatedNodeID";
 
+  CoordScalar tmp_x = 0;
+  CoordScalar tmp_y = 0;
+
   for (tIt pts_it = pts_begin; pts_it != pts_end; ++pts_it)
   {
+    tmp_x = pts_it->second[0];
+    tmp_y = pts_it->second[1];
+
+    if (input_is_lps)
+    {
+      // inputs are LPS, but we are writing out to an older FCSV version which stores data in RAS
+      // Therefore, convert to RAS
+      tmp_x *= -1;
+      tmp_y *= -1;
+    }
+
     out << fmt::sprintf("\n,%.8f,%.8f,%.8f,0,0,0,1,1,1,0,%s,,",
-                        pts_it->second[0], pts_it->second[1], pts_it->second[2], pts_it->first);
+                        tmp_x, tmp_y, pts_it->second[2], pts_it->first);
   }
 
   out << std::endl;
@@ -150,18 +245,23 @@ void WriteFCSVFileFromNamePtMapHelper(const std::string& fcsv_path,
 
 }  // un-named
 
-void xreg::WriteFCSVFileFromNamePtMap(const std::string& fcsv_path, const LandMap3& pts)
+void xreg::WriteFCSVFileFromNamePtMap(const std::string& fcsv_path,
+                                      const LandMap3& pts,
+                                      const bool input_is_lps)
 {
-  WriteFCSVFileFromNamePtMapHelper(fcsv_path, pts.begin(), pts.end());
+  WriteFCSVFileFromNamePtMapHelper(fcsv_path, pts.begin(), pts.end(), input_is_lps);
 }
 
 void xreg::WriteFCSVFileFromNamePtMap(const std::string& fcsv_path,
-                                      const LandMultiMap3& pts)
+                                      const LandMultiMap3& pts,
+                                      const bool input_is_lps)
 {
-  WriteFCSVFileFromNamePtMapHelper(fcsv_path, pts.begin(), pts.end());
+  WriteFCSVFileFromNamePtMapHelper(fcsv_path, pts.begin(), pts.end(), input_is_lps);
 }
 
-void xreg::WriteFCSVFilePts(const std::string& fcsv_path, const Pt3List& pts,
+void xreg::WriteFCSVFilePts(const std::string& fcsv_path,
+                            const Pt3List& pts,
+                            const bool input_is_lps,
                             const bool use_empty_names)
 {
   auto create_name_str_from_idx = [](const size_type idx)
@@ -192,7 +292,7 @@ void xreg::WriteFCSVFilePts(const std::string& fcsv_path, const Pt3List& pts,
     tmp_pt_map.emplace(create_name_str(i), pts[i]);
   }
 
-  WriteFCSVFileFromNamePtMap(fcsv_path, tmp_pt_map);
+  WriteFCSVFileFromNamePtMap(fcsv_path, tmp_pt_map, input_is_lps);
 }
 
 void MergeFCSVFiles(const std::vector<std::string>& fcsv_paths, std::ostream& out)

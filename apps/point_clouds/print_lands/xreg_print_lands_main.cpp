@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@
 
 // xreg
 #include "xregProgOptUtils.h"
-#include "xregFCSVUtils.h"
+#include "xregLandmarkFiles.h"
 #include "xregLandmarkMapUtils.h"
 #include "xregAnatCoordFrames.h"
 
@@ -46,16 +46,16 @@ int main(int argc, char* argv[])
 
   xregPROG_OPTS_SET_COMPILE_DATE(po);
 
-  po.set_help("Prints the contents of a to stdout in a prettier format than the CSV.");
-  po.set_arg_usage("<FCSV file>");
+  po.set_help("Prints the contents of a landmarks file to stdout in a prettier format than the original FCSV/JSON.");
+  po.set_arg_usage("<Landmarks file path (e.g. .fcsv/.json/.mrk.json)>");
   po.set_min_num_pos_args(1);
 
   po.add("no-dups", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-dups",
          "Do not allow duplicate landmark names.")
     << false;
 
-  po.add("no-ras2lps", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-ras2lps",
-         "Do NOT convert RAS to LPS")
+  po.add("ras", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "ras",
+         "Print landmarks in RAS coordinates instead of LPS coordinates")
     << false;
 
   po.add("no-sort", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-sort",
@@ -80,45 +80,37 @@ int main(int argc, char* argv[])
     return kEXIT_VAL_SUCCESS;
   }
 
-  const bool no_dups    = po.get("no-dups");
-  const bool no_ras2lps = po.get("no-ras2lps");
-  const bool no_sort    = po.get("no-sort");
+  const bool no_dups   = po.get("no-dups");
+  const bool lands_ras = po.get("ras");
+  const bool no_sort   = po.get("no-sort");
 
-  const std::string fcsv_path = po.pos_args()[0];
+  const std::string lands_file_path = po.pos_args()[0];
 
   if (!no_dups)
   {
-    auto fcsv_map = ReadFCSVFileNamePtMultiMap(fcsv_path);
-    if (!no_ras2lps)
-    {
-      ConvertRASToLPS(&fcsv_map);
-    }
+    auto lands_map = ReadLandmarksFileNamePtMultiMap(lands_file_path, !lands_ras);
 
     if (no_sort)
     {
-      PrintLandmarkMap(fcsv_map, std::cout);
+      PrintLandmarkMap(lands_map, std::cout);
     }
     else
     {
-      std::multimap<std::string,Pt3> ordered_map(fcsv_map.begin(), fcsv_map.end());
+      std::multimap<std::string,Pt3> ordered_map(lands_map.begin(), lands_map.end());
       PrintLandmarkMap(ordered_map, std::cout);
     }
   }
   else
   {
-    auto fcsv_map = ReadFCSVFileNamePtMap(fcsv_path);
-    if (no_ras2lps)
-    {
-      ConvertRASToLPS(&fcsv_map);
-    }
+    auto lands_map = ReadLandmarksFileNamePtMap(lands_file_path, !lands_ras);
     
     if (no_sort)
     {
-      PrintLandmarkMap(fcsv_map, std::cout);
+      PrintLandmarkMap(lands_map, std::cout);
     }
     else
     {
-      std::map<std::string,Pt3> ordered_map(fcsv_map.begin(), fcsv_map.end());
+      std::map<std::string,Pt3> ordered_map(lands_map.begin(), lands_map.end());
       PrintLandmarkMap(ordered_map, std::cout);
     }
   }

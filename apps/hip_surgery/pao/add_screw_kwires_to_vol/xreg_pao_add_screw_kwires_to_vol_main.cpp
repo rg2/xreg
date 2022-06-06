@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@
 
 // xreg
 #include "xregProgOptUtils.h"
-#include "xregFCSVUtils.h"
+#include "xregLandmarkFiles.h"
 #include "xregITKIOUtils.h"
 #include "xregLandmarkMapUtils.h"
 #include "xregAnatCoordFrames.h"
@@ -58,9 +58,8 @@ int main(int argc, char* argv[])
                    "<Output CT vol.> [<Output definitions of inserted objects>]");
   po.set_min_num_pos_args(7);
 
-  po.add("no-ras2lps", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-ras2lps",
-         "Do NOT convert RAS to LPS (or LPS to RAS) for the landmarks; "
-         "RAS to LPS conversion negates the first and second components.")
+  po.add("lands-ras", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "lands-ras",
+         "Read landmarks in RAS coordinates instead of LPS.")
     << false;
 
 #if 0
@@ -135,7 +134,7 @@ int main(int argc, char* argv[])
 
   vout << "Insert objects on " << side_str << " side." << std::endl;
 
-  const bool ras2lps = !po.get("no-ras2lps").as_bool();
+  const bool lands_ras = po.get("lands-ras");
   
   const double p_kwire = po.get("p-wire");
   const double p_two   = po.get("p-two");
@@ -164,13 +163,7 @@ int main(int argc, char* argv[])
   // Get the landmarks
 
   vout << "reading APP landmarks..." << std::endl;
-  LandMap3 app_pts = ReadFCSVFileNamePtMap(app_fcsv_path);
-
-  if (ras2lps)
-  {
-    vout << "converting landmarks from RAS -> LPS" << std::endl;
-    ConvertRASToLPS(&app_pts);
-  }
+  const LandMap3 app_pts = ReadLandmarksFileNamePtMap(app_fcsv_path, !lands_ras);
 
   vout << "APP Landmarks:\n";
   PrintLandmarkMap(app_pts, vout);

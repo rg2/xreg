@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,8 @@
 
 // xreg
 #include "xregProgOptUtils.h"
-#include "xregFCSVUtils.h"
+#include "xregFCSVUtils.h"  // Still need this to write FCSV out
+#include "xregLandmarkFiles.h"
 #include "xregAnatCoordFrames.h"
 #include "xregITKIOUtils.h"
 
@@ -43,12 +44,11 @@ int main(int argc, char* argv[])
 
   po.set_help("Applies a transformation to points in an FCSV file. "
               "Currently, only rigid is supported.");
-  po.set_arg_usage("<Input FCSV File> <Transform File> <Output FCSV File>");
+  po.set_arg_usage("<Input Landmarks File> <Transform File> <Output FCSV File>");
   po.set_min_num_pos_args(3);
 
-  po.add("no-ras2lps", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-ras2lps",
-         "Do NOT convert input points from RAS to LPS (or LPS to RAS) before, and after "
-         "applying the transformation.")
+  po.add("ras", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "ras",
+         "Treat the transformation and landmarks as being with respect to the RAS coordinate frame, rather than LPS.")
     << false;
   
   po.add("invert", 'i', ProgOpts::kSTORE_TRUE, "invert",
@@ -73,11 +73,11 @@ int main(int argc, char* argv[])
     return kEXIT_VAL_SUCCESS;
   }
 
-  const bool ras2lps = !po.get("no-ras2lps").as_bool();
+  const bool use_ras = po.get("ras");
 
   const bool invert_xform = po.get("invert");
 
-  auto fcsv_map = ReadFCSVFileNamePtMultiMap(po.pos_args()[0]);
+  auto fcsv_map = ReadLandmarksFileNamePtMultiMap(po.pos_args()[0], !use_ras);
 
   FrameTransform xform = ReadITKAffineTransformFromFile(po.pos_args()[1]);
 
@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
     xform = xform.inverse();
   }
 
-  if (ras2lps)
+  if (use_ras)
   {
     FrameTransform ras2lps = FrameTransform::Identity();
     ras2lps.matrix()(0,0) = -1;
@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
     name_pt.second = xform * name_pt.second;
   }
 
-  WriteFCSVFileFromNamePtMap(po.pos_args()[2], fcsv_map);
+  WriteFCSVFileFromNamePtMap(po.pos_args()[2], fcsv_map, !use_ras);
 
   return kEXIT_VAL_SUCCESS;
 }

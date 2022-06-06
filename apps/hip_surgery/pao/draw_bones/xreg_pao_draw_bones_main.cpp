@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 #include "xregProgOptUtils.h"
 #include "xregPAODrawBones.h"
 #include "xregITKIOUtils.h"
-#include "xregFCSVUtils.h"
+#include "xregLandmarkFiles.h"
 #include "xregAnatCoordFrames.h"
 #include "xregPAOIO.h"
 #include "xregMeshIO.h"
@@ -51,9 +51,8 @@ int main(int argc, char* argv[])
   po.set_arg_usage("<Label Map> <APP Landmarks> <side> [<PNG Path>]");
   po.set_min_num_pos_args(3);
 
-  po.add("no-ras2lps", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-ras2lps",
-         "Do NOT convert RAS to LPS (or LPS to RAS) for the landmarks; "
-         "RAS to LPS conversion negates the first and second components.")
+  po.add("lands-ras", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "lands-ras",
+         "Landmark and point clouds should be populated in RAS coordinates, otherwise they are populated in LPS coordinates.")
     << false;
 
   po.add("pelvis-label", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_UINT32,
@@ -139,9 +138,9 @@ int main(int argc, char* argv[])
          "Path to cutting planes file - will also display these when provided.")
     << "";
 
-  po.add("other-fcsv", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "other-fcsv",
+  po.add("other-pts", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "other-pts",
          "A set of 3D landmarks to draw; these should be in the label map space."
-         " The RAS/LPS transform will be applied to these if that flag is specified.")
+         " These points will be loaded in LPS or RAS coordinates according to the \"lands-ras\" flag.")
     << "";
 
   po.add("no-frag", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-frag",
@@ -248,7 +247,7 @@ int main(int argc, char* argv[])
 
   draw_bones.set_debug_output_stream(vout, verbose);
 
-  const bool ras2lps = !po.get("no-ras2lps").as_bool();
+  const bool lands_in_ras = po.get("lands-ras");
 
   const std::string src_labels_path = po.pos_args()[0];
 
@@ -356,7 +355,7 @@ int main(int argc, char* argv[])
   const std::string cut_defs_path = po.get("cut-defs");
   const bool draw_cut_planes = !cut_defs_path.empty();
 
-  const std::string other_fcsv_path = po.get("other-fcsv");
+  const std::string other_fcsv_path = po.get("other-pts");
   const bool draw_other_fcsv = !other_fcsv_path.empty();
 
   draw_bones.no_draw_frag = po.get("no-frag");
@@ -371,25 +370,13 @@ int main(int argc, char* argv[])
   //////////////////////////////////////////////////////////////////////////////
   // Get the landmarks
 
-  draw_bones.app_pts = ReadFCSVFileNamePtMap(app_fcsv_path);
-
-  if (ras2lps)
-  {
-    vout << "converting landmarks from RAS -> LPS" << std::endl;
-    ConvertRASToLPS(&draw_bones.app_pts);
-  }
-
+  draw_bones.app_pts = ReadLandmarksFileNamePtMap(app_fcsv_path, !lands_in_ras);
 
   // Read other FCSV Landmarks
   if (draw_other_fcsv)
   {
-    vout << "reading other FCSV points..." << std::endl;
-    draw_bones.other_pts = ReadFCSVFilePts(other_fcsv_path);
-  
-    if (ras2lps)
-    {
-      ConvertRASToLPS(&*draw_bones.other_pts);
-    }
+    vout << "reading other landmark points..." << std::endl;
+    draw_bones.other_pts = ReadLandmarksFilePts(other_fcsv_path, !lands_in_ras);
   }
 
   //////////////////////////////////////////////////////////////////////////////
