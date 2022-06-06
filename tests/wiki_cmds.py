@@ -319,14 +319,14 @@ if __name__ == '__main__':
         download_file('https://github.com/rg2/xreg/wiki/walkthrough/point_cloud_to_surface_regi/pelvis_intraop_point_cloud.fcsv')
         
         wait_prompt('The next visualization will show the pelvis and intraop. point cloud BEFORE registration.')
-        run_cmd('xreg-pao-draw-bones --no-frag --no-femurs --pelvis-mesh pelvis_sur.ply pelvis_seg.nii.gz pelvis_app_lands.fcsv left --other-fcsv pelvis_intraop_point_cloud.fcsv')
+        run_cmd('xreg-pao-draw-bones --no-frag --no-femurs --pelvis-mesh pelvis_sur.ply pelvis_seg.nii.gz pelvis_app_lands.fcsv left --other-pts pelvis_intraop_point_cloud.fcsv')
 
         run_cmd('xreg-sur-regi pelvis_sur.ply pelvis_intraop_point_cloud.fcsv pelvis_regi.h5 --mesh-lands pelvis_preop_lands.fcsv --pts-lands pelvis_intraop_lands.fcsv')
         
         run_cmd('xreg-xform-fcsv pelvis_intraop_point_cloud.fcsv pelvis_regi.h5 pelvis_intraop_point_cloud_regi.fcsv')
         
         wait_prompt('The next visualization will show the pelvis and intraop. point cloud AFTER registration.')
-        run_cmd('xreg-pao-draw-bones --no-frag --no-femurs --pelvis-mesh pelvis_sur.ply pelvis_seg.nii.gz pelvis_app_lands.fcsv left --other-fcsv pelvis_intraop_point_cloud_regi.fcsv')
+        run_cmd('xreg-pao-draw-bones --no-frag --no-femurs --pelvis-mesh pelvis_sur.ply pelvis_seg.nii.gz pelvis_app_lands.fcsv left --other-pts pelvis_intraop_point_cloud_regi.fcsv')
     
     #################################################################
     # https://github.com/rg2/xreg/wiki/Walkthrough%3A-Single-View-Pelvis-Registration
