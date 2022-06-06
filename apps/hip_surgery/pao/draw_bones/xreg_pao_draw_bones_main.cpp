@@ -247,7 +247,7 @@ int main(int argc, char* argv[])
 
   draw_bones.set_debug_output_stream(vout, verbose);
 
-  const bool lands_in_ras = !po.get("lands-ras");
+  const bool lands_in_ras = po.get("lands-ras");
 
   const std::string src_labels_path = po.pos_args()[0];
 
