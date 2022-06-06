@@ -72,12 +72,14 @@ ReadFCSVFileAllTxt(const std::string& fcsv_path, const bool pop_names_list, cons
 
   bool input_is_lps = true;
 
+  const bool is_version_5 = version_str == "5.0";
+
   if ((version_str == "4.10") || (version_str == "4.8") || (version_str == "4.6"))
   {
     xregASSERT(lines[1] == "# CoordinateSystem = 0");
     input_is_lps = false;
   }
-  else if (version_str == "4.11")
+  else if ((version_str == "4.11") || is_version_5)
   {
     const auto& coord_frame_line = lines[1];
 
@@ -120,7 +122,7 @@ ReadFCSVFileAllTxt(const std::string& fcsv_path, const bool pop_names_list, cons
 
   for (const auto& csv_line : csv_data)
   {
-    xregASSERT(csv_line.size() == 14);
+    xregASSERT(csv_line.size() == (is_version_5 ? 16 : 14));
 
     pts.push_back(Pt3(
       StringCast<CoordScalar>(csv_line[1]),
