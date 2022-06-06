@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2020 Robert Grupp
+# Copyright (c) 2020-2022 Robert Grupp
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,9 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-set(EXE_NAME "${XREG_EXE_PREFIX}print-fcsv")
+set(EXE_NAME "${XREG_EXE_PREFIX}print-lands")
 
-add_executable(${EXE_NAME} xreg_print_fcsv_main.cpp)
+add_executable(${EXE_NAME} xreg_print_lands_main.cpp)
 
 target_link_libraries(${EXE_NAME} PUBLIC ${XREG_EXE_LIBS_TO_LINK})
 
