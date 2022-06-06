@@ -26,7 +26,7 @@
 
 // xreg
 #include "xregProgOptUtils.h"
-#include "xregFCSVUtils.h"
+#include "xregLandmarkFiles.h"
 #include "xregFilesystemUtils.h"
 #include "xregStringUtils.h"
 #include "xregITKIOUtils.h"
@@ -349,7 +349,7 @@ int main(int argc, char* argv[])
 
   const std::string app_fcsv_path = po.pos_args()[1];
   const std::string cut_fcsv_path = po.pos_args()[2];
-  const bool input_is_cut_landmarks = ToLowerCase(Path(cut_fcsv_path).file_extension()) == ".fcsv";
+  const bool input_is_cut_landmarks = IsSupportedLandmarksFileNamePtMap(cut_fcsv_path);
 
   const std::string side_str = po.pos_args()[3];
 
@@ -481,13 +481,13 @@ int main(int argc, char* argv[])
   //////////////////////////////////////////////////////////////////////////////
   // Get the landmarks
 
-  const LandMap3 app_pts = ReadFCSVFileNamePtMap(app_fcsv_path, !lands_ras);
+  const LandMap3 app_pts = ReadLandmarksFileNamePtMap(app_fcsv_path, !lands_ras);
 
   LandMap3 cut_pts;
 
   if (input_is_cut_landmarks)
   {
-    cut_pts = ReadFCSVFileNamePtMap(cut_fcsv_path, !lands_ras);
+    cut_pts = ReadLandmarksFileNamePtMap(cut_fcsv_path, !lands_ras);
   }
 
   vout << "APP Landmarks:\n";

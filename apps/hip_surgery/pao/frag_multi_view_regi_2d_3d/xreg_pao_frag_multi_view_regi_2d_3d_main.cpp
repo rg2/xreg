@@ -25,7 +25,7 @@
 #include <fmt/format.h>
 
 #include "xregProgOptUtils.h"
-#include "xregFCSVUtils.h"
+#include "xregLandmarkFiles.h"
 #include "xregITKIOUtils.h"
 #include "xregITKLabelUtils.h"
 #include "xregLandmarkMapUtils.h"
@@ -142,10 +142,10 @@ int main(int argc, char* argv[])
   // Get the landmarks
 
   vout << "reading 3D landmarks for regi..." << std::endl;
-  const LandMap3 regi_lands_3d = ReadFCSVFileNamePtMap(regi_lands_path, !lands_ras);
+  const LandMap3 regi_lands_3d = ReadLandmarksFileNamePtMap(regi_lands_path, !lands_ras);
 
   vout << "reading landmarks for establishing APP..." << std::endl;
-  const LandMap3 app_lands_3d = ReadFCSVFileNamePtMap(app_lands_path, !lands_ras);
+  const LandMap3 app_lands_3d = ReadLandmarksFileNamePtMap(app_lands_path, !lands_ras);
 
   vout << "3D Landmarks For Registration:\n";
   PrintLandmarkMap(regi_lands_3d, vout);

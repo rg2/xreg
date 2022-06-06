@@ -29,7 +29,7 @@
 
 // xreg
 #include "xregProgOptUtils.h"
-#include "xregFCSVUtils.h"
+#include "xregLandmarkFiles.h"
 #include "xregLandmarkMapUtils.h"
 #include "xregAnatCoordFrames.h"
 
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 
   xregPROG_OPTS_SET_COMPILE_DATE(po);
 
-  po.set_help("Prints the contents of a to stdout in a prettier format than the CSV.");
+  po.set_help("Prints the contents of a landmarks file to stdout in a prettier format than the original FCSV/JSON.");
   po.set_arg_usage("<FCSV file>");
   po.set_min_num_pos_args(1);
 
@@ -84,33 +84,33 @@ int main(int argc, char* argv[])
   const bool lands_ras = po.get("ras");
   const bool no_sort   = po.get("no-sort");
 
-  const std::string fcsv_path = po.pos_args()[0];
+  const std::string lands_file_path = po.pos_args()[0];
 
   if (!no_dups)
   {
-    auto fcsv_map = ReadFCSVFileNamePtMultiMap(fcsv_path, !lands_ras);
+    auto lands_map = ReadLandmarksFileNamePtMultiMap(lands_file_path, !lands_ras);
 
     if (no_sort)
     {
-      PrintLandmarkMap(fcsv_map, std::cout);
+      PrintLandmarkMap(lands_map, std::cout);
     }
     else
     {
-      std::multimap<std::string,Pt3> ordered_map(fcsv_map.begin(), fcsv_map.end());
+      std::multimap<std::string,Pt3> ordered_map(lands_map.begin(), lands_map.end());
       PrintLandmarkMap(ordered_map, std::cout);
     }
   }
   else
   {
-    auto fcsv_map = ReadFCSVFileNamePtMap(fcsv_path, lands_ras);
+    auto lands_map = ReadLandmarksFileNamePtMap(lands_file_path, !lands_ras);
     
     if (no_sort)
     {
-      PrintLandmarkMap(fcsv_map, std::cout);
+      PrintLandmarkMap(lands_map, std::cout);
     }
     else
     {
-      std::map<std::string,Pt3> ordered_map(fcsv_map.begin(), fcsv_map.end());
+      std::map<std::string,Pt3> ordered_map(lands_map.begin(), lands_map.end());
       PrintLandmarkMap(ordered_map, std::cout);
     }
   }

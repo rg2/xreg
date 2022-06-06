@@ -26,7 +26,7 @@
 
 // xreg
 #include "xregProgOptUtils.h"
-#include "xregFCSVUtils.h"
+#include "xregLandmarkFiles.h"
 #include "xregITKIOUtils.h"
 #include "xregLandmarkMapUtils.h"
 #include "xregAnatCoordFrames.h"
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     << false;
 
   po.add("lands", 'l', ProgOpts::kSTORE_STRING, "lands",
-         "Path to a FCSV file containing 3D landmarks which should be projected into 2D and "
+         "Path to a landmarks file containing 3D landmarks which should be projected into 2D and "
          "saved in the projection data.")
     << "";
 
@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
   // Get the landmarks
 
   vout << "reading APP landmarks..." << std::endl;
-  const LandMap3 app_pts = ReadFCSVFileNamePtMap(app_fcsv_path, !lands_ras);
+  const LandMap3 app_pts = ReadLandmarksFileNamePtMap(app_fcsv_path, !lands_ras);
 
   vout << "APP Landmarks:\n";
   PrintLandmarkMap(app_pts, vout);
@@ -237,7 +237,7 @@ int main(int argc, char* argv[])
   {
     vout << "Reading landmarks to project..." << std::endl;
 
-    lands_to_proj = ReadFCSVFileNamePtMap(fcsv_to_proj, !lands_ras);
+    lands_to_proj = ReadLandmarksFileNamePtMap(fcsv_to_proj, !lands_ras);
 
     vout << "Landmarks to project:\n";
     PrintLandmarkMap(lands_to_proj, vout);

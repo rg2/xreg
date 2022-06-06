@@ -26,7 +26,7 @@
 #include "xregMeshIO.h"
 #include "xregFilesystemUtils.h"
 #include "xregStringUtils.h"
-#include "xregFCSVUtils.h"
+#include "xregLandmarkFiles.h"
 #include "xregCSVUtils.h"
 #include "xregICP3D3D.h"
 #include "xregAnatCoordFrames.h"
@@ -49,9 +49,7 @@ int main(int argc, char* argv[])
   xregPROG_OPTS_SET_COMPILE_DATE(po);
 
   po.set_help("Performs point cloud to surface registration using ICP. The output transformation "
-              "maps points in the point cloud coordinate frame to the surface coordinate frame. "
-              "The point cloud (second positional argument) is assumed to be in CSV format "
-              "(x,y,z) with no header, unless an FCSV file is passed (determined by file extension).");
+              "maps points in the point cloud coordinate frame to the surface coordinate frame.");
 
   po.add("lands-ras", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "lands-ras",
          "Landmark and point cloud points should be populated in RAS coordinates, otherwise they are populated in LPS coordinates")
@@ -59,12 +57,12 @@ int main(int argc, char* argv[])
 
   po.add("mesh-lands", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "mesh-lands",
          "Landmarks on the mesh to be used to compute an initialization. "
-         "Landmark names are used to establish correspondences. FCSV format.")
+         "Landmark names are used to establish correspondences.")
     << "";
 
   po.add("pts-lands", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "pts-lands",
          "Landmarks in the point cloud to be used to compute an initialization. "
-         "Landmark names are used to establish correspondences. FCSV format.")
+         "Landmark names are used to establish correspondences.")
     << "";
 
   po.add("max-its", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_INT32, "max-its",
@@ -130,7 +128,8 @@ int main(int argc, char* argv[])
   
   if (mesh_lands_path.empty() ^ pts_lands_path.empty())
   {
-    std::cerr << "ERROR: when supplying landmark FCSV, both mesh and point cloud must be provided!" << std::endl;
+    std::cerr << "ERROR: when supplying landmark files for initial transform estimation, "
+                 "both mesh and point cloud must be provided!" << std::endl;
     return kEXIT_VAL_BAD_USE;
   }
 
@@ -140,22 +139,18 @@ int main(int argc, char* argv[])
 
   icp.sur = &mesh;
 
-  const bool pt_cloud_is_fcsv = ToLowerCase(Path(pt_cloud_path).file_extension()) == ".fcsv";
-
-  vout << "Point Cloud is FCSV: " << BoolToYesNo(pt_cloud_is_fcsv) << std::endl;
-
   vout << "reading point cloud from disk..." << std::endl;
-  auto pt_cloud = pt_cloud_is_fcsv ? ReadFCSVFilePts(pt_cloud_path, !lands_as_ras) : Read3DPtCloudCSV(pt_cloud_path, false);
+  auto pt_cloud = ReadLandmarksFilePts(pt_cloud_path, !lands_as_ras);
   vout << "  complete." << std::endl;
 
   if (!mesh_lands_path.empty())
   {
     vout << "reading mesh landmarks..." << std::endl;
-    auto mesh_lands_map = ReadFCSVFileNamePtMap(mesh_lands_path, !lands_as_ras);
+    auto mesh_lands_map = ReadLandmarksFileNamePtMap(mesh_lands_path, !lands_as_ras);
     PrintLandmarkMap(mesh_lands_map, vout);
 
     vout << "reading point cloud landmarks..." << std::endl;
-    auto pt_cloud_lands_map = ReadFCSVFileNamePtMap(pts_lands_path, !lands_as_ras);
+    auto pt_cloud_lands_map = ReadLandmarksFileNamePtMap(pts_lands_path, !lands_as_ras);
     PrintLandmarkMap(pt_cloud_lands_map, vout);
 
     vout << "estimating initial transformation using corresponding paired points..." << std::endl;

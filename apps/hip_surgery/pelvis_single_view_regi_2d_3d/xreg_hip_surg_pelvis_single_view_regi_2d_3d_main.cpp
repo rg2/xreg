@@ -23,7 +23,7 @@
  */
 
 #include "xregProgOptUtils.h"
-#include "xregFCSVUtils.h"
+#include "xregLandmarkFiles.h"
 #include "xregITKIOUtils.h"
 #include "xregITKLabelUtils.h"
 #include "xregLandmarkMapUtils.h"
@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
   if (!use_identity_for_init_cam_to_vol)
   {
     vout << "reading 3D landmarks..." << std::endl;
-    lands_3d = ReadFCSVFileNamePtMap(fcsv_3d_path, !lands_ras);
+    lands_3d = ReadLandmarksFileNamePtMap(fcsv_3d_path, !lands_ras);
 
     vout << "3D Landmarks:\n";
     PrintLandmarkMap(lands_3d, vout);

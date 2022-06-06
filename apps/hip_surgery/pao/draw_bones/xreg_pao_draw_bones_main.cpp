@@ -25,7 +25,7 @@
 #include "xregProgOptUtils.h"
 #include "xregPAODrawBones.h"
 #include "xregITKIOUtils.h"
-#include "xregFCSVUtils.h"
+#include "xregLandmarkFiles.h"
 #include "xregAnatCoordFrames.h"
 #include "xregPAOIO.h"
 #include "xregMeshIO.h"
@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
          "Path to cutting planes file - will also display these when provided.")
     << "";
 
-  po.add("other-fcsv", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "other-fcsv",
+  po.add("other-pts", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "other-pts",
          "A set of 3D landmarks to draw; these should be in the label map space."
          " These points will be loaded in LPS or RAS coordinates according to the \"lands-ras\" flag.")
     << "";
@@ -355,7 +355,7 @@ int main(int argc, char* argv[])
   const std::string cut_defs_path = po.get("cut-defs");
   const bool draw_cut_planes = !cut_defs_path.empty();
 
-  const std::string other_fcsv_path = po.get("other-fcsv");
+  const std::string other_fcsv_path = po.get("other-pts");
   const bool draw_other_fcsv = !other_fcsv_path.empty();
 
   draw_bones.no_draw_frag = po.get("no-frag");
@@ -370,13 +370,13 @@ int main(int argc, char* argv[])
   //////////////////////////////////////////////////////////////////////////////
   // Get the landmarks
 
-  draw_bones.app_pts = ReadFCSVFileNamePtMap(app_fcsv_path, !lands_in_ras);
+  draw_bones.app_pts = ReadLandmarksFileNamePtMap(app_fcsv_path, !lands_in_ras);
 
   // Read other FCSV Landmarks
   if (draw_other_fcsv)
   {
-    vout << "reading other FCSV points..." << std::endl;
-    draw_bones.other_pts = ReadFCSVFilePts(other_fcsv_path, !lands_in_ras);
+    vout << "reading other landmark points..." << std::endl;
+    draw_bones.other_pts = ReadLandmarksFilePts(other_fcsv_path, !lands_in_ras);
   }
 
   //////////////////////////////////////////////////////////////////////////////

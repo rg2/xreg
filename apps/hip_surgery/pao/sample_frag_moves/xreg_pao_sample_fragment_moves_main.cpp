@@ -28,7 +28,7 @@
 #include <itkBinaryBallStructuringElement.h>
 
 #include "xregProgOptUtils.h"
-#include "xregFCSVUtils.h"
+#include "xregLandmarkFiles.h"
 #include "xregAnatCoordFrames.h"
 #include "xregLandmarkMapUtils.h"
 #include "xregITKIOUtils.h"
@@ -304,7 +304,7 @@ int main(int argc, char* argv[])
   //////////////////////////////////////////////////////////////////////////////
   // Get the landmarks
 
-  const auto app_pts = ReadFCSVFileNamePtMap(app_fcsv_path, !lands_ras);
+  const auto app_pts = ReadLandmarksFileNamePtMap(app_fcsv_path, !lands_ras);
 
   vout << "APP Landmarks:\n";
   PrintLandmarkMap(app_pts, vout);

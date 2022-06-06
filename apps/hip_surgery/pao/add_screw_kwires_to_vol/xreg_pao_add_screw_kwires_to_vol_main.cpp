@@ -26,7 +26,7 @@
 
 // xreg
 #include "xregProgOptUtils.h"
-#include "xregFCSVUtils.h"
+#include "xregLandmarkFiles.h"
 #include "xregITKIOUtils.h"
 #include "xregLandmarkMapUtils.h"
 #include "xregAnatCoordFrames.h"
@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
   // Get the landmarks
 
   vout << "reading APP landmarks..." << std::endl;
-  const LandMap3 app_pts = ReadFCSVFileNamePtMap(app_fcsv_path, !lands_ras);
+  const LandMap3 app_pts = ReadLandmarksFileNamePtMap(app_fcsv_path, !lands_ras);
 
   vout << "APP Landmarks:\n";
   PrintLandmarkMap(app_pts, vout);

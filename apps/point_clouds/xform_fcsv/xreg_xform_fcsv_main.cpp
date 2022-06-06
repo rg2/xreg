@@ -24,7 +24,8 @@
 
 // xreg
 #include "xregProgOptUtils.h"
-#include "xregFCSVUtils.h"
+#include "xregFCSVUtils.h"  // Still need this to write FCSV out
+#include "xregLandmarkFiles.h"
 #include "xregAnatCoordFrames.h"
 #include "xregITKIOUtils.h"
 
@@ -43,7 +44,7 @@ int main(int argc, char* argv[])
 
   po.set_help("Applies a transformation to points in an FCSV file. "
               "Currently, only rigid is supported.");
-  po.set_arg_usage("<Input FCSV File> <Transform File> <Output FCSV File>");
+  po.set_arg_usage("<Input Landmarks File> <Transform File> <Output FCSV File>");
   po.set_min_num_pos_args(3);
 
   po.add("ras", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "ras",
@@ -76,7 +77,7 @@ int main(int argc, char* argv[])
 
   const bool invert_xform = po.get("invert");
 
-  auto fcsv_map = ReadFCSVFileNamePtMultiMap(po.pos_args()[0], !use_ras);
+  auto fcsv_map = ReadLandmarksFileNamePtMultiMap(po.pos_args()[0], !use_ras);
 
   FrameTransform xform = ReadITKAffineTransformFromFile(po.pos_args()[1]);
 

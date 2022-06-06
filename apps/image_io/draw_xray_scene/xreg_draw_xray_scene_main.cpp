@@ -37,7 +37,7 @@
 #include "xregVTK3DPlotter.h"
 #include "xregH5ProjDataIO.h"
 #include "xregMeshIO.h"
-#include "xregFCSVUtils.h"
+#include "xregLandmarkFiles.h"
 #include "xregAnatCoordFrames.h"
 #include "xregRigidUtils.h"
 #include "xregSampleUtils.h"
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 
   po.set_help("Visualizes an X-Ray scene. Displays the X-Ray images with "
               "camera geometries in 3D space, along with an optional surface "
-              "meshes or FCSV point clouds. The pose of a provided surface should "
+              "meshes or point clouds. The pose of a provided surface should "
               "map X-Ray/C-Arm world coordinates to the surface coordinates. "
               "If \"-\" is passed as the pose path, then the identity transform is used. "
               "The following hot keys are available: "
@@ -69,8 +69,8 @@ int main(int argc, char* argv[])
               "c - print the current view geometry to stdout "
               "(useful for starting back up with the same view).");
   po.set_arg_usage("<Proj. Data File> "
-                   "[<surface mesh or FCSV points #1> <surface mesh or FCSV points #1 pose>, ... "
-                   "[<surface mesh or FCSV points #N> <surface mesh or FCSV points #N pose>]]");
+                   "[<surface mesh or points #1> <surface mesh or points #1 pose>, ... "
+                   "[<surface mesh or points #N> <surface mesh or points #N pose>]]");
   po.set_min_num_pos_args(1);
 
   po.add("show-image", 'i', ProgOpts::kSTORE_TRUE, "show-image",
@@ -175,8 +175,9 @@ int main(int argc, char* argv[])
   pos_arg.default_vals.assign(3, ProgOpts::ArgVal(0.0));
 
   po.add("app-lands", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "app-lands",
-         "Path to FCSV file with landmarks used to compute the anterior pelvic plane (APP). "
-         "This is required if some variation of an AP, lateral, or oblique pelvis view is specified.")
+         "Path to a landmarks (e.g. FCSV or Slicer JSON) file with landmarks used to compute the anterior "
+         "pelvic plane (APP). This is required if some variation of an AP, lateral, or oblique pelvis view "
+         "is specified.")
     << "";
 
   po.add("pelvis-view", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "pelvis-view",
@@ -190,50 +191,50 @@ int main(int argc, char* argv[])
          "without the clutter of the camera/c-arm objects.")
     << false;
 
-  po.add("fcsv-as-ras", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "fcsv-as-ras",
+  po.add("pts-as-ras", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "pts-as-ras",
          "Any 3D point clouds supplied as positional arguments should be populated in RAS coordinates, "
          "otherwise they are populated in LPS coordinates.")
     << false;
 
-  po.add("fcsv-rad", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "fcsv-rad",
-         "Radius of the spheres to draw for the 3D FCSV points. "
+  po.add("pts-rad", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "pts-rad",
+         "Radius of the spheres to draw for any 3D point clouds. "
          "Non-positive values skip drawing the spheres.")
     << 3.0;
   
-  po.add("fcsv-rad-txt", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "fcsv-rad-txt",
-         "Text file where each line defines the sphere radius to draw for a specific FCSV file. "
-         "Line 1 is associated with FCSV file 1, line 2 with FCSV file 2, and so on. "
-         "Overrides \"fcsv-rad\" when supplied.")
+  po.add("pts-rad-txt", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "pts-rad-txt",
+         "Text file where each line defines the sphere radius to draw for a specific landmarks file. "
+         "Line 1 is associated with file 1, line 2 with file 2, and so on. "
+         "Overrides \"pts-rad\" when supplied.")
     << "";
 
   {
-    auto& fcsv_color_arg = po.add("fcsv-color", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "fcsv-color",
-                                  "Color used for all 3D FCSV spheres (no alpha component, only RGB).");
+    auto& fcsv_color_arg = po.add("pts-color", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "pts-color",
+                                  "Color used for all 3D point spheres (no alpha component, only RGB).");
     fcsv_color_arg.nvals(3);
     fcsv_color_arg << 1.0 << 0.0 << 0.0;
   }
 
-  po.add("fcsv-colors-csv", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "fcsv-colors-csv",
-         "Path to a CSV file that defines the colors to use for each FCSV file "
+  po.add("pts-colors-csv", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "pts-colors-csv",
+         "Path to a CSV file that defines the colors to use for each landmarks file "
          "specified on the command line. The first row corresponds to the RGBA "
-         "used to color all 3D points in the first FCSV file, second row is for "
-         "the second FCSV, and so on. When less colors than FCSV files have been "
+         "used to color all 3D points in the first landmarks file, second row is for "
+         "the second landmarks file, and so on. When less colors than landmark files have been "
          "specified, then the colors cycle.")
     << "";
 
-  po.add("fcsv-line-colors-csv", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "fcsv-line-colors-csv",
+  po.add("pts-line-colors-csv", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "pts-line-colors-csv",
          "Path to a CSV file defining the colors to use for source-to-detector "
-         "lines intersecting FCSV 3D points. Same format as \"fcsv-colors-csv.\" "
+         "lines intersecting landmark 3D points. Same format as \"pts-colors-csv.\" "
          "Overrides \"land-line-color.\"")
     << "";
 
-  po.add("fcsv-line-projs-txt", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "fcsv-line-projs-txt",
+  po.add("pts-line-projs-txt", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "pts-line-projs-txt",
          "Path to a text file that defines which projections source-to-detector lines should be drawn "
-         "for each FCSV file. Each line specifies a set of projection indices; first line for the first "
-         "FCSV file, second line for the second FCSV file, and so forth. If not provided, all "
+         "for each landmarks file. Each line specifies a set of projection indices; first line for the first "
+         "landmarks file, second line for the second landmarks file, and so forth. If not provided, all "
          "projections that are visualized are used. The formatting on each line is identical to the "
-         "\"projs\" (\'p\') flag. Similar to the fcsv color flags, the projection associations cycle "
-         "when there are more FCSV files than the number of lines in this file.")
+         "\"projs\" (\'p\') flag. Similar to the \"pts-\" color flags, the projection associations cycle "
+         "when there are more landmark files than the number of lines in this file.")
     << "";
 
   {
@@ -371,21 +372,21 @@ int main(int argc, char* argv[])
 
   if (has_pelvis_view_arg && app_lands_fcsv_path.empty())
   {
-    std::cerr << "Must specify landmarks FCSV for pelvis view!" << std::endl;
+    std::cerr << "Must specify landmarks file for pelvis view!" << std::endl;
     return kEXIT_VAL_BAD_USE;
   }
 
   const bool no_cam = po.get("no-cam");
 
-  const bool fcsv_as_ras = po.get("fcsv-as-ras");
+  const bool fcsv_as_ras = po.get("pts-as-ras");
 
   std::vector<double> fcsv_rads;
 
-  const std::string fcsv_rad_txt_path = po.get("fcsv-rad-txt");
+  const std::string fcsv_rad_txt_path = po.get("pts-rad-txt");
   
   if (fcsv_rad_txt_path.empty())
   {
-    fcsv_rads.assign(1, po.get("fcsv-rad").as_double());
+    fcsv_rads.assign(1, po.get("pts-rad").as_double());
   }
   else
   {
@@ -400,11 +401,11 @@ int main(int argc, char* argv[])
   }
 
   const size_type num_fcsv_rads = fcsv_rads.size();
-  vout << "number of FCSV radii: " << num_fcsv_rads << std::endl;
+  vout << "number of points radii: " << num_fcsv_rads << std::endl;
 
-  const std::string fcsv_color_csv_path = po.get("fcsv-colors-csv");
+  const std::string fcsv_color_csv_path = po.get("pts-colors-csv");
   
-  const std::string fcsv_line_colors_csv_path = po.get("fcsv-line-colors-csv");
+  const std::string fcsv_line_colors_csv_path = po.get("pts-line-colors-csv");
 
   std::vector<VTK3DPlotter::RGBAVec> geom_colors;
   std::vector<VTK3DPlotter::RGBAVec> mesh_colors;
@@ -473,7 +474,7 @@ int main(int argc, char* argv[])
 
     if (fcsv_color_csv_path.empty())
     {
-      po.get_vals("fcsv-color", &tmp_color);
+      po.get_vals("pts-color", &tmp_color);
       
       fcsv_colors.resize(1);
       fcsv_colors[0][0] = tmp_color[0];
@@ -530,7 +531,7 @@ int main(int argc, char* argv[])
 
     vout << "reading landmarks to compute APP (wrt LPS)..." << std::endl;
     xregASSERT(!app_lands_fcsv_path.empty());
-    auto fcsv_lands = ReadFCSVFileNamePtMap(app_lands_fcsv_path, true);
+    auto fcsv_lands = ReadLandmarksFileNamePtMap(app_lands_fcsv_path, true);
     
     vout << "compute app --> pelvis vol..." << std::endl;
     const FrameTransform app_to_vol = AnteriorPelvicPlaneFromLandmarksMap(fcsv_lands);
@@ -595,7 +596,7 @@ int main(int argc, char* argv[])
     }
   }
 
-  const std::string fcsv_line_projs_txt_path = po.get("fcsv-line-projs-txt");
+  const std::string fcsv_line_projs_txt_path = po.get("pts-line-projs-txt");
 
   const std::string pd_path = po.pos_args()[0];
 
@@ -639,7 +640,7 @@ int main(int argc, char* argv[])
   }
 
   const size_type num_fcsv_line_proj_assocs = fcsv_line_projs.size();
-  vout << "number of FCSV line/projection associations: " << num_fcsv_line_proj_assocs << std::endl;
+  vout << "number of points line/projection associations: " << num_fcsv_line_proj_assocs << std::endl;
 
   std::mt19937 rng_eng;
   SeedRNGEngWithRandDev(&rng_eng);
@@ -757,7 +758,7 @@ int main(int argc, char* argv[])
     plotter.add_sphere(Pt3::Zero(), 5, 1, 1, 0);
   }
 
-  // draw surfaces and FCSV
+  // draw surfaces and points
     
   const size_type num_mesh_colors = mesh_colors.size();
   
@@ -793,7 +794,7 @@ int main(int argc, char* argv[])
       mesh_color[2] = uni_dist_01(rng_eng);
     }
 
-    if (ToLowerCase(Path(next_sur_or_pts_path).file_extension()) != ".fcsv")
+    if (!IsSupportedLandmarksFilePts(next_sur_or_pts_path))
     {
       vout << "reading surface " << sur_idx << "..." << std::endl;
       auto m = ReadMeshFromDisk(next_sur_or_pts_path);
@@ -810,7 +811,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-      auto pts_3d = ReadFCSVFilePts(next_sur_or_pts_path, !fcsv_as_ras);
+      auto pts_3d = ReadLandmarksFilePts(next_sur_or_pts_path, !fcsv_as_ras);
 
       ApplyTransform(xform_cam_wrt_ct.inverse(), pts_3d, &pts_3d);
     

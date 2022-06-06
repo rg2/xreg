@@ -33,7 +33,7 @@
 #include "xregAnatCoordFrames.h"
 #include "xregCIOSFusionDICOM.h"
 #include "xregDICOMUtils.h"
-#include "xregFCSVUtils.h"
+#include "xregLandmarkFiles.h"
 #include "xregITKIOUtils.h"
 #include "xregITKOpenCVUtils.h"
 #include "xregLandmarkMapUtils.h"
@@ -438,8 +438,8 @@ ReadProjDataFromDICOMHelper(const std::string& dcm_path, const std::string& fcsv
   
   if (!fcsv_path.empty())
   {
-    vout << "reading landmarks from FCSV (to LPS coords) and converting to pixels..." << std::endl;
-    const auto lands_3d = ReadFCSVFileNamePtMap(fcsv_path, true);
+    vout << "reading landmarks from file (to LPS coords) and converting to pixels..." << std::endl;
+    const auto lands_3d = ReadLandmarksFileNamePtMap(fcsv_path, true);
         
     xregASSERT(!pd.empty());
     
