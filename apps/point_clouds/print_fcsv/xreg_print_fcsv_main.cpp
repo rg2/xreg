@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
   xregPROG_OPTS_SET_COMPILE_DATE(po);
 
   po.set_help("Prints the contents of a landmarks file to stdout in a prettier format than the original FCSV/JSON.");
-  po.set_arg_usage("<FCSV file>");
+  po.set_arg_usage("<Landmarks file path (e.g. .fcsv/.json/.mrk.json)>");
   po.set_min_num_pos_args(1);
 
   po.add("no-dups", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-dups",
