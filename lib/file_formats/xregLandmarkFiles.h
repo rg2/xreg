@@ -30,6 +30,19 @@
 namespace xreg
 {
 
+/// \brief Determines if a file format is compatible with ReadLandmarksFilePts().
+///        e.g. can a list of 3D points be loaded from the file.
+///
+/// This is determined by interpreting the file extension.
+bool IsSupportedLandmarksFilePts(const std::string& path);
+
+/// \brief Determines if a file format is compatible with
+//         ReadLandmarksFileNamePtMap() or ReadLandmarksFileNamePtMultiMap().
+///        e.g. can a name/3D point mapping be loaded from the file.
+///
+/// This is determined by interpreting the file extension.
+bool IsSupportedLandmarksFileNamePtMap(const std::string& path);
+
 /// \brief Reads a landmarks file into a list of 3D points - all other information
 ///        is discarded. Supported file formats are FCSV and 3D Slicer Markups JSON.
 ///

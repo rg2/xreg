@@ -31,6 +31,18 @@
 #include "xregSlicerMarkupsJSON.h"
 #include "xregCSVUtils.h"
 
+bool xreg::IsSupportedLandmarksFilePts(const std::string& path)
+{
+  const std::string file_ext = ToLowerCase(Path(path).file_extension());
+  return (file_ext == ".fcsv") || (file_ext == ".json") || (file_ext == ".csv");
+}
+
+bool xreg::IsSupportedLandmarksFileNamePtMap(const std::string& path)
+{
+  const std::string file_ext = ToLowerCase(Path(path).file_extension());
+  return (file_ext == ".fcsv") || (file_ext == ".json");
+}
+
 xreg::Pt3List xreg::ReadLandmarksFilePts(const std::string& path, const bool output_in_lps)
 {
   Pt3List pts;
