@@ -6,6 +6,7 @@ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
             -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON \
             -DTBB_DIR:PATH="/opt/tbb/cmake" \
             -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
+            -DXREG_INCLUDE_GIT_HASH_IN_VER_STR:BOOL=ON \
             ..
 
 cmake --build .
