@@ -133,7 +133,7 @@ def macos_check_for_dyld_vars():
 
 if __name__ == '__main__':
     mac_slicer_default_paths = ['/Applications/Slicer.app/Contents/MacOS/Slicer']
-    win_slicer_default_paths = ['%LOCALAPPDATA%\\NA-MIC\\{}'.format(sn) for sn in ['Slicer 5.0.2', 'Slicer 4.11.20210226']] + ['C:\\Program Files\\Slicer 4.10.2\\Slicer.exe']
+    win_slicer_default_paths = ['%LOCALAPPDATA%\\NA-MIC\\{}\\Slicer.exe'.format(sn) for sn in ['Slicer 5.0.2', 'Slicer 4.11.20210226']] + ['C:\\Program Files\\Slicer 4.10.2\\Slicer.exe']
     linux_slicer_default_paths = ['{}/Slicer'.format(sd) for sd in ['$HOME/Slicer-5.0.2-linux-amd64', '$HOME/Slicer-4.11.20210226-linux-amd64', '$HOME/Slicer-4.10.2-linux-amd64']]
     
     if ('--help' in sys.argv) or ('-h' in sys.argv):
@@ -179,9 +179,10 @@ if __name__ == '__main__':
                 break
     elif platform.system() == 'Windows':
         for p in win_slicer_default_paths:
-            if os.path.exists(p):
+            pp = os.path.expandvars(p)
+            if os.path.exists(pp):
                 # enclose the path in quotes to handle any spaces
-                slicer_path = '\"{}\"'.format(p)
+                slicer_path = '\"{}\"'.format(pp)
                 break
     elif platform.system() == 'Linux':
         for p in linux_slicer_default_paths:
