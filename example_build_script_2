@@ -159,7 +159,7 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   rm $VTK_FILE
 
-  ITK_URL="https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.1.1/InsightToolkit-5.1.1.zip"
+  ITK_URL="https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.2.1/InsightToolkit-5.2.1.zip"
 
   ITK_FILE=`basename $ITK_URL`
 
