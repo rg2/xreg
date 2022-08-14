@@ -88,10 +88,10 @@ RUN mkdir nlopt_build && cd nlopt_build && \
     cmake --build . && cmake --build . --target install && \
     cd / && rm -rf nlopt_build
 
-# build ITK 5.1.1
+# build ITK 5.2.1
 RUN mkdir itk_build && cd itk_build && \
-    wget https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.1.1/InsightToolkit-5.1.1.tar.gz && \
-    tar xf InsightToolkit-5.1.1.tar.gz && cd InsightToolkit-5.1.1 && \
+    wget https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.2.1/InsightToolkit-5.2.1.zip && \
+    tar xf InsightToolkit-5.2.1.tar.gz && cd InsightToolkit-5.2.1 && \
     mkdir build && cd build && \
     cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
           -DCMAKE_CXX_STANDARD:STRING="11" \

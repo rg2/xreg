@@ -24,7 +24,7 @@
 
 #include "xregLandmark2D3DRegi.h"
 
-#include "xregAssert.h"
+#include "xregExceptionUtils.h"
 #include "xregLandmarkMapUtils.h"
 #include "xregPointCloudUtils.h"
 
@@ -115,7 +115,10 @@ void xreg::Landmark2D3DRegi::set_inds_2d_and_world_pts_3d(const std::vector<Land
   
   const size_type num_lands = common_lands.size();
 
-  xregASSERT(num_lands);
+  if (num_lands == 0)
+  {
+    xregThrow("No corresponding landmarks found between 2D and 3D!");
+  }
 
   const size_type num_views = inds_2d.size();
 

@@ -133,8 +133,14 @@ def macos_check_for_dyld_vars():
 
 if __name__ == '__main__':
     mac_slicer_default_paths = ['/Applications/Slicer.app/Contents/MacOS/Slicer']
-    win_slicer_default_paths = ['%LOCALAPPDATA%\\NA-MIC\\{}\\Slicer.exe'.format(sn) for sn in ['Slicer 5.0.2', 'Slicer 4.11.20210226']] + ['C:\\Program Files\\Slicer 4.10.2\\Slicer.exe']
-    linux_slicer_default_paths = ['{}/Slicer'.format(sd) for sd in ['$HOME/Slicer-5.0.2-linux-amd64', '$HOME/Slicer-4.11.20210226-linux-amd64', '$HOME/Slicer-4.10.2-linux-amd64']]
+    win_slicer_default_paths = ['%LOCALAPPDATA%\\NA-MIC\\{}\\Slicer.exe'.format(sn) for sn in \
+            ['Slicer 5.0.3', 'Slicer 5.0.2', 'Slicer 4.11.20210226']] \
+            + ['C:\\Program Files\\Slicer 4.10.2\\Slicer.exe']
+    linux_slicer_default_paths = ['{}/Slicer'.format(sd) for sd in \
+               ['$HOME/Slicer-5.0.3-linux-amd64',
+                '$HOME/Slicer-5.0.2-linux-amd64',
+                '$HOME/Slicer-4.11.20210226-linux-amd64',
+                '$HOME/Slicer-4.10.2-linux-amd64']]
     
     if ('--help' in sys.argv) or ('-h' in sys.argv):
         print('This script exists for semi-automatic functional testing by executing the commands '

@@ -159,7 +159,7 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   rm $VTK_FILE
 
-  ITK_URL="https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.1.1/InsightToolkit-5.1.1.zip"
+  ITK_URL="https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.2.1/InsightToolkit-5.2.1.zip"
 
   ITK_FILE=`basename $ITK_URL`
 
@@ -363,7 +363,8 @@ if [ "$NEED_TO_START_XREG" = true ]; then
     -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
     -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
     -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
-    -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON $XREG_POS_INDEP_CODE_FLAG $XREG_CMAKE_INSTALL_FLAG
+    -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON \
+    -DXREG_INCLUDE_GIT_HASH_IN_VER_STR:BOOL=ON $XREG_POS_INDEP_CODE_FLAG $XREG_CMAKE_INSTALL_FLAG
 
   cmake --build .
 
