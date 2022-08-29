@@ -26,6 +26,7 @@ add_library(xreg_basic_math OBJECT ${XREG_CUR_LIB_HEADERS}
                                    xregPolyFit.cpp
                                    xregDistInterface.cpp
                                    xregNormDist.cpp
+                                   xregMultivarNormDist.cpp
                                    xregFoldNormDist.cpp
                                    xregLogNormDist.cpp
                                    xregNullDist.cpp
