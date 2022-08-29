@@ -81,3 +81,55 @@ xreg::size_type xreg::MultivarNormalDist::dim() const
 {
   return static_cast<size_type>(mean_.size());
 }
+
+xreg::MultivarNormalDistZeroCov::MultivarNormalDistZeroCov(const PtN& mean, const PtN& vars)
+{
+  const size_type dim = static_cast<size_type>(mean.size());
+
+  xregASSERT(dim > 0);
+  xregASSERT(dim == static_cast<size_type>(vars.size()));
+
+  // Covariance matrix is invertible if all variances are non-zero
+  xregASSERT((vars.array().abs() > Scalar(1.0e-12)).all());
+
+  vars_inv_ = vars.array().inverse();
+
+  constexpr Scalar log_two_pi = static_cast<Scalar>(1.8378770664093453);
+  
+  log_norm_const_ = ((static_cast<Scalar>(dim) * log_two_pi) * vars.array().log().sum()) / Scalar(2);
+}
+
+xreg::MultivarNormalDistZeroCov::Scalar xreg::MultivarNormalDistZeroCov::operator()(const PtN& x) const
+{
+  return density(x);
+}
+  
+xreg::MultivarNormalDistZeroCov::Scalar xreg::MultivarNormalDistZeroCov::density(const PtN& x) const
+{
+  return std::exp(log_density(x));
+}
+
+xreg::MultivarNormalDistZeroCov::Scalar xreg::MultivarNormalDistZeroCov::log_density(const PtN& x) const
+{
+  return (static_cast<Scalar>(-0.5) * ((x - mean_).array().square() * vars_inv_).sum()) - log_norm_const_;
+}
+
+xreg::MultivarNormalDistZeroCov::Scalar xreg::MultivarNormalDistZeroCov::norm_const() const
+{
+  return std::exp(log_norm_const_);
+}
+
+xreg::MultivarNormalDistZeroCov::Scalar xreg::MultivarNormalDistZeroCov::log_norm_const() const
+{
+  return log_norm_const_;
+}
+
+bool xreg::MultivarNormalDistZeroCov::normalized() const
+{
+  return true;
+}
+
+xreg::size_type xreg::MultivarNormalDistZeroCov::dim() const
+{
+  return static_cast<size_type>(mean_.size());
+}

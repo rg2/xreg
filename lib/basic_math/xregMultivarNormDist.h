@@ -57,6 +57,34 @@ private:
   Scalar log_norm_const_;
 };
 
+// Multivariate Normal distribution where the dimensions are independent (no covariance).
+class MultivarNormalDistZeroCov final : public Dist
+{
+public:
+  MultivarNormalDistZeroCov(const PtN& mean, const PtN& vars);
+
+  Scalar operator()(const PtN& x) const;
+    
+  Scalar density(const PtN& x) const override;
+
+  Scalar log_density(const PtN& x) const override;
+
+  Scalar norm_const() const override;
+
+  Scalar log_norm_const() const override;
+  
+  bool normalized() const override;
+
+  size_type dim() const override;
+
+private:
+  PtN mean_;
+  
+  Eigen::Array<Scalar,Eigen::Dynamic,1> vars_inv_;
+
+  Scalar log_norm_const_;
+};
+
 }  // xreg
 
 #endif
