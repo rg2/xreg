@@ -30,8 +30,12 @@
 namespace xreg
 {
 
-// Fits a quadradic form, h(x) = x^T H x, using a set of observations
+// Fits a quadradic form, h(x) = 0.5 * x^T H x, using a set of observations
 // (x_1, f(x_1), ... (x_N, f(x_N)).
+//
+// NOTE: if you know that your data really fits the form: 0.5 * x^T H x + C,
+//       then f(0) = C should be calculated first (by the user) and f(x_i) - C
+//       should be passed to this function when solving for H.
 //
 // params is a MxN matrix of observation parameters where the
 // ith column holds the ith M-D parameter vector.

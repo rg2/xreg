@@ -46,7 +46,7 @@ xreg::MatMxN xreg::FitQuadradicForm(const MatMxN& params, const PtN& fn_vals)
     {
       for (size_type c = 0; c < dim; ++c, ++flat_idx)
       {
-        A(obs_idx, flat_idx) = x(r) * x(c);
+        A(obs_idx, flat_idx) = (x(r) * x(c)) / CoordScalar(2);
       }
     }
   }
@@ -114,7 +114,7 @@ xreg::MatMxN xreg::FitQuadradicFormSymmetric(const MatMxN& params, const PtN& fn
     {
       for (size_type c = 0; c < dim; ++c)
       {
-        A(obs_idx,sym_lut(r,c)) += x(r) * x(c);
+        A(obs_idx,sym_lut(r,c)) += (x(r) * x(c)) / CoordScalar(2);
       }
     }
   }
