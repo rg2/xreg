@@ -24,6 +24,7 @@ file(GLOB_RECURSE XREG_CUR_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 
 add_library(xreg_basic_math OBJECT ${XREG_CUR_LIB_HEADERS}
                                    xregPolyFit.cpp
+                                   xregFitQuadratic.cpp
                                    xregDistInterface.cpp
                                    xregNormDist.cpp
                                    xregMultivarNormDist.cpp
