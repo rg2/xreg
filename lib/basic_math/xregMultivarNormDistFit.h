@@ -33,7 +33,7 @@ namespace xreg
 // Estimates the covariance matrix from a set of zero-mean samples, their log
 // density values and the log density value at zero.
 //
-// NOTE: When using values obtained about from an objective function for which a
+// NOTE: When using values obtained from an objective function for which a
 // minimum is sought, then the objective function values are analogous to energy
 // function values and must be negated to represent proper log densities.
 // 
