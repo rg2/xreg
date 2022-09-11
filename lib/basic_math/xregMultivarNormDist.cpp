@@ -82,15 +82,19 @@ xreg::size_type xreg::MultivarNormalDist::dim() const
   return static_cast<size_type>(mean_.size());
 }
 
-xreg::MultivarNormalDistZeroCov::MultivarNormalDistZeroCov(const PtN& mean, const PtN& vars)
+xreg::MultivarNormalDistZeroCov::MultivarNormalDistZeroCov(const PtN& mean, const PtN& std_devs)
 {
   const size_type dim = static_cast<size_type>(mean.size());
 
   xregASSERT(dim > 0);
-  xregASSERT(dim == static_cast<size_type>(vars.size()));
+  xregASSERT(dim == static_cast<size_type>(std_devs.size()));
 
   // Covariance matrix is invertible if all variances are non-zero
-  xregASSERT((vars.array().abs() > Scalar(1.0e-12)).all());
+  xregASSERT((std_devs.array().abs() > Scalar(1.0e-12)).all());
+
+  mean_ = mean;
+
+  const PtN vars = std_devs.array().square().matrix();
 
   vars_inv_ = vars.array().inverse();
 

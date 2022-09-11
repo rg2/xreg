@@ -61,7 +61,7 @@ private:
 class MultivarNormalDistZeroCov final : public Dist
 {
 public:
-  MultivarNormalDistZeroCov(const PtN& mean, const PtN& vars);
+  MultivarNormalDistZeroCov(const PtN& mean, const PtN& std_devs);
 
   Scalar operator()(const PtN& x) const;
     
