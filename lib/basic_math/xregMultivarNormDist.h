@@ -33,7 +33,7 @@ namespace xreg
 class MultivarNormalDist final : public Dist
 {
 public:
-  MultivarNormalDist(const PtN& mean, const MatMxN& cov);
+  MultivarNormalDist(const PtN& mean, const MatMxN& cov, const bool enable_sampling = true);
 
   Scalar operator()(const PtN& x) const;
     
@@ -49,12 +49,19 @@ public:
 
   size_type dim() const override;
 
+  PtN draw_sample(std::mt19937& g) const override;
+
+  MatMxN draw_samples(const size_type num_samples, std::mt19937& g) const override;
+
 private:
   PtN mean_;
   
   MatMxN cov_inv_;
 
   Scalar log_norm_const_;
+
+  // used for drawing samples
+  MatMxN A_;
 };
 
 // Multivariate Normal distribution where the dimensions are independent (no covariance).

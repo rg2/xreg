@@ -24,9 +24,11 @@
 
 #include "xregMultivarNormDist.h"
 
+#include <Eigen/Eigenvalues>
+
 #include "xregAssert.h"
 
-xreg::MultivarNormalDist::MultivarNormalDist(const PtN& mean, const MatMxN& cov)
+xreg::MultivarNormalDist::MultivarNormalDist(const PtN& mean, const MatMxN& cov, const bool enable_sampling)
 {
   const size_type dim = static_cast<size_type>(mean.size());
 
@@ -45,6 +47,12 @@ xreg::MultivarNormalDist::MultivarNormalDist(const PtN& mean, const MatMxN& cov)
   log_norm_const_ = std::log(std::pow(two_pi, static_cast<Scalar>(dim)) * lu.determinant()) / Scalar(2);
 
   mean_ = mean;
+
+  if (enable_sampling)
+  {
+    Eigen::SelfAdjointEigenSolver<MatMxN> eig(cov);
+    A_ = eig.eigenvectors() * eig.eigenvalues().array().sqrt().matrix().asDiagonal();
+  }
 }
 
 xreg::MultivarNormalDist::Scalar xreg::MultivarNormalDist::operator()(const PtN& x) const
@@ -80,6 +88,51 @@ bool xreg::MultivarNormalDist::normalized() const
 xreg::size_type xreg::MultivarNormalDist::dim() const
 {
   return static_cast<size_type>(mean_.size());
+}
+
+xreg::PtN xreg::MultivarNormalDist::draw_sample(std::mt19937& g) const
+{
+  const size_type d = dim();
+  
+  xregASSERT(static_cast<size_type>(A_.rows()) == d);
+  xregASSERT(static_cast<size_type>(A_.cols()) == d);
+
+  std::normal_distribution<Scalar> std_normal(0, 1);
+  
+  PtN z(d);
+
+  for (size_type i = 0; i < d; ++i)
+  {
+    z(i) = std_normal(g);
+  }
+
+  return mean_ + (A_ * z);
+}
+
+xreg::MatMxN xreg::MultivarNormalDist::draw_samples(const size_type num_samples, std::mt19937& g) const
+{
+  const size_type d = dim();
+  
+  xregASSERT(static_cast<size_type>(A_.rows()) == d);
+  xregASSERT(static_cast<size_type>(A_.cols()) == d);
+
+  std::normal_distribution<Scalar> std_normal(0, 1);
+  
+  PtN z(d);
+
+  MatMxN samples(d, num_samples);
+
+  for (size_type j = 0; j < num_samples; ++j)
+  {
+    for (size_type i = 0; i < d; ++i)
+    {
+      z(i) = std_normal(g);
+    }
+
+    samples.col(j) = mean_ + (A_ * z);
+  }
+
+  return samples;
 }
 
 xreg::MultivarNormalDistZeroCov::MultivarNormalDistZeroCov(const PtN& mean, const PtN& std_devs)
