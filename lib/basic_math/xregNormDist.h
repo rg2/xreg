@@ -82,6 +82,7 @@ private:
 class NormalDist2DIndep final : public Dist
 {
 public:
+  // Takes the mean x and y values and the standard deviations in each direction.
   NormalDist2DIndep(const Scalar m_x, const Scalar m_y,
                     const Scalar s_x, const Scalar s_y);
 
