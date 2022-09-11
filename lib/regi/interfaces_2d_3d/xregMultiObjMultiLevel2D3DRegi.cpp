@@ -253,10 +253,11 @@ void xreg::MultiLevelMultiObjRegi::run()
 
       ds_proj_data[fixed_idx] = DownsampleProjData(fixed_proj_data[global_fixed_idx], lvl.ds_factor);
 
-      if (masks_provided) {
+      if (masks_provided)
+      {
         auto& cur_mask_to_ds = masks_2d[global_fixed_idx];
 
-        if (masks_provided && cur_mask_to_ds)
+        if (cur_mask_to_ds)
         {
           dout() << "downsampling global fixed mask: " << global_fixed_idx << std::endl;
 
