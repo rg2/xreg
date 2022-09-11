@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -74,3 +74,19 @@ xreg::PtN xreg::Dist::log_densities(const PtNList& pts) const
   return out;
 }
 
+xreg::PtN xreg::Dist::draw_sample(std::mt19937&) const
+{
+  throw UnsupportedOperation();
+}
+
+xreg::MatMxN xreg::Dist::draw_samples(const size_type num_samples, std::mt19937& g) const
+{
+  MatMxN samples(dim(), num_samples);
+
+  for (size_type i = 0; i < num_samples; ++i)
+  {
+    samples.col(i) = draw_sample(g);
+  }
+
+  return samples;
+}

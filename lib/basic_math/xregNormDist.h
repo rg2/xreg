@@ -56,6 +56,10 @@ public:
 
   size_type dim() const override;
 
+  PtN draw_sample(std::mt19937& g) const override;
+
+  MatMxN draw_samples(const size_type num_samples, std::mt19937& g) const override;
+
 private:
   const Scalar mu_;
 
@@ -96,6 +100,10 @@ public:
   bool normalized() const override;
 
   size_type dim() const override;
+
+  PtN draw_sample(std::mt19937& g) const override;
+
+  MatMxN draw_samples(const size_type num_samples, std::mt19937& g) const override;
 
 private:
 

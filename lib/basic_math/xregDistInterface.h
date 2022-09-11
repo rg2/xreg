@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,8 @@
 
 #ifndef XREGDISTINTERFACE_H_
 #define XREGDISTINTERFACE_H_
+
+#include <random>
 
 #include "xregCommon.h"
 
@@ -52,6 +54,12 @@ public:
   virtual PtN densities(const PtNList& pts) const;
 
   virtual PtN log_densities(const PtNList& pts) const;
+
+  virtual PtN draw_sample(std::mt19937& g) const;
+
+  // The i,j entry of the output matrix stores the ith component of the jth sample.
+  // e.g. The columns of the output matrix are the samples.
+  virtual MatMxN draw_samples(const size_type num_samples, std::mt19937& g) const;
 };
 
 }  // un-named
