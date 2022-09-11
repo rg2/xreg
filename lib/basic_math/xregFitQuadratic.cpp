@@ -51,7 +51,7 @@ xreg::MatMxN xreg::FitQuadradicForm(const MatMxN& params, const PtN& fn_vals)
     }
   }
 
-  Eigen::JacobiSVD<MatMxN> svd(A, Eigen::ComputeFullU | Eigen::ComputeFullU);
+  Eigen::JacobiSVD<MatMxN> svd(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
   const PtN H_flat = svd.solve(fn_vals);
 
@@ -119,7 +119,7 @@ xreg::MatMxN xreg::FitQuadradicFormSymmetric(const MatMxN& params, const PtN& fn
     }
   }
 
-  Eigen::JacobiSVD<MatMxN> svd(A, Eigen::ComputeFullU | Eigen::ComputeFullU);
+  Eigen::JacobiSVD<MatMxN> svd(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
   const PtN H_flat = svd.solve(fn_vals);
 
