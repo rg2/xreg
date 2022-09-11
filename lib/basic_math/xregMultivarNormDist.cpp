@@ -147,6 +147,8 @@ xreg::MultivarNormalDistZeroCov::MultivarNormalDistZeroCov(const PtN& mean, cons
 
   mean_ = mean;
 
+  std_devs_ = std_devs;
+
   const PtN vars = std_devs.array().square().matrix();
 
   vars_inv_ = vars.array().inverse();
@@ -189,4 +191,39 @@ bool xreg::MultivarNormalDistZeroCov::normalized() const
 xreg::size_type xreg::MultivarNormalDistZeroCov::dim() const
 {
   return static_cast<size_type>(mean_.size());
+}
+
+xreg::PtN xreg::MultivarNormalDistZeroCov::draw_sample(std::mt19937& g) const
+{
+  const size_type d = dim();
+
+  std::normal_distribution<Scalar> std_normal(0, 1);
+  
+  PtN x(d);
+
+  for (size_type i = 0; i < d; ++i)
+  {
+    x(i) = mean_(i) + (std_devs_(i) * std_normal(g));
+  }
+
+  return x;
+}
+
+xreg::MatMxN xreg::MultivarNormalDistZeroCov::draw_samples(const size_type num_samples, std::mt19937& g) const
+{
+  const size_type d = dim();
+
+  std::normal_distribution<Scalar> std_normal(0, 1);
+  
+  MatMxN samples(d, num_samples);
+
+  for (size_type j = 0; j < num_samples; ++j)
+  {
+    for (size_type i = 0; i < d; ++i)
+    {
+      samples(i,j) = mean_(i) + (std_devs_(i) * std_normal(g));
+    }
+  }
+
+  return samples;
 }

@@ -84,12 +84,19 @@ public:
 
   size_type dim() const override;
 
+  PtN draw_sample(std::mt19937& g) const override;
+
+  MatMxN draw_samples(const size_type num_samples, std::mt19937& g) const override;
+
 private:
   PtN mean_;
   
   Eigen::Array<Scalar,Eigen::Dynamic,1> vars_inv_;
 
   Scalar log_norm_const_;
+
+  // This is used when sampling
+  PtN std_devs_;
 };
 
 }  // xreg
