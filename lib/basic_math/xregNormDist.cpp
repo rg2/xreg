@@ -126,9 +126,9 @@ xreg::NormalDist2DIndep::log_density(const Scalar x, const Scalar y) const
   const Scalar x_minus_mu_x = x - mu_x_;
   const Scalar y_minus_mu_y = y - mu_y_;
   
-  return (Scalar(-0.5)
-           * (x_minus_mu_x * x_minus_mu_x * one_over_sigma_x_sq_)
-           * (y_minus_mu_y * y_minus_mu_y * one_over_sigma_y_sq_)) - log_norm_const_;
+  return (Scalar(-0.5) *
+           ((x_minus_mu_x * x_minus_mu_x * one_over_sigma_x_sq_)
+              + (y_minus_mu_y * y_minus_mu_y * one_over_sigma_y_sq_))) - log_norm_const_;
 }
   
 xreg::NormalDist2DIndep::Scalar
