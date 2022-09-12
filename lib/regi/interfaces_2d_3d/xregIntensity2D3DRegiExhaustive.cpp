@@ -129,6 +129,8 @@ void xreg::Intensity2D3DRegiExhaustive::run()
     mg_it = mesh_grid_.begin();
   }
 
+  all_sim_vals_.clear();
+
   double next_print_percent = print_status_inc_;
 
   while (num_xforms_left)
