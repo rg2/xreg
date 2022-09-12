@@ -204,6 +204,31 @@ struct MultiLevelMultiObjRegi : ObjWithOStream
   // This will be allocated by calling set_save_debug_info()
   std::shared_ptr<DebugRegiResultsMultiLevel> debug_info;
 
+  // (Advanced Feature)
+  // Whether or not certain objects (ray casters, sim metrics, 2D/3D regi objects) should
+  // be deallocated when they are no longer necessary. This behavior is useful when a
+  // registration strategy use nearly all of the GPU resources and cannot execute unless
+  // all unrelated GPU resources are released. Disabling this behavior is useful when the
+  // related objects may be reused between calls of run() and may potentially result in
+  // quicker subsequent runs.
+  bool dealloc_resources = true;
+
+  // (Advanced Feature)
+  // Whether or not the user provided ray tracer object needs its resources allocated.
+  // This should nearly always be set to true. However, it is useful to set to false when
+  // an existing ray tracer may be resused in order to save time during resource allocation.
+  // The volumes and camera models should not change between successive calls to run() when
+  // this flag is set to false.
+  bool ray_caster_needs_resources_alloc = true;
+
+  // (Advanced Feature)
+  // Whether or not the user provided sim metric objects need their resources allocated.
+  // This should nearly always be set to true. However, it is useful to set to false when
+  // existing sim metrics may be resused in order to save time during resource allocation.
+  // Fixed images and masks should not change between successive calls to run() when
+  // this flag is set to false.
+  bool sim_metrics_need_resources_alloc = true;
+
   /// This must be set prior to registration if debug info is to be saved
   /// The debug_info member is valid after this
   void set_save_debug_info(const bool save_debug_info);
