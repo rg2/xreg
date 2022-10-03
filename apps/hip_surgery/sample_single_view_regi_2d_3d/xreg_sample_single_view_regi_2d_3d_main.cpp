@@ -435,6 +435,11 @@ int main(int argc, char* argv[])
          "When using posterior sampling, passing zero will remove the prior probability in this dimension.")
          << 150.0;
 
+  po.add("no-prior", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-prior",
+         "When using posterior sampling, passing this flag indicates that the prior distribution should not be used "
+         "(e.g. only sample from likelihood).")
+      << true;
+
   po.add("batch-size", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_UINT32, "batch-size",
          "Maximum number of objective functions to evaluate at once on the GPU.")
     << ProgOpts::uint32(1000);
@@ -484,12 +489,20 @@ int main(int argc, char* argv[])
 
   const double ds_factor = po.get("ds-factor");
 
+  const bool no_prior = po.get("no-prior");
+
   bool prior_only_sampling = false;
 
   if (sampling_method_str == "prior")
   {
     vout << "using prior-only sampling" << std::endl;
     prior_only_sampling = true;
+
+    if (no_prior)
+    {
+      std::cerr << "ERROR: cannot skip prior distribution when sampling only from prior!" << std::endl;
+      return kEXIT_VAL_BAD_USE;
+    }
   }
   else if (sampling_method_str == "mvn-approx")
   {
@@ -593,6 +606,12 @@ int main(int argc, char* argv[])
   }
   else
   {
+    if (no_prior)
+    {
+      vout << "discarding prior distribution, only likelihood will be sampled..." << std::endl;
+      prior_std_devs.setZero();
+    }
+
     vout << "preprocessing input projection in preparation for similarity metric calculations..." << std::endl;
 
     ProjPreProc proj_preproc;
