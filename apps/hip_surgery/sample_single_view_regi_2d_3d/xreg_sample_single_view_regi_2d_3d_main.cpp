@@ -191,6 +191,97 @@ private:
   std::shared_ptr<MultivarNormalDistZeroCov> dist_;
 };
 
+class ProductOfZeroMeanSameDimMultiVarNormalsDist : public Dist
+{
+public:
+  ProductOfZeroMeanSameDimMultiVarNormalsDist(const MatMxN& cov1, const MatMxN& cov2)
+  {
+    dim_ = static_cast<size_type>(cov1.rows());
+    xregASSERT(dim_ > 0);
+
+    // Check that the covariance matrices are square and consistent
+    xregASSERT(dim_ == static_cast<size_type>(cov1.cols()));
+    xregASSERT(dim_ == static_cast<size_type>(cov2.rows()));
+    xregASSERT(dim_ == static_cast<size_type>(cov2.cols()));
+
+    PtN zero_mean(dim_);
+    zero_mean.setZero();
+
+    auto mvn_dist1 = std::make_shared<MultivarNormalDist>(zero_mean, cov1, true);
+    auto mvn_dist2 = std::make_shared<MultivarNormalDist>(zero_mean, cov2, true);
+
+    const Scalar inv_norm_const1 = Scalar(1) / mvn_dist1->norm_const();
+    const Scalar inv_norm_const2 = Scalar(1) / mvn_dist2->norm_const();
+
+    inv_prod_of_norm_consts_ = inv_norm_const1 * inv_norm_const2;
+
+    // determine which source distribution should be used as a proposal distribution for
+    // rejection sampling of the product distribution
+    const bool use_dist1_for_prop = inv_norm_const1 > inv_norm_const2;
+
+    prop_dist_ = use_dist1_for_prop ? mvn_dist1 : mvn_dist2;
+
+    ratio_bound_ = use_dist1_for_prop ? inv_norm_const2 : inv_norm_const1;
+
+    cov_inv_ = mvn_dist1->cov_inv() + mvn_dist2->cov_inv();
+  }
+
+  Scalar density(const PtN& x) const override
+  {
+    xregASSERT(static_cast<size_type>(x.size()) == dim_);
+
+    return inv_prod_of_norm_consts_ * std::exp((x.transpose() * cov_inv_ * x)(0,0) / Scalar(-2));
+  }
+
+  Scalar log_density(const PtN& x) const override
+  {
+    throw UnsupportedOperation();
+  }
+
+  bool normalized() const override
+  {
+    return false;
+  }
+
+  size_type dim() const override
+  {
+    return dim_;
+  }
+
+  PtN draw_sample(std::mt19937& g) const override
+  {
+    // Basic rejection sampling strategy
+
+    std::uniform_real_distribution<Scalar> uni_01_dist(0, 1);
+
+    PtN cur_cand;
+
+    while (true)
+    {
+      cur_cand = prop_dist_->draw_sample(g);
+
+      if (uni_01_dist(g) < (density(cur_cand) / (prop_dist_->density(cur_cand) * ratio_bound_)))
+      {
+        break;
+      }
+    }
+
+    return cur_cand;
+  }
+
+private:
+
+  size_type dim_ = 0;
+
+  Scalar inv_prod_of_norm_consts_ = 0;
+
+  std::shared_ptr<MultivarNormalDist> prop_dist_;
+
+  Scalar ratio_bound_ = 0;
+
+  MatMxN cov_inv_;
+};
+
 int main(int argc, char* argv[])
 {
   constexpr int kEXIT_VAL_SUCCESS        = 0;
