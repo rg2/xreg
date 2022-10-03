@@ -33,15 +33,23 @@
 #include "xregHDF5.h"
 #include "xregH5ProjDataIO.h"
 #include "xregHUToLinAtt.h"
+#include "xregImgSimMetric2DGradImgParamInterface.h"
+#include "xregImgSimMetric2DPatchCommon.h"
+#include "xregImgSimMetric2DProgOpts.h"
 #include "xregITKBasicImageUtils.h"
 #include "xregITKIOUtils.h"
 #include "xregITKLabelUtils.h"
 #include "xregITKOpenCVUtils.h"
 #include "xregITKRemapUtils.h"
+#include "xregMultiObjMultiLevel2D3DRegi.h"
 #include "xregMultivarNormDist.h"
+#include "xregMultivarNormDistFit.h"
+#include "xregNDRange.h"
 #include "xregOpenCVUtils.h"
 #include "xregProgOptUtils.h"
+#include "xregProjPreProc.h"
 #include "xregRayCastProgOpts.h"
+#include "xregIntensity2D3DRegiExhaustive.h"
 #include "xregRigidUtils.h"
 #include "xregSampleUtils.h"
 #include "xregSE3OptVars.h"
@@ -163,17 +171,9 @@ public:
 class PoseParamSamplerIndepNormalDims : public PoseParamSampler
 {
 public:
-  PoseParamSamplerIndepNormalDims(
-    const CoordScalar rot_x_deg_std_dev, const CoordScalar rot_y_deg_std_dev, const CoordScalar rot_z_deg_std_dev,
-    const CoordScalar trans_x_mm_std_dev, const CoordScalar trans_y_mm_std_dev, const CoordScalar trans_z_mm_std_dev)
+  PoseParamSamplerIndepNormalDims(const PtN& std_devs)
   {
-    PtN std_devs(6);
-    std_devs(0) = rot_x_deg_std_dev;
-    std_devs(1) = rot_y_deg_std_dev;
-    std_devs(2) = rot_z_deg_std_dev;
-    std_devs(3) = trans_x_mm_std_dev;
-    std_devs(4) = trans_y_mm_std_dev;
-    std_devs(5) = trans_z_mm_std_dev;
+    xregASSERT(std_devs.size() == 6);
 
     PtN mean(6);
     mean.setZero();
@@ -191,95 +191,177 @@ private:
   std::shared_ptr<MultivarNormalDistZeroCov> dist_;
 };
 
-class ProductOfZeroMeanSameDimMultiVarNormalsDist : public Dist
+class PoseParamSamplerMultiVarNormalLikelihoodApprox : public PoseParamSampler
 {
 public:
-  ProductOfZeroMeanSameDimMultiVarNormalsDist(const MatMxN& cov1, const MatMxN& cov2)
+  PoseParamSamplerMultiVarNormalLikelihoodApprox(
+    itk::Image<float,3>::Pointer ct_vol_lin_att,
+    const ProjDataF32& proj_data,
+    const FrameTransform& gt_cam_extrins_to_pelvis_vol,
+    const ConstSpacedMeshGrid& params_grid,
+    const float ds_factor_2d,
+    const size_type batch_size,
+    const PtN& prior_std_devs,
+    ProgOpts& po)
   {
-    dim_ = static_cast<size_type>(cov1.rows());
-    xregASSERT(dim_ > 0);
+    xregASSERT(bool(ct_vol_lin_att));
+    xregASSERT(params_grid.num_dims() == 6);
+    xregASSERT(static_cast<size_type>(prior_std_devs.size()) == 6);
 
-    // Check that the covariance matrices are square and consistent
-    xregASSERT(dim_ == static_cast<size_type>(cov1.cols()));
-    xregASSERT(dim_ == static_cast<size_type>(cov2.rows()));
-    xregASSERT(dim_ == static_cast<size_type>(cov2.cols()));
+    auto& vout = po.vout();
 
-    PtN zero_mean(dim_);
-    zero_mean.setZero();
+    // setup a registration object to perform the batch objective function calculation
 
-    auto mvn_dist1 = std::make_shared<MultivarNormalDist>(zero_mean, cov1, true);
-    auto mvn_dist2 = std::make_shared<MultivarNormalDist>(zero_mean, cov2, true);
+    auto se3_vars = std::make_shared<SE3OptVarsLieAlg>();
 
-    const Scalar inv_norm_const1 = Scalar(1) / mvn_dist1->norm_const();
-    const Scalar inv_norm_const2 = Scalar(1) / mvn_dist2->norm_const();
+    auto ex_regi = std::make_shared<Intensity2D3DRegiExhaustive>();
+    ex_regi->set_opt_vars(se3_vars);
+    ex_regi->set_save_all_sim_vals(true);
+    ex_regi->set_save_all_cam_wrt_vols_in_aux(false);
+    ex_regi->set_print_status_inc(false);
+    ex_regi->set_include_penalty_in_obj_fn(false);
 
-    inv_prod_of_norm_consts_ = inv_norm_const1 * inv_norm_const2;
+    MultiLevelMultiObjRegi ml_mo_regi;
+    ml_mo_regi.set_debug_output_stream(vout, po.get("verbose").as_bool());
+    ml_mo_regi.set_save_debug_info(false);
 
-    // determine which source distribution should be used as a proposal distribution for
-    // rejection sampling of the product distribution
-    const bool use_dist1_for_prop = inv_norm_const1 > inv_norm_const2;
+    ml_mo_regi.vol_names = { "Pelvis" };
+  
+    ml_mo_regi.vols = { ct_vol_lin_att };
 
-    prop_dist_ = use_dist1_for_prop ? mvn_dist1 : mvn_dist2;
+    ml_mo_regi.fixed_proj_data = { proj_data };
 
-    ratio_bound_ = use_dist1_for_prop ? inv_norm_const2 : inv_norm_const1;
+    // setup the camera reference frame which we optimize in
+    auto cam_align_ref = std::make_shared<MultiLevelMultiObjRegi::CamAlignRefFrameWithCurPose>();
+    cam_align_ref->vol_idx = 0;
+    cam_align_ref->center_of_rot_wrt_vol = ITKVol3DCenterAsPhysPt(ct_vol_lin_att.GetPointer());
+    cam_align_ref->cam_extrins = ml_mo_regi.fixed_proj_data[0].cam.extrins;
 
-    cov_inv_ = mvn_dist1->cov_inv() + mvn_dist2->cov_inv();
-  }
+    ml_mo_regi.ref_frames = { cam_align_ref };
 
-  Scalar density(const PtN& x) const override
-  {
-    xregASSERT(static_cast<size_type>(x.size()) == dim_);
+    ml_mo_regi.init_cam_to_vols = { gt_cam_extrins_to_pelvis_vol };
 
-    return inv_prod_of_norm_consts_ * std::exp((x.transpose() * cov_inv_ * x)(0,0) / Scalar(-2));
-  }
+    ml_mo_regi.levels.resize(1);
 
-  Scalar log_density(const PtN& x) const override
-  {
-    throw UnsupportedOperation();
-  }
+    using UseCurEstForInit = MultiLevelMultiObjRegi::Level::SingleRegi::InitPosePrevPoseEst;
 
-  bool normalized() const override
-  {
-    return false;
-  }
-
-  size_type dim() const override
-  {
-    return dim_;
-  }
-
-  PtN draw_sample(std::mt19937& g) const override
-  {
-    // Basic rejection sampling strategy
-
-    std::uniform_real_distribution<Scalar> uni_01_dist(0, 1);
-
-    PtN cur_cand;
-
-    while (true)
     {
-      cur_cand = prop_dist_->draw_sample(g);
+      vout << "  setting regi level..." << std::endl;
+      
+      auto& lvl = ml_mo_regi.levels[0];
+      
+      lvl.fixed_imgs_to_use = { 0 };
 
-      if (uni_01_dist(g) < (density(cur_cand) / (prop_dist_->density(cur_cand) * ratio_bound_)))
+      lvl.ds_factor = ds_factor_2d;
+      
+      vout << "    setting up ray caster..." << std::endl;
+      lvl.ray_caster = LineIntRayCasterFromProgOpts(po);
+      
+      vout << "    setting up sim metric..." << std::endl;
+      auto sm = PatchGradNCCSimMetricFromProgOpts(po);
+
       {
-        break;
+        auto* grad_sm = dynamic_cast<ImgSimMetric2DGradImgParamInterface*>(sm.get());
+
+        grad_sm->set_smooth_img_before_sobel_kernel_radius(5);
       }
+    
+      {
+        auto* patch_sm = dynamic_cast<ImgSimMetric2DPatchCommon*>(sm.get());
+        xregASSERT(patch_sm);
+
+        patch_sm->set_patch_radius(std::lround(lvl.ds_factor * 41));
+        patch_sm->set_patch_stride(1);
+      }
+
+      lvl.sim_metrics = { sm };
+
+      lvl.regis.resize(1);
+
+      auto& regi = lvl.regis[0];
+
+      regi.mov_vols    = { 0 };  // pelvis vol pose is optimized over
+      regi.ref_frames  = { 0 };  // use ref frame that is camera aligned
+      regi.static_vols = { };    // No other objects exist
+
+      // use the current estimate of the pelvis as the initialization at this phase
+      auto init_guess_fn = std::make_shared<UseCurEstForInit>();
+      init_guess_fn->vol_idx = 0;
+      regi.init_mov_vol_poses = { init_guess_fn };
+
+      lvl.regis[0].regi = ex_regi;
     }
 
-    return cur_cand;
+    const size_type mvn_grid_num_el = params_grid.size();
+
+    vout << "Number of cost-functions: " << mvn_grid_num_el << std::endl;
+
+    ex_regi->set_cam_wrt_vols(params_grid, batch_size);
+
+    vout << "Calculating cost-functions..." << std::endl;
+    ml_mo_regi.run();
+
+    vout << "setting up inputs for covariance estimation..." << std::endl;
+
+    MatMxN pose_params_for_fit(6, mvn_grid_num_el);
+
+    PtN neg_sim_vals = Eigen::Map<const PtN>(&ex_regi->all_sim_vals()[0], mvn_grid_num_el);
+    neg_sim_vals *= -1;
+
+    const CoordScalar neg_sim_val_at_regi = neg_sim_vals(mvn_grid_num_el / 2);
+
+    size_type flat_idx = 0;
+    for (auto grid_it = params_grid.begin(); grid_it != params_grid.end(); ++grid_it, ++flat_idx)
+    {
+      pose_params_for_fit.col(flat_idx) = *grid_it;
+    }
+
+    vout << "fitting quadratic model to data for covariance estimates..." << std::endl;
+
+    MatMxN cov;
+    MatMxN cov_inv;
+    CoordScalar det_cov = 0;
+
+    std::tie(cov, cov_inv, det_cov) = FindCovMatFromZeroMeanLogPts(pose_params_for_fit, neg_sim_vals, neg_sim_val_at_regi);
+
+    vout << "likelihood estimates:\n"
+         << "cov:\n" << cov
+         << "\ncov inv:\n" << cov_inv
+         << "\ndet(cov):\n" << det_cov << std::endl;
+
+    vout << "creating posterior covariance..." << std::endl;
+
+    for (int i = 0; i < 6; ++i)
+    {
+      cov_inv(i,i) += 1.0f / (prior_std_devs(i) * prior_std_devs(i));
+    }
+
+    vout << "posterior cov inv:\n" << cov_inv << std::endl;
+
+    Eigen::FullPivLU<MatMxN> lu(cov_inv);
+    xregASSERT(lu.isInvertible());
+
+    cov = lu.inverse();
+
+    vout << "posterior cov:\n" << cov << std::endl;
+
+    vout << "creating sampling distribution..." << std::endl;
+
+    PtN zero_mean(6);
+    zero_mean.setZero();
+
+    dist_ = std::make_shared<MultivarNormalDist>(zero_mean, cov, true);
+
+    vout << "multivariate normal approximate model complete..." << std::endl;
+  }
+
+  MatMxN SamplePoseParams(const size_type num_samples, std::mt19937& rng_eng) override
+  {
+    return dist_->draw_samples(num_samples, rng_eng);
   }
 
 private:
-
-  size_type dim_ = 0;
-
-  Scalar inv_prod_of_norm_consts_ = 0;
-
-  std::shared_ptr<MultivarNormalDist> prop_dist_;
-
-  Scalar ratio_bound_ = 0;
-
-  MatMxN cov_inv_;
+  std::shared_ptr<MultivarNormalDist> dist_;
 };
 
 int main(int argc, char* argv[])
@@ -299,9 +381,13 @@ int main(int argc, char* argv[])
   po.set_arg_usage("<HDF5 Data File> <patient ID> <projection index> <num samples> <output directory>");
   po.set_min_num_pos_args(5);
   
-  //po.add("batch-size", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_UINT32, "batch-size",
-  //       "Maximum number of objective functions to evaluate at once on the GPU.")
-  //  << ProgOpts::uint32(100);
+  po.add("method", 'm', ProgOpts::kSTORE_STRING, "method",
+         "Sampling method. Valid entries are \"prior\" and \"mvn-approx.\"")
+         << "prior";
+
+  po.add("batch-size", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_UINT32, "batch-size",
+         "Maximum number of objective functions to evaluate at once on the GPU.")
+    << ProgOpts::uint32(1000);
   
   //po.add("ds-factor", 'd', ProgOpts::kSTORE_DOUBLE, "ds-factor",
   //       "Downsampling factor of each 2D projection dimension. 0.25 --> 4x downsampling in width AND height.")
@@ -339,11 +425,31 @@ int main(int argc, char* argv[])
   const size_type   num_samples        = StringCast<size_type>(po.pos_args()[3]);
   const std::string dst_dir_path       = po.pos_args()[4];
 
+  const std::string sampling_method_str = po.get("method");
+
   const bool rng_seed_provided = po.has("rng-seed");
 
-  //const size_type grid_batch_size = po.get("batch-size").as_uint32();
+  const size_type grid_batch_size = po.get("batch-size").as_uint32();
 
   //const double ds_factor = po.get("ds-factor");
+
+  bool prior_only_sampling = false;
+
+  if (sampling_method_str == "prior")
+  {
+    vout << "using prior-only sampling" << std::endl;
+    prior_only_sampling = true;
+  }
+  else if (sampling_method_str == "mvn-approx")
+  {
+    vout << "using multivariate normal approximate sampling" << std::endl;
+    prior_only_sampling = false;
+  }
+  else
+  {
+    std::cerr << "ERROR: invalid sampling method string: " << sampling_method_str << std::endl;
+    return kEXIT_VAL_BAD_USE;
+  }
 
   if (num_samples < 1)
   {
@@ -397,9 +503,64 @@ int main(int argc, char* argv[])
   vout << "converting HU --> Lin. Att." << std::endl;
   auto ct_lin_att = HUToLinAtt(ct_hu.GetPointer());
 
-  vout << "creating indep. normal dist. pose sampler..." << std::endl;
-  auto param_sampler = std::make_shared<PoseParamSamplerIndepNormalDims>(
-                            1.0 * kDEG2RAD, 1.0 * kDEG2RAD, 1.0 * kDEG2RAD, 1.0, 1.0, 5.0);
+  std::shared_ptr<PoseParamSampler> param_sampler;
+
+  PtN prior_std_devs(6);
+  prior_std_devs(0) = 1.0 * kDEG2RAD;
+  prior_std_devs(1) = 1.0 * kDEG2RAD;
+  prior_std_devs(2) = 1.0 * kDEG2RAD;
+  prior_std_devs(3) = 1.0;
+  prior_std_devs(4) = 1.0;
+  prior_std_devs(5) = 5.0;
+
+  if (prior_only_sampling)
+  {
+    vout << "creating indep. normal dist. pose sampler..." << std::endl;
+    param_sampler = std::make_shared<PoseParamSamplerIndepNormalDims>(prior_std_devs);
+  }
+  else
+  {
+    vout << "preprocessing input projection in preparation for similarity metric calculations..." << std::endl;
+
+    ProjPreProc proj_preproc;
+
+    // consider making this a configurable parameter for use with other datasets,
+    // e.g. simulated or traditional radiography
+    proj_preproc.params.no_log_remap = false;
+
+    proj_preproc.input_projs = { data_from_h5.pd };
+
+    proj_preproc.set_debug_output_stream(vout, verbose);
+    
+    vout << "preprocessing projection..." << std::endl;
+    proj_preproc();
+
+    vout << "setting up grid object..." << std::endl;
+
+    // each entry is: start,stop,increment
+    const ConstSpacedMeshGrid::Range1DList mvn_fit_grid_ranges = 
+    {
+      { -1 * kDEG2RAD, 1 * kDEG2RAD, 0.5 * kDEG2RAD },
+      { -1 * kDEG2RAD, 1 * kDEG2RAD, 0.5 * kDEG2RAD },
+      { -1 * kDEG2RAD, 1 * kDEG2RAD, 0.5 * kDEG2RAD },
+      { -1,            1,            0.5            },
+      { -1,            1,            0.5            },
+      { -1,            1,            0.5            }
+    };
+
+    ConstSpacedMeshGrid mvn_fit_grid(mvn_fit_grid_ranges);
+
+    vout << "creating mvn approx. sampler..." << std::endl;
+    param_sampler = std::make_shared<PoseParamSamplerMultiVarNormalLikelihoodApprox>(
+      ct_lin_att,
+      proj_preproc.output_projs[0],
+      data_from_h5.gt_cam_extrins_to_pelvis_vol,
+      mvn_fit_grid,
+      0.125f,
+      grid_batch_size,
+      prior_std_devs,
+      po);
+  }
 
   MatMxN pose_param_samples(6, num_samples);
   
