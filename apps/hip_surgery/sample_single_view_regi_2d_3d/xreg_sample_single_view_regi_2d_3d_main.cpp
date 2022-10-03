@@ -403,37 +403,37 @@ int main(int argc, char* argv[])
          "Prior distribution parameter. "
          "Standard deviation of the univariate normal distribution for rotation about X. Degrees. "
          "When using posterior sampling, passing zero will remove the prior probability in this dimension.")
-         << 15.0;
+         << 2.0;
   
   po.add("prior-rot-y-std-dev-deg", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "prior-rot-y-std-dev-deg",
          "Prior distribution parameter. "
          "Standard deviation of the univariate normal distribution for rotation about Y. Degrees. "
          "When using posterior sampling, passing zero will remove the prior probability in this dimension.")
-         << 15.0;
+         << 2.0;
   
   po.add("prior-rot-z-std-dev-deg", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "prior-rot-z-std-dev-deg",
          "Prior distribution parameter. "
          "Standard deviation of the univariate normal distribution for rotation about Z. Degrees. "
          "When using posterior sampling, passing zero will remove the prior probability in this dimension.")
-         << 10.0;
+         << 1.0;
   
   po.add("prior-trans-x-std-dev-mm", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "prior-trans-x-std-dev-mm",
          "Prior distribution parameter. "
          "Standard deviation of the univariate normal distribution for translation along X. mm. "
          "When using posterior sampling, passing zero will remove the prior probability in this dimension.")
-         << 30.0;
+         << 2.0;
   
   po.add("prior-trans-y-std-dev-mm", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "prior-trans-y-std-dev-mm",
          "Prior distribution parameter. "
          "Standard deviation of the univariate normal distribution for translation along Y. mm. "
          "When using posterior sampling, passing zero will remove the prior probability in this dimension.")
-         << 30.0;
+         << 2.0;
   
   po.add("prior-trans-z-std-dev-mm", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "prior-trans-z-std-dev-mm",
          "Prior distribution parameter. "
          "Standard deviation of the univariate normal distribution for translation along Z. mm. "
          "When using posterior sampling, passing zero will remove the prior probability in this dimension.")
-         << 150.0;
+         << 15.0;
 
   po.add("no-prior", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-prior",
          "When using posterior sampling, passing this flag indicates that the prior distribution should not be used "
