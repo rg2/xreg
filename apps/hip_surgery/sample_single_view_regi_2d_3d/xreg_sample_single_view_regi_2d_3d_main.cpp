@@ -49,43 +49,6 @@
 
 using namespace xreg;
 
-class PoseParamSampler
-{
-public:
-  virtual MatMxN SamplePoseParams(const size_type num_samples, std::mt19937& rng_eng) = 0;
-};
-
-class PoseParamSamplerIndepNormalDims : public PoseParamSampler
-{
-public:
-  PoseParamSamplerIndepNormalDims(
-    const CoordScalar rot_x_deg_std_dev, const CoordScalar rot_y_deg_std_dev, const CoordScalar rot_z_deg_std_dev,
-    const CoordScalar trans_x_mm_std_dev, const CoordScalar trans_y_mm_std_dev, const CoordScalar trans_z_mm_std_dev)
-  {
-    PtN std_devs(6);
-    std_devs(0) = rot_x_deg_std_dev;
-    std_devs(1) = rot_y_deg_std_dev;
-    std_devs(2) = rot_z_deg_std_dev;
-    std_devs(3) = trans_x_mm_std_dev;
-    std_devs(4) = trans_y_mm_std_dev;
-    std_devs(5) = trans_z_mm_std_dev;
-
-    PtN mean(6);
-    mean.setZero();
-
-    dist_ = std::make_shared<MultivarNormalDistZeroCov>(mean, std_devs);
-  }
-
-  MatMxN SamplePoseParams(const size_type num_samples, std::mt19937& rng_eng) override
-  {
-    return dist_->draw_samples(num_samples, rng_eng);
-  }
-
-private:
-
-  std::shared_ptr<MultivarNormalDistZeroCov> dist_;
-};
-
 struct SamplingToolData
 {
   itk::Image<float,3>::Pointer ct_vol;
@@ -190,6 +153,43 @@ SamplingToolData ReadPelvisVolProjAndGtFromH5File(
 
   return data;
 }
+
+class PoseParamSampler
+{
+public:
+  virtual MatMxN SamplePoseParams(const size_type num_samples, std::mt19937& rng_eng) = 0;
+};
+
+class PoseParamSamplerIndepNormalDims : public PoseParamSampler
+{
+public:
+  PoseParamSamplerIndepNormalDims(
+    const CoordScalar rot_x_deg_std_dev, const CoordScalar rot_y_deg_std_dev, const CoordScalar rot_z_deg_std_dev,
+    const CoordScalar trans_x_mm_std_dev, const CoordScalar trans_y_mm_std_dev, const CoordScalar trans_z_mm_std_dev)
+  {
+    PtN std_devs(6);
+    std_devs(0) = rot_x_deg_std_dev;
+    std_devs(1) = rot_y_deg_std_dev;
+    std_devs(2) = rot_z_deg_std_dev;
+    std_devs(3) = trans_x_mm_std_dev;
+    std_devs(4) = trans_y_mm_std_dev;
+    std_devs(5) = trans_z_mm_std_dev;
+
+    PtN mean(6);
+    mean.setZero();
+
+    dist_ = std::make_shared<MultivarNormalDistZeroCov>(mean, std_devs);
+  }
+
+  MatMxN SamplePoseParams(const size_type num_samples, std::mt19937& rng_eng) override
+  {
+    return dist_->draw_samples(num_samples, rng_eng);
+  }
+
+private:
+
+  std::shared_ptr<MultivarNormalDistZeroCov> dist_;
+};
 
 int main(int argc, char* argv[])
 {
