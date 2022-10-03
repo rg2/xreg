@@ -329,21 +329,35 @@ public:
          << "\ncov inv:\n" << cov_inv
          << "\ndet(cov):\n" << det_cov << std::endl;
 
-    vout << "creating posterior covariance..." << std::endl;
-
-    for (int i = 0; i < 6; ++i)
+    if (prior_std_devs.norm() > CoordScalar(1.0e-8))
     {
-      cov_inv(i,i) += 1.0f / (prior_std_devs(i) * prior_std_devs(i));
+      vout << "creating posterior covariance..." << std::endl;
+
+      for (int i = 0; i < 6; ++i)
+      {
+        if (std::abs(prior_std_devs(i)) > CoordScalar(1.0e-8))
+        {
+          cov_inv(i,i) += 1.0f / (prior_std_devs(i) * prior_std_devs(i));
+        }
+        else
+        {
+          vout << "ignoring prior distribution in dimension index: " << i << std::endl;
+        }
+      }
+
+      vout << "posterior cov inv:\n" << cov_inv << std::endl;
+
+      Eigen::FullPivLU<MatMxN> lu(cov_inv);
+      xregASSERT(lu.isInvertible());
+
+      cov = lu.inverse();
+
+      vout << "posterior cov:\n" << cov << std::endl;
     }
-
-    vout << "posterior cov inv:\n" << cov_inv << std::endl;
-
-    Eigen::FullPivLU<MatMxN> lu(cov_inv);
-    xregASSERT(lu.isInvertible());
-
-    cov = lu.inverse();
-
-    vout << "posterior cov:\n" << cov << std::endl;
+    else
+    {
+      vout << "prior std. deviations are all zeros - likelihood will be sampled." << std::endl;
+    }
 
     vout << "creating sampling distribution..." << std::endl;
 
@@ -384,6 +398,42 @@ int main(int argc, char* argv[])
   po.add("method", 'm', ProgOpts::kSTORE_STRING, "method",
          "Sampling method. Valid entries are \"prior\" and \"mvn-approx.\"")
          << "prior";
+
+  po.add("prior-rot-x-std-dev-deg", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "prior-rot-x-std-dev-deg",
+         "Prior distribution parameter. "
+         "Standard deviation of the univariate normal distribution for rotation about X. Degrees. "
+         "When using posterior sampling, passing zero will remove the prior probability in this dimension.")
+         << 15.0;
+  
+  po.add("prior-rot-y-std-dev-deg", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "prior-rot-y-std-dev-deg",
+         "Prior distribution parameter. "
+         "Standard deviation of the univariate normal distribution for rotation about Y. Degrees. "
+         "When using posterior sampling, passing zero will remove the prior probability in this dimension.")
+         << 15.0;
+  
+  po.add("prior-rot-z-std-dev-deg", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "prior-rot-z-std-dev-deg",
+         "Prior distribution parameter. "
+         "Standard deviation of the univariate normal distribution for rotation about Z. Degrees. "
+         "When using posterior sampling, passing zero will remove the prior probability in this dimension.")
+         << 10.0;
+  
+  po.add("prior-trans-x-std-dev-mm", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "prior-trans-x-std-dev-mm",
+         "Prior distribution parameter. "
+         "Standard deviation of the univariate normal distribution for translation along X. mm. "
+         "When using posterior sampling, passing zero will remove the prior probability in this dimension.")
+         << 30.0;
+  
+  po.add("prior-trans-y-std-dev-mm", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "prior-trans-y-std-dev-mm",
+         "Prior distribution parameter. "
+         "Standard deviation of the univariate normal distribution for translation along Y. mm. "
+         "When using posterior sampling, passing zero will remove the prior probability in this dimension.")
+         << 30.0;
+  
+  po.add("prior-trans-z-std-dev-mm", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_DOUBLE, "prior-trans-z-std-dev-mm",
+         "Prior distribution parameter. "
+         "Standard deviation of the univariate normal distribution for translation along Z. mm. "
+         "When using posterior sampling, passing zero will remove the prior probability in this dimension.")
+         << 150.0;
 
   po.add("batch-size", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_UINT32, "batch-size",
          "Maximum number of objective functions to evaluate at once on the GPU.")
@@ -457,6 +507,14 @@ int main(int argc, char* argv[])
     return kEXIT_VAL_BAD_USE;
   }
 
+  const double prior_rot_x_std_dev_deg = po.get("prior-rot-x-std-dev-deg");
+  const double prior_rot_y_std_dev_deg = po.get("prior-rot-y-std-dev-deg");
+  const double prior_rot_z_std_dev_deg = po.get("prior-rot-z-std-dev-deg");
+
+  const double prior_trans_x_std_dev_mm = po.get("prior-trans-x-std-dev-mm");
+  const double prior_trans_y_std_dev_mm = po.get("prior-trans-y-std-dev-mm");
+  const double prior_trans_z_std_dev_mm = po.get("prior-trans-z-std-dev-mm");
+
   const Path dst_dir = dst_dir_path;
 
   if (dst_dir.exists() && !dst_dir.is_dir())
@@ -506,12 +564,14 @@ int main(int argc, char* argv[])
   std::shared_ptr<PoseParamSampler> param_sampler;
 
   PtN prior_std_devs(6);
-  prior_std_devs(0) = 1.0 * kDEG2RAD;
-  prior_std_devs(1) = 1.0 * kDEG2RAD;
-  prior_std_devs(2) = 1.0 * kDEG2RAD;
-  prior_std_devs(3) = 1.0;
-  prior_std_devs(4) = 1.0;
-  prior_std_devs(5) = 5.0;
+  prior_std_devs(0) = prior_rot_x_std_dev_deg * kDEG2RAD;
+  prior_std_devs(1) = prior_rot_y_std_dev_deg * kDEG2RAD;
+  prior_std_devs(2) = prior_rot_z_std_dev_deg * kDEG2RAD;
+  prior_std_devs(3) = prior_trans_x_std_dev_mm;
+  prior_std_devs(4) = prior_trans_y_std_dev_mm;
+  prior_std_devs(5) = prior_trans_z_std_dev_mm;
+
+  vout << "prior std. devs. (after deg --> rad)\n" << prior_std_devs << std::endl;
 
   if (prior_only_sampling)
   {
