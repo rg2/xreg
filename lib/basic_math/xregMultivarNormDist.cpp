@@ -135,6 +135,11 @@ xreg::MatMxN xreg::MultivarNormalDist::draw_samples(const size_type num_samples,
   return samples;
 }
 
+const xreg::MatMxN& xreg::MultivarNormalDist::cov_inv() const
+{
+  return cov_inv_;
+}
+
 xreg::MultivarNormalDistZeroCov::MultivarNormalDistZeroCov(const PtN& mean, const PtN& std_devs)
 {
   const size_type dim = static_cast<size_type>(mean.size());

@@ -53,6 +53,8 @@ public:
 
   MatMxN draw_samples(const size_type num_samples, std::mt19937& g) const override;
 
+  const MatMxN& cov_inv() const;
+
 private:
   PtN mean_;
   
