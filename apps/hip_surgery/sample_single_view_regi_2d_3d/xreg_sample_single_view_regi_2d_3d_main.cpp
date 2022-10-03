@@ -439,9 +439,10 @@ int main(int argc, char* argv[])
          "Maximum number of objective functions to evaluate at once on the GPU.")
     << ProgOpts::uint32(1000);
   
-  //po.add("ds-factor", 'd', ProgOpts::kSTORE_DOUBLE, "ds-factor",
-  //       "Downsampling factor of each 2D projection dimension. 0.25 --> 4x downsampling in width AND height.")
-  //  << 0.25;
+  po.add("ds-factor", 'd', ProgOpts::kSTORE_DOUBLE, "ds-factor",
+         "Only when performing similarity metric calculations. "
+         "Downsampling factor of each 2D projection dimension. 0.25 --> 4x downsampling in width AND height.")
+    << 0.25;
 
   po.add("rng-seed", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_UINT32, "rng-seed",
          "A seed for the RNG engine. A random seed is drawn from random device when this is not provided.");
@@ -481,7 +482,7 @@ int main(int argc, char* argv[])
 
   const size_type grid_batch_size = po.get("batch-size").as_uint32();
 
-  //const double ds_factor = po.get("ds-factor");
+  const double ds_factor = po.get("ds-factor");
 
   bool prior_only_sampling = false;
 
@@ -616,7 +617,7 @@ int main(int argc, char* argv[])
       proj_preproc.output_projs[0],
       data_from_h5.gt_cam_extrins_to_pelvis_vol,
       mvn_fit_grid,
-      0.125f,
+      ds_factor,
       grid_batch_size,
       prior_std_devs,
       po);
