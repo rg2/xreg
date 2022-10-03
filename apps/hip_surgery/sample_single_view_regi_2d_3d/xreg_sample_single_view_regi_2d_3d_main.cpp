@@ -438,7 +438,7 @@ int main(int argc, char* argv[])
   po.add("no-prior", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_TRUE, "no-prior",
          "When using posterior sampling, passing this flag indicates that the prior distribution should not be used "
          "(e.g. only sample from likelihood).")
-      << true;
+      << false;
 
   po.add("batch-size", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_UINT32, "batch-size",
          "Maximum number of objective functions to evaluate at once on the GPU.")
