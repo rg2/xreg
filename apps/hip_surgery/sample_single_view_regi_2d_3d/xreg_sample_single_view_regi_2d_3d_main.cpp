@@ -554,6 +554,18 @@ int main(int argc, char* argv[])
   vout << "remapping proj to 8bpp for eventual edge overlay..." << std::endl;
   cv::Mat proj_remap = ShallowCopyItkToOpenCV(ITKImageRemap8bpp(
                           data_from_h5.pd.img.GetPointer()).GetPointer()).clone();
+    
+  // NOTE: this only code only supports 0 or 180 right now
+
+  const bool need_to_rot_to_up = data_from_h5.pd.rot_to_pat_up && (*data_from_h5.pd.rot_to_pat_up != ProjDataRotToPatUp::kZERO);
+  vout << "  images need to be rotated 180 degrees to \"up\": " << static_cast<int>(need_to_rot_to_up) << std::endl;
+  
+  if (need_to_rot_to_up)
+  {
+    vout << "    rotating proj remap to up..." << std::endl;
+    FlipImageColumns(&proj_remap);
+    FlipImageRows(&proj_remap);
+  }
 
   vout << "masking out non-pelvis voxels and cropping..." << std::endl;
   auto ct_hu = MakeVolListFromVolAndLabels(data_from_h5.ct_vol.GetPointer(), data_from_h5.seg_vol.GetPointer(),
@@ -749,6 +761,15 @@ int main(int argc, char* argv[])
 
     auto drr_img = edge_creator.line_int_ray_caster->proj(0);
 
+    if (need_to_rot_to_up)
+    {
+      vout << "    rotating raw DRR to up..." << std::endl;
+      cv::Mat drr_orig = ShallowCopyItkToOpenCV(drr_img.GetPointer());
+      FlipImageColumns(&drr_orig);
+      FlipImageRows(&drr_orig);
+    }
+
+
     vout << "  saving raw DRR..." << std::endl;
     WriteITKImageToDisk(drr_img.GetPointer(), fmt::format("{}/drr_raw_{}.nii.gz", dst_dir_path, sample_idx_str));
 
@@ -761,6 +782,13 @@ int main(int argc, char* argv[])
     cv::Mat edges_ocv = ShallowCopyItkToOpenCV(edge_creator.final_edge_img.GetPointer());
     edges_ocv *= 255;  // useful for verifying output png has edges
     
+    if (need_to_rot_to_up)
+    {
+      vout << "    rotating edges to up..." << std::endl;
+      FlipImageColumns(&edges_ocv);
+      FlipImageRows(&edges_ocv);
+    }
+
     vout << "  saving edges..." << std::endl;
     cv::imwrite(fmt::format("{}/edges_{}.png", dst_dir_path, sample_idx_str), edges_ocv);
 
