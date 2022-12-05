@@ -14,7 +14,9 @@ NEED_TO_DOWNLOAD=true
 NEED_TO_BUILD_THIRD_PARTY=true
 NEED_TO_START_XREG=true
 
-DO_GUI=true
+# This can be set to false when building on servers which do not have appropriate UI
+# dependencies. This can avoid linker errors.
+: ${XREG_DO_GUI:=true}
 
 # Use these to explicitly set the build config
 #BUILD_CONFIG="Debug"
@@ -265,7 +267,7 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
   cd build
 
   VTK_NO_RENDER_FLAGS=""
-  if [ "$DO_GUI" = false ]; then
+  if [ "$XREG_DO_GUI" = false ]; then
     VTK_NO_RENDER_FLAGS="-DVTK_RENDERING_BACKEND=None -DVTK_Group_Rendering:BOOL=OFF"
   fi
 
@@ -310,7 +312,7 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
 
   # Need to set this OFF on MARCC (and other systems without the necessary deps)
   OPENCV_GUI_FLAGS=""
-  if [ "$DO_GUI" = false ]; then
+  if [ "$XREG_DO_GUI" = false ]; then
     OPENCV_GUI_FLAGS="-DBUILD_opencv_highgui:BOOL=OFF -DWITH_GSTREAMER:BOOL=OFF"
   fi
 
