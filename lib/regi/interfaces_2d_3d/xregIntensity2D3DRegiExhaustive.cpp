@@ -33,6 +33,7 @@
 #include "xregHDF5.h"
 #include "xregImgSimMetric2D.h"
 #include "xregImgSimMetric2DCombine.h"
+#include "xregRegi2D3DPenaltyFn.h"
 
 //#define XREG_TBME_MOVIE_HACK
 
@@ -129,6 +130,10 @@ void xreg::Intensity2D3DRegiExhaustive::run()
     mg_it = mesh_grid_.begin();
   }
 
+  all_sim_vals_.clear();
+  all_pen_vals_.clear();
+  all_pen_log_prob_vals_.clear();
+
   double next_print_percent = print_status_inc_;
 
   while (num_xforms_left)
@@ -205,6 +210,20 @@ void xreg::Intensity2D3DRegiExhaustive::run()
     if (save_all_sim_vals_)
     {
       all_sim_vals_.insert(all_sim_vals_.end(), sim_vals_.begin(), sim_vals_.begin() + cur_num_xforms_);
+    }
+
+    if (save_all_penalty_vals_)
+    {
+      const auto& pen_vals = penalty_fn_->reg_vals();
+
+      all_pen_vals_.insert(all_pen_vals_.end(), pen_vals.begin(), pen_vals.begin() + cur_num_xforms_);
+
+      if (penalty_fn_->compute_probs())
+      {
+        const auto& log_probs = penalty_fn_->log_probs();
+
+        all_pen_log_prob_vals_.insert(all_pen_log_prob_vals_.end(), log_probs.begin(), log_probs.begin() + cur_num_xforms_);
+      }
     }
 
 #ifdef XREG_TBME_MOVIE_HACK
@@ -316,10 +335,32 @@ void xreg::Intensity2D3DRegiExhaustive::set_save_all_sim_vals(const bool s)
   save_all_sim_vals_ = s;
 }
 
+bool xreg::Intensity2D3DRegiExhaustive::save_all_penalty_vals() const
+{
+  return save_all_penalty_vals_;
+}
+
+void xreg::Intensity2D3DRegiExhaustive::set_save_all_penalty_vals(const bool s)
+{
+  save_all_penalty_vals_ = s;
+}
+
 const xreg::Intensity2D3DRegiExhaustive::ScalarList&
 xreg::Intensity2D3DRegiExhaustive::all_sim_vals() const
 {
   return all_sim_vals_;
+}
+
+const xreg::Intensity2D3DRegiExhaustive::ScalarList&
+xreg::Intensity2D3DRegiExhaustive::all_penalty_vals() const
+{
+  return all_pen_vals_;
+}
+
+const xreg::Intensity2D3DRegiExhaustive::ScalarList&
+xreg::Intensity2D3DRegiExhaustive::all_penalty_log_probs() const
+{
+  return all_pen_log_prob_vals_;
 }
 
 void xreg::Intensity2D3DRegiExhaustive::set_save_all_cam_wrt_vols_in_aux(const bool s)

@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2020-2022 Robert Grupp
+# Copyright (c) 2022 Robert Grupp
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,22 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-file(GLOB_RECURSE XREG_CUR_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+set(EXE_NAME "${XREG_EXE_PREFIX}sample-single-view-regi-2d-3d")
 
-add_library(xreg_basic_math OBJECT ${XREG_CUR_LIB_HEADERS}
-                                   xregPolyFit.cpp
-                                   xregFitQuadratic.cpp
-                                   xregDistInterface.cpp
-                                   xregNormDist.cpp
-                                   xregMultivarNormDist.cpp
-                                   xregFoldNormDist.cpp
-                                   xregLogNormDist.cpp
-                                   xregNullDist.cpp
-                                   xregNormDistFit.cpp
-                                   xregMultivarNormDistFit.cpp
-                                   xregPolyFindZeros.cpp
-                                   xregBasicStats.cpp
-                                   xregSampleUniformUnitVecs.cpp
-                                   xregNDRange.cpp
-                                   xregLinAlgUtils.cpp)
+add_executable(${EXE_NAME} xreg_sample_single_view_regi_2d_3d_main.cpp)
+
+target_link_libraries(${EXE_NAME} PUBLIC ${XREG_EXE_LIBS_TO_LINK})
+
+install(TARGETS ${EXE_NAME})
 

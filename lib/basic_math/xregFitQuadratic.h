@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2022 Robert Grupp
+ * Copyright (c) 2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,47 +22,36 @@
  * SOFTWARE.
  */
 
-#ifndef XREGDISTINTERFACE_H_
-#define XREGDISTINTERFACE_H_
-
-#include <random>
+ #ifndef XREGFITQUADRADIC_H_
+ #define XREGFITQUADRADIC_H_
 
 #include "xregCommon.h"
 
 namespace xreg
 {
 
-class Dist
-{
-public:
-  using Scalar = CoordScalar;
+// Fits a quadradic form, h(x) = 0.5 * x^T H x, using a set of observations
+// (x_1, f(x_1), ... (x_N, f(x_N)).
+//
+// NOTE: if you know that your data really fits the form: 0.5 * x^T H x + C,
+//       then f(0) = C should be calculated first (by the user) and f(x_i) - C
+//       should be passed to this function when solving for H.
+//
+// params is a MxN matrix of observation parameters where the
+// ith column holds the ith M-D parameter vector.
+//
+// fn_vals is N-D vector where the ith element holds the observed
+// function value for the ith parameter vector.
+//
+// A MxM matrix, H, is returned. No constraint is placed on H being
+// symmetric.
+MatMxN FitQuadradicForm(const MatMxN& params, const PtN& fn_vals);
 
-  struct UnsupportedOperation { };
+// Same interface as FitQuadradicForm, but with the quadratic form
+// limited to having a symmetric matrix, H.
+MatMxN FitQuadradicFormSymmetric(const MatMxN& params, const PtN& fn_vals);
 
-  virtual Scalar density(const PtN& x) const = 0;
+}  // xreg
 
-  virtual Scalar log_density(const PtN& x) const = 0;
-
-  virtual Scalar norm_const() const;
-
-  virtual Scalar log_norm_const() const;
-
-  virtual bool normalized() const = 0;
-
-  virtual size_type dim() const = 0;
-
-  virtual PtN densities(const PtNList& pts) const;
-
-  virtual PtN log_densities(const PtNList& pts) const;
-
-  virtual PtN draw_sample(std::mt19937& g) const;
-
-  // The i,j entry of the output matrix stores the ith component of the jth sample.
-  // e.g. The columns of the output matrix are the samples.
-  virtual MatMxN draw_samples(const size_type num_samples, std::mt19937& g) const;
-};
-
-}  // un-named
-
-#endif
+ #endif
 

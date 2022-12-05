@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2022 Robert Grupp
+ * Copyright (c) 2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,47 +22,25 @@
  * SOFTWARE.
  */
 
-#ifndef XREGDISTINTERFACE_H_
-#define XREGDISTINTERFACE_H_
-
-#include <random>
+#ifndef XREGMULTIVARNORMDISTFIT_H_
+#define XREGMULTIVARNORMDISTFIT_H_
 
 #include "xregCommon.h"
 
 namespace xreg
 {
 
-class Dist
-{
-public:
-  using Scalar = CoordScalar;
+// Estimates the covariance matrix from a set of zero-mean samples, their log
+// density values and the log density value at zero.
+//
+// NOTE: When using values obtained from an objective function for which a
+// minimum is sought, then the objective function values are analogous to energy
+// function values and must be negated to represent proper log densities.
+// 
+// Returns (cov, inv(cov), det(cov))
+std::tuple<MatMxN,MatMxN,CoordScalar> FindCovMatFromZeroMeanLogPts(
+  const MatMxN& x, const PtN& log_p_x, const CoordScalar log_p_0);
 
-  struct UnsupportedOperation { };
-
-  virtual Scalar density(const PtN& x) const = 0;
-
-  virtual Scalar log_density(const PtN& x) const = 0;
-
-  virtual Scalar norm_const() const;
-
-  virtual Scalar log_norm_const() const;
-
-  virtual bool normalized() const = 0;
-
-  virtual size_type dim() const = 0;
-
-  virtual PtN densities(const PtNList& pts) const;
-
-  virtual PtN log_densities(const PtNList& pts) const;
-
-  virtual PtN draw_sample(std::mt19937& g) const;
-
-  // The i,j entry of the output matrix stores the ith component of the jth sample.
-  // e.g. The columns of the output matrix are the samples.
-  virtual MatMxN draw_samples(const size_type num_samples, std::mt19937& g) const;
-};
-
-}  // un-named
+}  // xreg
 
 #endif
-

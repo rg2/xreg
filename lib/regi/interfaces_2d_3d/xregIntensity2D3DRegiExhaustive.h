@@ -59,6 +59,14 @@ public:
 
   const ScalarList& all_sim_vals() const;
 
+  const ScalarList& all_penalty_vals() const;
+
+  const ScalarList& all_penalty_log_probs() const;
+
+  bool save_all_penalty_vals() const;
+
+  void set_save_all_penalty_vals(const bool s);
+
   void set_save_all_cam_wrt_vols_in_aux(const bool s);
 
   bool save_all_cam_wrt_vols_in_aux() const;
@@ -95,9 +103,15 @@ protected:
 
   bool save_all_sim_vals_ = false;
 
+  bool save_all_penalty_vals_ = false;
+
   size_type best_all_sim_vals_idx_ = std::numeric_limits<size_type>::max();
 
   ScalarList all_sim_vals_;
+
+  ScalarList all_pen_vals_;
+
+  ScalarList all_pen_log_prob_vals_;
 
 private:
   // Interval to print the percentage of transforms evaluated.

@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2020 Robert Grupp
+# Copyright (c) 2020-2022 Robert Grupp
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,4 +23,6 @@
 add_subdirectory(pao)
 
 add_subdirectory(pelvis_single_view_regi_2d_3d)
+
+add_subdirectory(sample_single_view_regi_2d_3d)
 

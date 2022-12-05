@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -253,10 +253,11 @@ void xreg::MultiLevelMultiObjRegi::run()
 
       ds_proj_data[fixed_idx] = DownsampleProjData(fixed_proj_data[global_fixed_idx], lvl.ds_factor);
 
-      if (masks_provided) {
+      if (masks_provided)
+      {
         auto& cur_mask_to_ds = masks_2d[global_fixed_idx];
 
-        if (masks_provided && cur_mask_to_ds)
+        if (cur_mask_to_ds)
         {
           dout() << "downsampling global fixed mask: " << global_fixed_idx << std::endl;
 
@@ -296,13 +297,17 @@ void xreg::MultiLevelMultiObjRegi::run()
 
     ray_caster.set_num_projs(max_num_mov_imgs);
     ray_caster.set_use_bg_projs(need_bg_projs);
-    // TODO: create a subset of the volumes that are required at this level
-    ray_caster.set_volumes(vols);
     
-    ray_caster.set_camera_models(ExtractCamModels(ds_proj_data));
-   
-    dout() << "ray caster allocating resources..." << std::endl; 
-    ray_caster.allocate_resources();
+    if (ray_caster_needs_resources_alloc)
+    {
+      // TODO: create a subset of the volumes that are required at this level
+      ray_caster.set_volumes(vols);
+      
+      ray_caster.set_camera_models(ExtractCamModels(ds_proj_data));
+      
+      dout() << "ray caster allocating resources..." << std::endl; 
+      ray_caster.allocate_resources();
+    }
 
     dout() << "setting up sim metrics for each view..." << std::endl;
     for (size_type fixed_idx = 0; fixed_idx < num_fixed_imgs_this_level; ++fixed_idx)
@@ -310,20 +315,27 @@ void xreg::MultiLevelMultiObjRegi::run()
       dout() << "view " << fixed_idx << std::endl;
 
       lvl.sim_metrics[fixed_idx]->set_num_moving_images(max_num_mov_imgs);
-      lvl.sim_metrics[fixed_idx]->set_fixed_image(ds_proj_data[fixed_idx].img);
+
+      if (sim_metrics_need_resources_alloc)
+      {
+        lvl.sim_metrics[fixed_idx]->set_fixed_image(ds_proj_data[fixed_idx].img);
+      }
       
       dout() << "connecting ray caster buffer to sim metric..." << std::endl;
       lvl.sim_metrics[fixed_idx]->set_mov_imgs_buf_from_ray_caster(&ray_caster,
                                                                    max_num_mov_imgs * fixed_idx);
-     
-      if (masks_provided && ds_masks_2d[fixed_idx])
-      {
-        dout() << "setting mask for sim metric..." << std::endl;
-        lvl.sim_metrics[fixed_idx]->set_mask(ds_masks_2d[fixed_idx]);
-      }
 
-      dout() << "allocating resources..." << std::endl;
-      lvl.sim_metrics[fixed_idx]->allocate_resources();
+      if (sim_metrics_need_resources_alloc)
+      {
+        if (masks_provided && ds_masks_2d[fixed_idx])
+        {
+          dout() << "setting mask for sim metric..." << std::endl;
+          lvl.sim_metrics[fixed_idx]->set_mask(ds_masks_2d[fixed_idx]);
+        }
+
+        dout() << "allocating resources..." << std::endl;
+        lvl.sim_metrics[fixed_idx]->allocate_resources();
+      }
     }
 
     // run each regi
@@ -501,14 +513,17 @@ void xreg::MultiLevelMultiObjRegi::run()
         }
       }
 
-      // dealloc resources
-      single_regi.regi = nullptr;
+      if (dealloc_resources)
+      {
+        single_regi.regi = nullptr;
+      }
     }  // end for each regi
    
-    // dealloc resources 
-    lvl.ray_caster = nullptr;
-    lvl.sim_metrics.clear();
-
+    if (dealloc_resources)
+    {
+      lvl.ray_caster = nullptr;
+      lvl.sim_metrics.clear();
+    }
   }  // end for each level
   
   tmr.stop();
