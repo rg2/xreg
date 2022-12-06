@@ -264,6 +264,7 @@ cd $NLOPT_DIR
         -DWITH_CUDA:BOOL=OFF \
         -DWITH_CUFFT:BOOL=OFF \
         -DWITH_OPENCL:BOOL=OFF \
+        -DWITH_EIGEN:BOOL=OFF \
         -DBUILD_opencv_python2:BOOL=OFF \
         -DBUILD_opencv_python3:BOOL=OFF $OPENCV_GUI_FLAGS
 

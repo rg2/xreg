@@ -10,9 +10,12 @@
 # stop after the first failed command
 set -e
 
-NEED_TO_DOWNLOAD=true
-NEED_TO_BUILD_THIRD_PARTY=true
-NEED_TO_START_XREG=true
+# Disable these to skip downloading and building dependencies
+: ${NEED_TO_DOWNLOAD_THIRD_PARTY:=true}
+: ${NEED_TO_BUILD_THIRD_PARTY:=true}
+
+# Set this to false to not build xreg and only build the dependencies
+: ${NEED_TO_BUILD_XREG:=true}
 
 # This can be set to false when building on servers which do not have appropriate UI
 # dependencies. This can avoid linker errors.
@@ -81,7 +84,7 @@ fi
 # Operating system name
 OS_STR=`uname -s`
 
-if [ "$NEED_TO_DOWNLOAD" = true ]; then
+if [ "$NEED_TO_DOWNLOAD_THIRD_PARTY" = true ]; then
   echo "Downloading third party libraries..."
   
   # Choose the TBB package for your operating system:
@@ -333,6 +336,7 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
         -DWITH_CUDA:BOOL=OFF \
         -DWITH_CUFFT:BOOL=OFF \
         -DWITH_OPENCL:BOOL=OFF \
+        -DWITH_EIGEN:BOOL=OFF \
         -DBUILD_opencv_python2:BOOL=OFF \
         -DBUILD_opencv_python3:BOOL=OFF $OPENCV_GUI_FLAGS
 
@@ -345,7 +349,7 @@ fi
 
 # START: XREG BUILD:
 
-if [ "$NEED_TO_START_XREG" = true ]; then
+if [ "$NEED_TO_BUILD_XREG" = true ]; then
   
   mkdir $XREG_BUILD_DIR
   cd $XREG_BUILD_DIR
