@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2021 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +32,12 @@
 #include "xregITKIOUtils.h"
 #include "xregTBBUtils.h"
 #include "xregHDF5.h"
+
+#if CV_MAJOR_VERSION <= 3
+constexpr auto XREG_CV_GRAY2BGR = CV_GRAY2BGR;
+#else
+constexpr auto XREG_CV_GRAY2BGR = cv::COLOR_GRAY2BGR;
+#endif
 
 #define xregOCV_TO_ITK_IMAGE_REMAP_AND_WRITE_CASE(OCV_TYPE, SCALAR_TYPE) \
   case OCV_TYPE: \
@@ -78,7 +84,7 @@ cv::Mat xreg::OverlayEdges(const cv::Mat& base_img, const cv::Mat& edge_img,
     // TODO: error checking!
 
     dst_img = cv::Mat(nr, nc, CV_8UC3);
-    cv::cvtColor(base_img, dst_img, CV_GRAY2BGR);
+    cv::cvtColor(base_img, dst_img, XREG_CV_GRAY2BGR);
   }
 
   for (int r = 0; r < nr; ++r)
@@ -123,7 +129,7 @@ cv::Mat xreg::OverlayRectBoundary(const cv::Mat& base_img, const cv::Rect& rect,
     // TODO: error checking!
 
     dst_img = cv::Mat(nr, nc, CV_8UC3);
-    cv::cvtColor(base_img, dst_img, CV_GRAY2BGR);
+    cv::cvtColor(base_img, dst_img, XREG_CV_GRAY2BGR);
   }
 
   const unsigned char blue_val  = (edge_channel == 0) ? 255 : 0;
@@ -243,7 +249,7 @@ std::vector<cv::Mat> xreg::CreateSummaryTiledImages(const std::vector<cv::Mat>& 
         else  // Assuming everything else is grayscale!!!
         {
           cur_img = cv::Mat(cur_img_nr, cur_img_nc, CV_8UC3);
-          cv::cvtColor(src_imgs[src_img_idx], cur_img, CV_GRAY2BGR);
+          cv::cvtColor(src_imgs[src_img_idx], cur_img, XREG_CV_GRAY2BGR);
         }
 
         // it may be that the image is smaller than the tile
@@ -366,7 +372,7 @@ cv::Mat xreg::OverlayPtsAsCircles(const cv::Mat& img, const Pt2List& pts, const 
     // TODO: error checking!
 
     dst_img = cv::Mat(nr, nc, CV_8UC3);
-    cv::cvtColor(img, dst_img, CV_GRAY2BGR);
+    cv::cvtColor(img, dst_img, XREG_CV_GRAY2BGR);
   }
 
   const int num_pts = pts.size();
@@ -481,7 +487,7 @@ cv::Mat xreg::OverlayPts(const cv::Mat& img, const Pt2List& pts,
     // TODO: error checking!
 
     dst_img = cv::Mat(nr, nc, CV_8UC3);
-    cv::cvtColor(img, dst_img, CV_GRAY2BGR);
+    cv::cvtColor(img, dst_img, XREG_CV_GRAY2BGR);
   }
 
   const int num_pts = pts.size();
