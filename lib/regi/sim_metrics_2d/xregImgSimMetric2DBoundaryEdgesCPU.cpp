@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2022 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -61,7 +61,15 @@ void xreg::ImgSimMetric2DBoundaryEdgesCPU::allocate_resources()
   
   fixed_edge_dist_map_ = cv::Mat::zeros(fixed_img.size(), cv::DataType<Scalar>::type);
 
-  cv::distanceTransform(fixed_edges, fixed_edge_dist_map_, CV_DIST_L2, CV_DIST_MASK_PRECISE);
+#if CV_MAJOR_VERSION <= 3
+  constexpr auto XREG_CV_DIST_L2 = CV_DIST_L2;
+  constexpr auto XREG_CV_DIST_MASK_PRECISE = CV_DIST_MASK_PRECISE;
+#else
+  constexpr auto XREG_CV_DIST_L2 = cv::DIST_L2;
+  constexpr auto XREG_CV_DIST_MASK_PRECISE = cv::DIST_MASK_PRECISE;
+#endif
+
+  cv::distanceTransform(fixed_edges, fixed_edge_dist_map_, XREG_CV_DIST_L2, XREG_CV_DIST_MASK_PRECISE);
  
   // create storage for moving image edges 
   move_edge_imgs_ = AllocContiguousBufferForOpenCVImages<EdgePixelScalar>(img_num_rows_, img_num_cols_,
