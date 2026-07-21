@@ -84,6 +84,8 @@ foreach (XREG_CUR_LIB_DIR ${XREG_LIB_SUB_DIRS})
   list(APPEND XREG_LIB_OBJS $<TARGET_OBJECTS:xreg_${XREG_CUR_LIB_DIR}>)
 endforeach()
 
+vtk_module_autoinit(TARGETS xreg_vtk MODULES ${VTK_LIBRARIES})
+
 # combine the subcomponents into a single library
 add_library(xreg ${XREG_LIB_OBJS})
 

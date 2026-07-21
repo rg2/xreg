@@ -104,7 +104,7 @@ if [ "$NEED_TO_DOWNLOAD_THIRD_PARTY" = true ]; then
 
   rm $TBB_FILE
 
-  BOOST_URL="https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.zip"
+  BOOST_URL="https://archives.boost.io/release/1.87.0/source/boost_1_87_0.zip"
 
   BOOST_FILE=`basename $BOOST_URL`
 
@@ -154,7 +154,7 @@ if [ "$NEED_TO_DOWNLOAD_THIRD_PARTY" = true ]; then
 
   rm $NLOPT_FILE
 
-  VTK_URL="https://www.vtk.org/files/release/8.2/VTK-8.2.0.zip"
+  VTK_URL="https://gitlab.kitware.com/vtk/vtk/-/archive/v9.6.2/vtk-v9.6.2.zip"
 
   wget $VTK_URL
 
@@ -183,6 +183,8 @@ if [ "$NEED_TO_DOWNLOAD_THIRD_PARTY" = true ]; then
   unzip -q $OPENCV_FILE
 
   rm $OPENCV_FILE
+
+  echo "Finished downloading third party libraries..."
 fi
 
 TBB_EXTRACT_DIR="$DEPS_DIR/tbb2018_20170919oss"
@@ -200,7 +202,7 @@ FMT_DIR="$DEPS_DIR/`ls | grep "fmt-*"`"
 
 NLOPT_DIR="$DEPS_DIR/`ls | grep "nlopt-*"`"
 
-VTK_DIR="$DEPS_DIR/`ls | grep "VTK-*"`"
+VTK_DIR="$DEPS_DIR/`ls | grep "vtk-*"`"
 
 ITK_DIR="$DEPS_DIR/`ls | grep "InsightToolkit-*"`"
 
@@ -224,6 +226,8 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
 
   echo "Building third-party libraries..."
  
+  echo "Building fmt..."
+
   cd $FMT_DIR
   mkdir build
   cd build
@@ -239,6 +243,8 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
   cmake --build .
   cmake --install .
   cd ../../
+
+  echo "Building nlopt..."
 
   cd $NLOPT_DIR
   mkdir build
@@ -265,13 +271,15 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
   
   cd ../../
 
+  echo "building VTK..."
+
   cd $VTK_DIR
   mkdir build
   cd build
 
   VTK_NO_RENDER_FLAGS=""
   if [ "$XREG_DO_GUI" = false ]; then
-    VTK_NO_RENDER_FLAGS="-DVTK_RENDERING_BACKEND=None -DVTK_Group_Rendering:BOOL=OFF"
+    VTK_NO_RENDER_FLAGS="-DVTK_GROUP_ENABLE_Rendering=NO"
   fi
 
   TBB_ROOT="$TBB_INC_DIR/.." cmake -G Ninja .. \
@@ -279,15 +287,18 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
     -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
     -DCMAKE_CXX_STANDARD:STRING="11" \
     -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
-    -DVTK_Group_Imaging:BOOL=ON \
-    -DVTK_Group_Views:BOOL=ON \
+    -DVTK_GROUP_ENABLE_Imaging=YES \
+    -DVTK_GROUP_ENABLE_Views=YES \
     -DBUILD_TESTING:BOOL=OFF \
-    -DVTK_SMP_IMPLEMENTATION_TYPE:STRING="TBB" $VTK_NO_RENDER_FLAGS
+    -DONLY_SHARED_LIBS:BOOL=$BUILD_SHARED \
+    $VTK_NO_RENDER_FLAGS 
 
   cmake --build .
   cmake --install .
 
   cd ../..
+
+  echo "building ITK..."
 
   cd $ITK_DIR
   mkdir build
@@ -308,6 +319,8 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
   cmake --install .
 
   cd ../..
+
+  echo "building OpenCV..."
 
   cd $OPENCV_DIR
   mkdir build
@@ -350,6 +363,7 @@ fi
 # START: XREG BUILD:
 
 if [ "$NEED_TO_BUILD_XREG" = true ]; then
+  echo "Building XREG..."
   
   mkdir $XREG_BUILD_DIR
   cd $XREG_BUILD_DIR
@@ -376,6 +390,29 @@ if [ "$NEED_TO_BUILD_XREG" = true ]; then
 
   if [ "$XREG_INSTALL_DIR" != "" ]; then
     cmake --install .
+
+    # xreg's install target does not copy TBB, since it is found via
+    # find_package(TBB) as an external/imported target rather than a
+    # target built by this project. Copy the runtime library over manually
+    # so that it is discoverable at ${XREG_INSTALL_DIR}/lib.
+    echo "Copying TBB runtime library to install prefix..."
+
+    if [ "$BUILD_CONFIG" == "Debug" ]; then
+      TBB_LIB_NAME_PATTERN="libtbb_debug.*"
+    else
+      TBB_LIB_NAME_PATTERN="libtbb.*"
+    fi
+
+    # On Linux the package ships both lib/intel64/ and lib/ia32/ variants
+    # with identical filenames, so restrict the search to intel64 to avoid
+    # copying whichever architecture "find" happens to visit last. macOS
+    # has no such split and keeps the libraries directly under lib/.
+    TBB_LIB_SEARCH_DIR="$TBB_INSTALL_DIR/lib"
+    if [ -d "$TBB_INSTALL_DIR/lib/intel64" ]; then
+      TBB_LIB_SEARCH_DIR="$TBB_INSTALL_DIR/lib/intel64"
+    fi
+
+    find "$TBB_LIB_SEARCH_DIR" -name "$TBB_LIB_NAME_PATTERN" -exec cp -a {} "$XREG_INSTALL_DIR/lib/" \;
   fi
 fi
 
