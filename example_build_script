@@ -62,7 +62,7 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   rm $TBB_FILE
 
-  BOOST_URL="https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.zip"
+  BOOST_URL="https://archives.boost.io/release/1.87.0/source/boost_1_87_0.zip"
 
   BOOST_FILE=`basename $BOOST_URL`
 
@@ -112,7 +112,7 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   rm $NLOPT_FILE
 
-  VTK_URL="https://www.vtk.org/files/release/8.2/VTK-8.2.0.zip"
+  VTK_URL="https://gitlab.kitware.com/vtk/vtk/-/archive/v9.6.2/vtk-v9.6.2.zip"
 
   wget $VTK_URL
 
@@ -156,7 +156,7 @@ FMT_DIR="$DEPS_DIR/`ls | grep "fmt-*"`"
 
 NLOPT_DIR="$DEPS_DIR/`ls | grep "nlopt-*"`"
 
-VTK_DIR="$DEPS_DIR/`ls | grep "VTK-*"`"
+VTK_DIR="$DEPS_DIR/`ls | grep "vtk-*"`"
 
 ITK_DIR="$DEPS_DIR/`ls | grep "InsightToolkit-*"`"
 
@@ -201,17 +201,17 @@ cd $NLOPT_DIR
 
   VTK_NO_RENDER_FLAGS=""
   if [ "$DO_GUI" = false ]; then
-    VTK_NO_RENDER_FLAGS="-DVTK_RENDERING_BACKEND=None -DVTK_Group_Rendering:BOOL=OFF"
+    VTK_NO_RENDER_FLAGS="-DVTK_GROUP_ENABLE_Rendering=NO"
   fi
 
   TBB_ROOT="$TBB_INC_DIR/.." cmake -G Ninja .. \
     -DCMAKE_CXX_STANDARD:STRING="11" \
     -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
     -DBUILD_SHARED_LIBS:BOOL=OFF \
-    -DVTK_Group_Imaging:BOOL=ON \
-    -DVTK_Group_Views:BOOL=ON \
-    -DBUILD_TESTING:BOOL=OFF \
-    -DVTK_SMP_IMPLEMENTATION_TYPE:STRING="TBB" $VTK_NO_RENDER_FLAGS
+    -DONLY_SHARED_LIBS:BOOL=OFF \
+    -DVTK_GROUP_ENABLE_Imaging=YES \
+    -DVTK_GROUP_ENABLE_Views=YES \
+    -DBUILD_TESTING:BOOL=OFF $VTK_NO_RENDER_FLAGS
 
   ninja
 
