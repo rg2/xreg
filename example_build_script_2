@@ -167,6 +167,7 @@ if [ "$NEED_TO_DOWNLOAD_THIRD_PARTY" = true ]; then
 
   rm $VTK_FILE
 
+  # TODO: https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.4.6/InsightToolkit-5.4.6.zip
   ITK_URL="https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.2.1/InsightToolkit-5.2.1.zip"
 
   ITK_FILE=`basename $ITK_URL`
@@ -177,8 +178,7 @@ if [ "$NEED_TO_DOWNLOAD_THIRD_PARTY" = true ]; then
 
   rm $ITK_FILE
   
-  # TODO https://github.com/opencv/opencv/archive/refs/tags/4.12.0.zip
-  OPENCV_URL="https://github.com/opencv/opencv/archive/3.4.12.zip"
+  OPENCV_URL="https://github.com/opencv/opencv/archive/refs/tags/4.12.0.zip"
 
   OPENCV_FILE=`basename $OPENCV_URL`
 
@@ -360,11 +360,11 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
         -DWITH_VTK:BOOL=OFF \
         -DWITH_CUBLAS:BOOL=OFF \
         -DWITH_CUDA:BOOL=OFF \
-        -DWITH_CUFFT:BOOL=OFF \
         -DWITH_OPENCL:BOOL=OFF \
         -DWITH_EIGEN:BOOL=OFF \
-        -DBUILD_opencv_python2:BOOL=OFF \
-        -DBUILD_opencv_python3:BOOL=OFF $OPENCV_GUI_FLAGS
+        -DBUILD_opencv_java_bindings_generator:BOOL=OFF \
+        -DBUILD_opencv_python_tests:BOOL=OFF \
+        -DBUILD_opencv_python_bindings_generator:BOOL=OFF $OPENCV_GUI_FLAGS
 
   cmake --build .
   cmake --install .
