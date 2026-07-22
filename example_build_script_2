@@ -10,6 +10,9 @@
 # stop after the first failed command
 set -e
 
+# Catch errors and print helpful details before exiting
+trap 'echo "Error: Command \"$BASH_COMMAND\" failed on line $LINENO with exit code $?" >&2' ERR
+
 # Disable these to skip downloading and building dependencies
 : ${NEED_TO_DOWNLOAD_THIRD_PARTY:=true}
 : ${NEED_TO_BUILD_THIRD_PARTY:=true}
@@ -174,6 +177,7 @@ if [ "$NEED_TO_DOWNLOAD_THIRD_PARTY" = true ]; then
 
   rm $ITK_FILE
   
+  # TODO https://github.com/opencv/opencv/archive/refs/tags/4.12.0.zip
   OPENCV_URL="https://github.com/opencv/opencv/archive/3.4.12.zip"
 
   OPENCV_FILE=`basename $OPENCV_URL`
@@ -186,6 +190,8 @@ if [ "$NEED_TO_DOWNLOAD_THIRD_PARTY" = true ]; then
 
   echo "Finished downloading third party libraries..."
 fi
+
+echo "Setting third party downloaded directories..."
 
 TBB_EXTRACT_DIR="$DEPS_DIR/tbb2018_20170919oss"
 TBB_INSTALL_DIR="$DEPS_INSTALL_DIR/tbb"
@@ -207,6 +213,8 @@ VTK_DIR="$DEPS_DIR/`ls | grep "vtk-*"`"
 ITK_DIR="$DEPS_DIR/`ls | grep "InsightToolkit-*"`"
 
 OPENCV_DIR="$DEPS_DIR/`ls | grep "opencv-*"`"
+
+echo "Finished setting third party downloaded directories..."
 
 if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
 
@@ -239,7 +247,8 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
     -DFMT_USE_CPP11:BOOL=ON \
     -DFMT_TEST:BOOL=OFF \
     -DFMT_INSTALL:BOOL=ON \
-    -DFMT_DOC:BOOL=OFF
+    -DFMT_DOC:BOOL=OFF \
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
   cmake --build .
   cmake --install .
   cd ../../
@@ -261,7 +270,8 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
     -DNLOPT_MATLAB:BOOL=OFF \
     -DNLOPT_GUILE:BOOL=OFF \
     -DNLOPT_SWIG:BOOL=OFF \
-    -DNLOPT_LINK_PYTHON:BOOL=OFF
+    -DNLOPT_LINK_PYTHON:BOOL=OFF \
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
  
   # nlopt tries to override the install prefix originally passsed 
   cmake -UCMAKE_INSTALL_PREFIX -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR .
@@ -306,6 +316,8 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
 
   cmake -G Ninja .. \
       -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR \
+      -DCMAKE_CXX_FLAGS:STRING="-include cstdint" \
+      -DCMAKE_C_FLAGS:STRING="-std=gnu17" \
       -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
       -DCMAKE_CXX_STANDARD:STRING="11" \
       -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
@@ -313,7 +325,8 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
       -DBUILD_EXAMPLES:BOOL=OFF \
       -DITK_USE_GPU:BOOL=OFF \
       -DModule_ITKReview:BOOL=ON \
-      -DModule_LabelErodeDilate:BOOL=ON
+      -DModule_LabelErodeDilate:BOOL=ON \
+      -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 
   cmake --build .
   cmake --install .
