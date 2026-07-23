@@ -121,6 +121,12 @@ def has_xdg_open():
     except:
         return False
 
+def has_default_video_player_linux():
+    try:
+        return 'No default applications' not in sp.check_output('gio mime video/mp4', shell=True).decode()
+    except:
+        return False
+
 def view_image(img_path):
     if platform.system() == 'Darwin':
         sp.check_call('open {}'.format(img_path), shell=True)
@@ -136,7 +142,7 @@ def view_movie(movie_path):
         sp.check_call('open {}'.format(movie_path), shell=True)
     elif platform.system() == 'Windows':
         sp.check_call(movie_path, shell=True)
-    elif (platform.system() == 'Linux') and has_xdg_open():
+    elif (platform.system() == 'Linux') and has_xdg_open() and has_default_video_player_linux():
         sp.check_call('xdg-open {}'.format(movie_path), shell=True)
 
     wait_prompt('Inspect {} in a video player'.format(movie_path))
@@ -178,7 +184,8 @@ if __name__ == '__main__':
             ['Slicer 5.0.3', 'Slicer 5.0.2', 'Slicer 4.11.20210226']] \
             + ['C:\\Program Files\\Slicer 4.10.2\\Slicer.exe']
     linux_slicer_default_paths = ['{}/Slicer'.format(sd) for sd in \
-               ['$HOME/Slicer-5.0.3-linux-amd64',
+               ['$HOME/Slicer-5.12.2-linux-amd64',
+                '$HOME/Slicer-5.0.3-linux-amd64',
                 '$HOME/Slicer-5.0.2-linux-amd64',
                 '$HOME/Slicer-4.11.20210226-linux-amd64',
                 '$HOME/Slicer-4.10.2-linux-amd64']]
