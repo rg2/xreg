@@ -7,6 +7,9 @@
 # stop after the first failed command
 set -e
 
+# Catch errors and print helpful details before exiting
+trap 'echo "Error: Command \"$BASH_COMMAND\" failed on line $LINENO with exit code $?" >&2' ERR
+
 NEED_TO_DOWNLOAD=true
 NEED_TO_BUILD_THIRD_PARTY=true
 NEED_TO_START_XREG=true
@@ -72,7 +75,7 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   rm $BOOST_FILE
 
-  EIGEN_URL="https://gitlab.com/libeigen/eigen/-/archive/3.3.4/eigen-3.3.4.zip"
+  EIGEN_URL="https://gitlab.com/libeigen/eigen/-/archive/3.4.1/eigen-3.4.1.zip"
 
   EIGEN_FILE=`basename $EIGEN_URL`
 
@@ -132,7 +135,7 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   rm $ITK_FILE
   
-  OPENCV_URL="https://github.com/opencv/opencv/archive/3.4.12.zip"
+  OPENCV_URL="https://github.com/opencv/opencv/archive/refs/tags/4.12.0.zip"
 
   OPENCV_FILE=`basename $OPENCV_URL`
 
@@ -141,6 +144,8 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
   unzip -q $OPENCV_FILE
 
   rm $OPENCV_FILE
+
+  echo "Finished downloading third party libraries..."
 fi
 
 TBB_INC_DIR="$DEPS_DIR/tbb2018_20170919oss/include"
@@ -162,8 +167,19 @@ ITK_DIR="$DEPS_DIR/`ls | grep "InsightToolkit-*"`"
 
 OPENCV_DIR="$DEPS_DIR/`ls | grep "opencv-*"`"
 
+echo "Finished setting third party downloaded directories..."
+
 if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
   echo "Building third-party libraries..."
+
+  echo "Building Eigen..."
+  cd $EIGEN_DIR
+  mkdir build
+  cd build
+  cmake ..
+  cd ../../
+
+  echo "Building fmt..."
 
   cd $FMT_DIR
   mkdir build
@@ -174,11 +190,14 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
     -DFMT_USE_CPP11:BOOL=ON \
     -DFMT_TEST:BOOL=OFF \
     -DFMT_INSTALL:BOOL=ON \
-    -DFMT_DOC:BOOL=OFF
+    -DFMT_DOC:BOOL=OFF \
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
   ninja
   cd ../../
 
-cd $NLOPT_DIR
+  echo "Building nlopt..."
+
+  cd $NLOPT_DIR
   mkdir build
   cd build
   cmake -G Ninja .. \
@@ -191,9 +210,12 @@ cd $NLOPT_DIR
     -DNLOPT_MATLAB:BOOL=OFF \
     -DNLOPT_GUILE:BOOL=OFF \
     -DNLOPT_SWIG:BOOL=OFF \
-    -DNLOPT_LINK_PYTHON:BOOL=OFF
+    -DNLOPT_LINK_PYTHON:BOOL=OFF \
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
   ninja
   cd ../../
+
+  echo "building VTK..."
 
   cd $VTK_DIR
   mkdir build
@@ -211,17 +233,22 @@ cd $NLOPT_DIR
     -DONLY_SHARED_LIBS:BOOL=OFF \
     -DVTK_GROUP_ENABLE_Imaging=YES \
     -DVTK_GROUP_ENABLE_Views=YES \
-    -DBUILD_TESTING:BOOL=OFF $VTK_NO_RENDER_FLAGS
+    -DBUILD_TESTING:BOOL=OFF \
+    -DONLY_SHARED_LIBS:BOOL=OFF $VTK_NO_RENDER_FLAGS
 
   ninja
 
   cd ../..
+
+  echo "building ITK..."
 
   cd $ITK_DIR
   mkdir build
   cd build
 
   cmake -G Ninja .. \
+      -DCMAKE_CXX_FLAGS:STRING="-include cstdint" \
+      -DCMAKE_C_FLAGS:STRING="-std=gnu17" \
       -DCMAKE_CXX_STANDARD:STRING="11" \
       -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
       -DBUILD_SHARED_LIBS:BOOL=OFF \
@@ -229,11 +256,16 @@ cd $NLOPT_DIR
       -DBUILD_EXAMPLES:BOOL=OFF \
       -DITK_USE_GPU:BOOL=OFF \
       -DModule_ITKReview:BOOL=ON \
-      -DModule_LabelErodeDilate:BOOL=ON
+      -DEigen3_DIR:PATH=$EIGEN_DIR/build \
+      -DITK_USE_SYSTEM_EIGEN:BOOL=ON \
+      -DModule_LabelErodeDilate:BOOL=ON \
+      -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 
   ninja
 
   cd ../..
+
+  echo "building OpenCV..."
 
   cd $OPENCV_DIR
   mkdir build
@@ -262,11 +294,11 @@ cd $NLOPT_DIR
         -DWITH_VTK:BOOL=OFF \
         -DWITH_CUBLAS:BOOL=OFF \
         -DWITH_CUDA:BOOL=OFF \
-        -DWITH_CUFFT:BOOL=OFF \
         -DWITH_OPENCL:BOOL=OFF \
         -DWITH_EIGEN:BOOL=OFF \
-        -DBUILD_opencv_python2:BOOL=OFF \
-        -DBUILD_opencv_python3:BOOL=OFF $OPENCV_GUI_FLAGS
+        -DBUILD_opencv_java_bindings_generator:BOOL=OFF \
+        -DBUILD_opencv_python_tests:BOOL=OFF \
+        -DBUILD_opencv_python_bindings_generator:BOOL=OFF $OPENCV_GUI_FLAGS
 
   ninja
 
@@ -287,8 +319,10 @@ if [ "$NEED_TO_START_XREG" = true ]; then
     -DViennaCL_DIR:PATH="$VIENNACL_DIR" \
     -DEIGEN3_INCLUDE_DIR:PATH="$EIGEN_DIR" \
     -DBoost_INCLUDE_DIR:PATH="$BOOST_DIR" \
-    -DNLopt_DIR:BOOL="$NLOPT_DIR/build" \
+    -DNLopt_DIR:PATH="$NLOPT_DIR/build" \
+    -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
     -DTBB_DIR:PATH="$TBB_DIR" \
+    -DTBB_INCLUDE_DIRS:PATH=$TBB_INC_DIR \
     -Dfmt_DIR:PATH="$FMT_DIR/build" \
     -DVTK_DIR:PATH="$VTK_DIR/build" \
     -DITK_DIR:PATH="$ITK_DIR/build" \
