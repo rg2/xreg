@@ -130,7 +130,7 @@ ECHO Downloading boost
 curl -L -O -J https://archives.boost.io/release/1.87.0/source/boost_1_87_0.zip || EXIT /b
 
 ECHO Extracting boost
-tar -xf boost_1_74_0.zip || EXIT /b
+tar -xf boost_1_87_0.zip || EXIT /b
 
 ECHO Downloading Eigen
 curl -L -O -J https://gitlab.com/libeigen/eigen/-/archive/3.3.4/eigen-3.3.4.zip || EXIT /b
@@ -195,7 +195,7 @@ ECHO Installing TBB (2/2)
 COPY %INSTALL_ROOT%\tbb\bin\intel64\vc14\tbb.dll %INSTALL_ROOT%\bin || EXIT /b
 
 ECHO Installing boost
-MOVE boost_1_74_0\boost %INSTALL_ROOT%\include\boost || EXIT /b
+MOVE boost_1_87_0\boost %INSTALL_ROOT%\include\boost || EXIT /b
 
 ECHO Installing Eigen
 MOVE eigen-3.3.4\Eigen %INSTALL_ROOT%\include\Eigen || EXIT /b
