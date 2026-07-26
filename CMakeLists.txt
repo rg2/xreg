@@ -40,6 +40,8 @@ endif ()
 
 option(XREG_BUILD_APPS "Build xreg applications in addition to the library" ${XREG_TOP_LEVEL_PROJ})
 
+option(XREG_BUILD_PYTHON "Build the pyxreg Python bindings (requires pybind11)" OFF)
+
 option(XREG_INCLUDE_GIT_HASH_IN_VER_STR "Include the git hash in the version string that is embedded into the library" OFF)
 mark_as_advanced(XREG_INCLUDE_GIT_HASH_IN_VER_STR)
 
@@ -142,6 +144,10 @@ set(XREG_EXE_PREFIX "xreg-")
 
 if (XREG_BUILD_APPS)
   add_subdirectory(apps)
+endif ()
+
+if (XREG_BUILD_PYTHON)
+  add_subdirectory(python)
 endif ()
 
 # only install targets and config when building the library
