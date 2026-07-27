@@ -7,9 +7,9 @@ on:
   pull_request:
 
 jobs:
-  ubuntu_20_04_build:
+  ubuntu_26_04_build:
     runs-on: ubuntu-latest
-    container: ghcr.io/rg2/xreg-deps-ubuntu-20.04:latest
+    container: ghcr.io/rg2/xreg-deps-ubuntu-26.04:latest
 
     steps:
       - uses: actions/checkout@v4
@@ -17,12 +17,12 @@ jobs:
         shell: bash
       - run: ./dist/ubuntu_dist_pkgs
         shell: bash
-      - run: ./.github/workflows/linux_make_dist ubuntu-20.04
+      - run: ./.github/workflows/linux_make_dist ubuntu-26.04
         shell: bash
       - uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-20.04-build
-          path: xreg-ubuntu-20.04.tar.gz
+          name: ubuntu-26.04-build
+          path: xreg-ubuntu-26.04.tar.gz
 
   windows_build:
     runs-on: windows-2022
