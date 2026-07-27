@@ -6,7 +6,7 @@ ARG os_name=ubuntu
 
 # for ubuntu choose 16.04, 18.04, or 20.04
 # for centos choose 7 or 8
-ARG os_version=16.04
+ARG os_version=26.04
 
 FROM xreg-deps-${os_name}-${os_version}
 
@@ -17,9 +17,8 @@ COPY . .
 RUN mkdir build && cd build && \
     cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
                    -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON \
-                   -DTBB_DIR:PATH="/opt/tbb/cmake" \
                    -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
           .. && \
-    cmake --build . && cmake --build . --target install && \
+    cmake --build . --parallel 2 && cmake --build . --target install && \
     cd / && rm -rf xreg_build
 
