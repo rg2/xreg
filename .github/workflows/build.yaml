@@ -40,18 +40,18 @@ jobs:
           path: xreg-win64.zip
 
   macos_build:
-    runs-on: macos-13
+    runs-on: macos-15-intel
 
     steps:
       - uses: actions/checkout@v4
       - run: brew install ninja
       - run: XREG_INSTALL_DIR="$HOME/xreg_install" ./example_build_script_2
         shell: bash
-      - run: mkdir xreg-macos-13
-      - run: python3 ./dist/make_macos_dist.py $HOME/xreg_install xreg-macos-13 ../xreg_deps_install
-      - run: cp LICENSE xreg-macos-13 && cp ./dist/dist_readme/README.txt xreg-macos-13
-      - run: tar czf xreg-macos-13.tar.gz xreg-macos-13
+      - run: mkdir xreg-macos-15
+      - run: python3 ./dist/make_macos_dist.py $HOME/xreg_install xreg-macos-15 ../xreg_deps_install
+      - run: cp LICENSE xreg-macos-15 && cp ./dist/dist_readme/README.txt xreg-macos-15
+      - run: tar czf xreg-macos-15.tar.gz xreg-macos-15
       - uses: actions/upload-artifact@v4
         with:
-          name: macos-13-build
-          path: xreg-macos-13.tar.gz
+          name: macos-15-build
+          path: xreg-macos-15.tar.gz
