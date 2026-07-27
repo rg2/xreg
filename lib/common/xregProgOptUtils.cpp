@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,8 +43,7 @@
 #include <itkVersion.h>
 #include <vtkVersion.h>
 
-#include <tbb/tbb_stddef.h>
-#include <tbb/task_scheduler_init.h>
+#include <tbb/tbb.h>
 
 #include <opencv2/core/version.hpp>
 
@@ -238,6 +237,29 @@ void WritePrettyHelp(const xreg::ProgOpts::StringList& flag_strs,
 
 const std::string kTBB_MAX_NUM_THREADS_ARG_STR = "tbb-max-threads";
 
+#if TBB_INTERFACE_VERSION >= 12000
+#define XREG_TBB_USE_GLOBAL_CONTROL 1
+//#  include <tbb/global_control.h>
+using TBBThreadLimiter = tbb::global_control;
+#else
+#define XREG_TBB_USE_GLOBAL_CONTROL 0
+//#  include <tbb/task_scheduler_init.h>
+using TBBThreadLimiter = tbb::task_scheduler_init;
+#endif
+
+/// \brief Creates a thread limiter for the requested maximum thread count.
+std::unique_ptr<TBBThreadLimiter> MakeTBBThreadLimiter(const unsigned long max_num_threads)
+{
+#if XREG_TBB_USE_GLOBAL_CONTROL
+  return std::unique_ptr<TBBThreadLimiter>(
+           new TBBThreadLimiter(tbb::global_control::max_allowed_parallelism,
+                                static_cast<std::size_t>(max_num_threads)));
+#else
+  return std::unique_ptr<TBBThreadLimiter>(
+           new TBBThreadLimiter(static_cast<int>(max_num_threads)));
+#endif
+}
+
 /// \brief Global for storing TBB thread information.
 ///
 /// By default, this is a null instance, so TBB defaults are used.
@@ -245,9 +267,9 @@ const std::string kTBB_MAX_NUM_THREADS_ARG_STR = "tbb-max-threads";
 /// created here. This is outside of the program options class, so that
 /// a user option will still have precedence even when the program
 /// options are destructed.
-std::unique_ptr<tbb::task_scheduler_init>& ProgOptsTBBTaskSchedInit()
+std::unique_ptr<TBBThreadLimiter>& ProgOptsTBBTaskSchedInit()
 {
-  static std::unique_ptr<tbb::task_scheduler_init> tbb_sched_init;
+  static std::unique_ptr<TBBThreadLimiter> tbb_sched_init;
 
   return tbb_sched_init;
 }
@@ -1347,8 +1369,7 @@ void xreg::ProgOpts::parse(int argc, char* argv[])
 
   if (tbb_max_num_threads_opt_added_ && has(kTBB_MAX_NUM_THREADS_ARG_STR))
   {
-    ProgOptsTBBTaskSchedInit().reset(
-        new tbb::task_scheduler_init(get(kTBB_MAX_NUM_THREADS_ARG_STR).as_uint32()));
+    ProgOptsTBBTaskSchedInit() = std::move(MakeTBBThreadLimiter(get(kTBB_MAX_NUM_THREADS_ARG_STR).as_uint32()));
   }
 
   if (print_help_backend_str_ && has("backend"))
