@@ -40,6 +40,23 @@ jobs:
         with:
           name: ubuntu-24.04-build
           path: xreg-ubuntu-24.04.tar.gz
+  
+  ubuntu_22_04_build:
+    runs-on: ubuntu-latest
+    container: ghcr.io/rg2/xreg-deps-ubuntu-22.04:latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./.github/workflows/linux_cmake_build
+        shell: bash
+      - run: ./dist/ubuntu_dist_pkgs
+        shell: bash
+      - run: ./.github/workflows/linux_make_dist ubuntu-22.04
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu-22.04-build
+          path: xreg-ubuntu-22.04.tar.gz
 
 #  windows_build:
 #    runs-on: windows-2022
