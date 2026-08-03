@@ -127,10 +127,10 @@ ECHO Extracting TBB
 tar -xf tbb-2020.3-win.zip || EXIT /b
 
 ECHO Downloading boost
-curl -L -O -J https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.zip || EXIT /b
+curl -L -O -J https://archives.boost.io/release/1.87.0/source/boost_1_87_0.zip || EXIT /b
 
 ECHO Extracting boost
-tar -xf boost_1_74_0.zip || EXIT /b
+tar -xf boost_1_87_0.zip || EXIT /b
 
 ECHO Downloading Eigen
 curl -L -O -J https://gitlab.com/libeigen/eigen/-/archive/3.3.4/eigen-3.3.4.zip || EXIT /b
@@ -164,10 +164,10 @@ ECHO Extracting nlopt
 tar -xf nlopt-2.5.0.zip
 
 ECHO Downloading VTK
-curl -L -O -J https://www.vtk.org/files/release/8.2/VTK-8.2.0.zip || EXIT /b
+curl -L -O -J https://gitlab.kitware.com/vtk/vtk/-/archive/v9.6.2/vtk-v9.6.2.zip || EXIT /b
 
 ECHO Extracting VTK
-tar -xf VTK-8.2.0.zip || EXIT /b
+tar -xf vtk-v9.6.2.zip || EXIT /b
 
 ECHO Downloading ITK
 curl -L -O -J https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.2.1/InsightToolkit-5.2.1.zip || EXIT /b
@@ -195,7 +195,7 @@ ECHO Installing TBB (2/2)
 COPY %INSTALL_ROOT%\tbb\bin\intel64\vc14\tbb.dll %INSTALL_ROOT%\bin || EXIT /b
 
 ECHO Installing boost
-MOVE boost_1_74_0\boost %INSTALL_ROOT%\include\boost || EXIT /b
+MOVE boost_1_87_0\boost %INSTALL_ROOT%\include\boost || EXIT /b
 
 ECHO Installing Eigen
 MOVE eigen-3.3.4\Eigen %INSTALL_ROOT%\include\Eigen || EXIT /b
@@ -300,7 +300,7 @@ cmake --install . || EXIT /b
 cd ..\.. || EXIT /b
 
 ECHO Building VTK, setting up...
-cd VTK-8.2.0 || EXIT /b
+cd vtk-v9.6.2 || EXIT /b
 
 mkdir build || EXIT /b
 
@@ -312,8 +312,9 @@ cmake %CMAKE_GENERATOR_ARG% .. ^
     -DCMAKE_CXX_STANDARD:STRING="11" ^
     -DCMAKE_BUILD_TYPE:STRING=%BUILD_CONFIG% ^
     -DBUILD_SHARED_LIBS:BOOL=%BUILD_SHARED% ^
-    -DVTK_Group_Imaging:BOOL=ON ^
-    -DVTK_Group_Views:BOOL=ON ^
+    -DONLY_SHARED_LIBS:BOOL=%BUILD_SHARED% ^
+    -DVTK_GROUP_ENABLE_Imaging=YES ^
+    -DVTK_GROUP_ENABLE_Views=YES ^
     -DBUILD_TESTING:BOOL=OFF || EXIT /b
 
 ECHO VTK building

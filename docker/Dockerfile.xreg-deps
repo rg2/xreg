@@ -7,7 +7,7 @@ ARG os_name=ubuntu
 
 # for ubuntu choose 16.04, 18.04, or 20.04
 # for centos choose 7 or 8
-ARG os_version=16.04
+ARG os_version=26.04
 
 # e.g. by running Dockerfile.ubuntu_dev_base or Dockerfile.centos_dev_base
 FROM xreg-dev-base-${os_name}-${os_version} as xreg-dev-base-cust-deps
@@ -21,46 +21,34 @@ RUN mkdir ffmpeg_dl && cd ffmpeg_dl && \
     mv ffmpeg-*-amd64-static/ffmpeg /usr/local/bin && \
     cd / && rm -rf ffmpeg_dl
 
-# Get a more recent version of TBB than what is probably in the package manager
-# At least one that works better w/ CMake
-RUN mkdir tbb_dl && cd tbb_dl && \
-    wget https://github.com/intel/tbb/releases/download/2018_U1/tbb2018_20170919oss_lin.tgz && \
-    tar xf tbb2018_20170919oss_lin.tgz && \
-    mv tbb2018_20170919oss /opt && cd /opt && ln -s tbb2018_20170919oss tbb && \
-    cd / && rm -rf tbb_dl
-
-# building ninja as it is able to build quicker than make
-RUN mkdir ninja_build && cd ninja_build && \
-    wget https://github.com/ninja-build/ninja/archive/v1.10.1.tar.gz && \
-    tar xf v1.10.1.tar.gz && cd ninja-1.10.1 && mkdir build && cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && cmake --build . --target install && \
-    cd / && rm -rf ninja_build
-
 FROM xreg-dev-base-cust-deps as xreg-deps
 
 WORKDIR /
 
-# bring in boost 1.74 header only
+# bring in boost header only
 RUN mkdir boost_dl && cd boost_dl && \
-    wget https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.tar.gz && \
-    tar xf boost_1_74_0.tar.gz && cd boost_1_74_0 && mv boost /usr/local/include && \
+    wget https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.bz2 && \
+    tar xf boost_1_87_0.tar.bz2 && cd boost_1_87_0 && mv boost /usr/local/include && \
     cd / && rm -rf boost_dl
 
-# bring in eigen 3.3.4 header only
+# bring in eigen header only, but needs to install cmake files
 RUN mkdir eigen_dl && cd eigen_dl && \
-    wget https://gitlab.com/libeigen/eigen/-/archive/3.3.4/eigen-3.3.4.tar.gz && \
-    tar xf eigen-3.3.4.tar.gz && cd eigen-3.3.4 && \
-    mv Eigen /usr/local/include && mv unsupported /usr/local/include && \
-    mv signature_of_eigen3_matrix_library /usr/local/include && \
+    wget https://gitlab.com/libeigen/eigen/-/archive/3.4.1/eigen-3.4.1.tar.bz2 && \
+    tar xf eigen-3.4.1.tar.bz2 && cd eigen-3.4.1 && \
+    mkdir build && cd build && \
+    cmake -DCMAKE_INSTALL_PREFIX:PATH="/usr/local" \
+          -DINCLUDE_INSTALL_DIR:PATH="/usr/local/include" \
+          .. && \
+    cmake --build . && cmake --build . --target install && \
     cd / && rm -rf eigen_dl
 
-# bring in viennacl 1.7.1 header only
+# bring in viennacl header only
 RUN mkdir viennacl_dl && cd viennacl_dl && \
     wget https://github.com/viennacl/viennacl-dev/archive/release-1.7.1.tar.gz && \
     tar xf release-1.7.1.tar.gz && cd viennacl-dev-release-1.7.1 && mv viennacl /usr/local/include && \
     cd / && rm -rf viennacl_dl
 
-# build format 5.3.0
+# build format
 RUN mkdir fmt_build && cd fmt_build && \
     wget https://github.com/fmtlib/fmt/archive/5.3.0.tar.gz && \
     tar xf 5.3.0.tar.gz && cd fmt-5.3.0 && \
@@ -69,11 +57,12 @@ RUN mkdir fmt_build && cd fmt_build && \
                    -DCMAKE_CXX_STANDARD:STRING="11" -DFMT_USE_CPP11:BOOL=ON \
                    -DFMT_TEST:BOOL=OFF -DFMT_INSTALL:BOOL=ON \
                    -DFMT_DOC:BOOL=OFF \
+                   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
           .. && \
     cmake --build . && cmake --build . --target install && \
     cd / && rm -rf fmt_build
 
-# build nlopt 2.5.0
+# build nlopt
 RUN mkdir nlopt_build && cd nlopt_build && \
     wget https://github.com/stevengj/nlopt/archive/v2.5.0.tar.gz && \
     tar xf v2.5.0.tar.gz && cd nlopt-2.5.0 && \
@@ -84,55 +73,60 @@ RUN mkdir nlopt_build && cd nlopt_build && \
                    -DNLOPT_OCTAVE:BOOL=OFF -DNLOPT_MATLAB:BOOL=OFF \
                    -DNLOPT_GUILE:BOOL=OFF -DNLOPT_SWIG:BOOL=OFF \
                    -DNLOPT_LINK_PYTHON:BOOL=OFF \
+                   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
          .. && \
     cmake --build . && cmake --build . --target install && \
     cd / && rm -rf nlopt_build
 
-# build ITK 5.2.1
+# build ITK
 RUN mkdir itk_build && cd itk_build && \
-    wget https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.2.1/InsightToolkit-5.2.1.zip && \
+    wget https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.2.1/InsightToolkit-5.2.1.tar.gz && \
     tar xf InsightToolkit-5.2.1.tar.gz && cd InsightToolkit-5.2.1 && \
     mkdir build && cd build && \
     cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
           -DCMAKE_CXX_STANDARD:STRING="11" \
+          -DCMAKE_CXX_FLAGS:STRING="-include cstdint" \
+          -DCMAKE_C_FLAGS:STRING="-std=gnu17" \
           -DBUILD_TESTING:BOOL=OFF -DBUILD_EXAMPLES:BOOL=OFF \
           -DITK_USE_GPU:BOOL=OFF -DModule_ITKReview:BOOL=ON \
           -DModule_LabelErodeDilate:BOOL=ON \
+          -DITK_USE_SYSTEM_EIGEN=ON \
+          -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
          .. && \
     cmake --build . && cmake --build . --target install && \
     cd / && rm -rf itk_build
 
-# build OpenCV 3.4.12
+# build OpenCV
 RUN mkdir opencv_build && cd opencv_build && \
-    wget https://github.com/opencv/opencv/archive/3.4.12.tar.gz && \
-    tar xf 3.4.12.tar.gz && cd opencv-3.4.12 && \
+    wget https://github.com/opencv/opencv/archive/refs/tags/4.12.0.tar.gz && \
+    tar xf 4.12.0.tar.gz && cd opencv-4.12.0 && \
     mkdir build && cd build && \
     cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
                    -DCMAKE_CXX_STANDARD:STRING="11" \
                    -DBUILD_TESTS:BOOL=OFF -DBUILD_EXAMPLES:BOOL=OFF \
                    -DBUILD_DOCS:BOOL=OFF -DBUILD_WITH_DEBUG_INFO:BOOL=OFF \
-                   -DWITH_TBB:BOOL=ON -DBUILD_TBB:BOOL=OFF -DTBB_INCLUDE_DIRS:PATH="/opt/tbb/include" \
+                   -DWITH_TBB:BOOL=ON -DBUILD_TBB:BOOL=OFF \
                    -DWITH_IPP:BOOL=OFF -DWITH_VTK:BOOL=OFF \
                    -DWITH_CUBLAS:BOOL=OFF -DWITH_CUDA:BOOL=OFF \
-                   -DWITH_CUFFT:BOOL=OFF -DWITH_OPENCL:BOOL=OFF \
-                   -DBUILD_opencv_python2:BOOL=OFF -DBUILD_opencv_python3:BOOL=OFF \
+                   -DWITH_OPENCL:BOOL=OFF \
+                   -DBUILD_opencv_java_bindings_generator:BOOL=OFF \
+                   -DBUILD_opencv_python_tests:BOOL=OFF \
+                   -DBUILD_opencv_python_bindings_generator:BOOL=OFF \
                    -DBUILD_opencv_highgui:BOOL=OFF -DWITH_GSTREAMER:BOOL=OFF \
          .. && \
     cmake --build . && cmake --build . --target install && \
     cd / && rm -rf opencv_build
-
-# build VTK 8.2.0
+    
+# build VTK, note --parallel 2 is used in order to avoid OOM errors
 RUN mkdir vtk_build && cd vtk_build && \
-    wget https://www.vtk.org/files/release/8.2/VTK-8.2.0.tar.gz && \
-    tar xf VTK-8.2.0.tar.gz && cd VTK-8.2.0 && \
+    wget https://vtk.org/files/release/9.6/VTK-9.6.2.tar.gz && \
+    tar xf VTK-9.6.2.tar.gz && cd VTK-9.6.2 && \
     mkdir build && cd build && \
-    TBB_ROOT="/opt/tbb" \
     cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
           -DCMAKE_CXX_STANDARD:STRING="11" \
-          -DVTK_Group_Imaging:BOOL=ON -DVTK_Group_Views:BOOL=ON \
+          -DVTK_GROUP_ENABLE_Imaging=YES -DVTK_GROUP_ENABLE_Views=YES \
           -DBUILD_TESTING:BOOL=OFF \
           -DVTK_SMP_IMPLEMENTATION_TYPE:STRING="TBB" \
          .. && \
-    cmake --build . && cmake --build . --target install && \
+    cmake --build . --parallel 2 && cmake --build . --target install && \
     cd / && rm -rf vtk_build
-

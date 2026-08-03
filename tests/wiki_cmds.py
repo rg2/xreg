@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2020-2022 Robert Grupp
+# Copyright (c) 2020-2026 Robert Grupp
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,16 +27,57 @@
 # the script must be run in an environment with a sufficient display. Some X11
 # forwarding configurations may NOT work.
 
+import json
 import sys
 import os.path
 import os
 import platform
+import urllib.parse
 import urllib.request
 import shutil
 import time
 import zipfile
 
 import subprocess as sp
+
+def download_tcia_image(series_uid, dst_file_name, use_existing=False):
+    if use_existing and os.path.exists(dst_file_name):
+        print('  Using already downloaded file: {}'.format(dst_file_name))
+        return
+
+    # get a token for public datasets
+
+    # first build up the token request
+    token_url = "https://services.cancerimagingarchive.net/nbia-api/oauth/token"
+    payload = {
+        "username": "nbia_guest",
+        "password": "",
+        "client_id": "NBIA",
+        "grant_type": "password"
+    }
+
+    token_req_data = urllib.parse.urlencode(payload).encode("utf-8")
+
+    token_req = urllib.request.Request(token_url, data=token_req_data, method="POST")
+
+    with urllib.request.urlopen(token_req) as response:
+        response_data = json.loads(response.read().decode("utf-8"))
+        access_token = response_data["access_token"]
+
+    print(f"Token acquired: {access_token[:15]}...")
+
+    image_url = f"https://services.cancerimagingarchive.net/nbia-api/services/v2/getImage?SeriesInstanceUID={series_uid}"
+
+    # Attach the Bearer token header
+    headers = {"Authorization": f"Bearer {access_token}"}
+    image_req = urllib.request.Request(image_url, headers=headers)
+
+    # Stream the file to disk to handle large ZIP files smoothly
+    print("Downloading series...")
+
+    with urllib.request.urlopen(image_req) as response, open(dst_file_name, "wb") as out_file:
+        while chunk := response.read(8192):
+            out_file.write(chunk)
 
 def download_file(url, dst_file_name=None, use_existing=False):
     print('Downloading: {} ...'.format(url))
@@ -80,6 +121,12 @@ def has_xdg_open():
     except:
         return False
 
+def has_default_video_player_linux():
+    try:
+        return 'No default applications' not in sp.check_output('gio mime video/mp4', shell=True).decode()
+    except:
+        return False
+
 def view_image(img_path):
     if platform.system() == 'Darwin':
         sp.check_call('open {}'.format(img_path), shell=True)
@@ -95,7 +142,7 @@ def view_movie(movie_path):
         sp.check_call('open {}'.format(movie_path), shell=True)
     elif platform.system() == 'Windows':
         sp.check_call(movie_path, shell=True)
-    elif (platform.system() == 'Linux') and has_xdg_open():
+    elif (platform.system() == 'Linux') and has_xdg_open() and has_default_video_player_linux():
         sp.check_call('xdg-open {}'.format(movie_path), shell=True)
 
     wait_prompt('Inspect {} in a video player'.format(movie_path))
@@ -137,7 +184,8 @@ if __name__ == '__main__':
             ['Slicer 5.0.3', 'Slicer 5.0.2', 'Slicer 4.11.20210226']] \
             + ['C:\\Program Files\\Slicer 4.10.2\\Slicer.exe']
     linux_slicer_default_paths = ['{}/Slicer'.format(sd) for sd in \
-               ['$HOME/Slicer-5.0.3-linux-amd64',
+               ['$HOME/Slicer-5.12.2-linux-amd64',
+                '$HOME/Slicer-5.0.3-linux-amd64',
                 '$HOME/Slicer-5.0.2-linux-amd64',
                 '$HOME/Slicer-4.11.20210226-linux-amd64',
                 '$HOME/Slicer-4.10.2-linux-amd64']]
@@ -208,7 +256,7 @@ if __name__ == '__main__':
     if True:
         print('DICOM conversion/resampling...')
         
-        download_file('https://services.cancerimagingarchive.net/services/v4/TCIA/query/getImage?SeriesInstanceUID=61.7.167248355135476067044532759811631626828', 'ABD_LYMPH_001.zip', True)
+        download_tcia_image('61.7.167248355135476067044532759811631626828', 'ABD_LYMPH_001.zip', True)
        
         extract_zip('ABD_LYMPH_001.zip', 'ABD_LYMPH_001')
 
@@ -388,7 +436,7 @@ if __name__ == '__main__':
         
         print('3D DICOM conversion/resampling...')
         
-        download_file('https://services.cancerimagingarchive.net/services/v4/TCIA/query/getImage?SeriesInstanceUID=1.3.6.1.4.1.14519.5.2.1.1706.4016.124291161306415775701317569638', 'TCGA-G2-A3VY_ct.zip', True)
+        download_tcia_image('1.3.6.1.4.1.14519.5.2.1.1706.4016.124291161306415775701317569638', 'TCGA-G2-A3VY_ct.zip', True)
        
         extract_zip('TCGA-G2-A3VY_ct.zip', 'TCGA-G2-A3VY_ct_dcm')
 
@@ -405,13 +453,13 @@ if __name__ == '__main__':
 
         print('2D DICOM conversion...')
 
-        download_file('https://services.cancerimagingarchive.net/services/v4/TCIA/query/getImage?SeriesInstanceUID=1.3.6.1.4.1.14519.5.2.1.1706.4016.146872675804132000774592060313', 'TCGA-G2-A3VY_radiographs_1.zip', True)
+        download_tcia_image('1.3.6.1.4.1.14519.5.2.1.1706.4016.146872675804132000774592060313', 'TCGA-G2-A3VY_radiographs_1.zip', True)
         
         extract_zip('TCGA-G2-A3VY_radiographs_1.zip', 'TCGA-G2-A3VY_radiographs')
 
         download_file('https://github.com/rg2/xreg/wiki/examples/tcia_hip_radiograph_rigid_2d_3d/2-c73e.fcsv', use_existing=True)
 
-        run_cmd('xreg-convert-dicom-radiograph TCGA-G2-A3VY_radiographs/2-c73e4bdf6c7d19772d00acd2891965fa.dcm 2-c73e_pd.h5 2-c73e.fcsv')
+        run_cmd('xreg-convert-dicom-radiograph TCGA-G2-A3VY_radiographs/00000002.dcm 2-c73e_pd.h5 2-c73e.fcsv')
 
         run_cmd('xreg-remap-tile-proj-data -d 0.25 -o 2-c73e_pd.h5 2-c73e_remap.png')
 
