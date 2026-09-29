@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,9 +31,9 @@ template <class T, int opts, int maxrows, int maxcols>
 cl_float3 ConvertToOpenCLHelper(const Eigen::Matrix<T,3,1,opts,maxrows,maxcols>& v)
 {
   cl_float3 u;
-  u.x = static_cast<float>(v(0));
-  u.y = static_cast<float>(v(1));
-  u.z = static_cast<float>(v(2));
+  u.s[0] = static_cast<float>(v(0));
+  u.s[1] = static_cast<float>(v(1));
+  u.s[2] = static_cast<float>(v(2));
   return u;
 }
 
@@ -41,8 +41,8 @@ template <class T, int opts, int maxrows, int maxcols>
 cl_float2 ConvertToOpenCLHelper(const Eigen::Matrix<T,2,1,opts,maxrows,maxcols>& v)
 {
   cl_float2 u;
-  u.x = static_cast<float>(v(0));
-  u.y = static_cast<float>(v(1));
+  u.s[0] = static_cast<float>(v(0));
+  u.s[1] = static_cast<float>(v(1));
   return u;
 }
 
@@ -51,10 +51,10 @@ template <class T, int opts, int maxrows, int maxcols>
 cl_float4 ConvertToOpenCLHelper(const Eigen::Matrix<T,4,1,opts,maxrows,maxcols>& v)
 {
   cl_float4 u;
-  u.x = static_cast<float>(v(0));
-  u.y = static_cast<float>(v(1));
-  u.z = static_cast<float>(v(2));
-  u.w = static_cast<float>(v(3));
+  u.s[0] = static_cast<float>(v(0));
+  u.s[1] = static_cast<float>(v(1));
+  u.s[2] = static_cast<float>(v(2));
+  u.s[3] = static_cast<float>(v(3));
   return u;
 }
 
@@ -63,14 +63,14 @@ template <class T, int opts, int maxrows, int maxcols>
 cl_float8 ConvertToOpenCLHelper(const Eigen::Matrix<T,8,1,opts,maxrows,maxcols>& v)
 {
   cl_float8 u;
-  u.s0 = static_cast<float>(v(0));
-  u.s1 = static_cast<float>(v(1));
-  u.s2 = static_cast<float>(v(2));
-  u.s3 = static_cast<float>(v(3));
-  u.s4 = static_cast<float>(v(4));
-  u.s5 = static_cast<float>(v(5));
-  u.s6 = static_cast<float>(v(6));
-  u.s7 = static_cast<float>(v(7));
+  u.s[0] = static_cast<float>(v(0));
+  u.s[1] = static_cast<float>(v(1));
+  u.s[2] = static_cast<float>(v(2));
+  u.s[3] = static_cast<float>(v(3));
+  u.s[4] = static_cast<float>(v(4));
+  u.s[5] = static_cast<float>(v(5));
+  u.s[6] = static_cast<float>(v(6));
+  u.s[7] = static_cast<float>(v(7));
   return u;
 }
 
@@ -79,22 +79,22 @@ template <class T, int opts, int maxrows, int maxcols>
 cl_float16 ConvertToOpenCLHelper(const Eigen::Matrix<T,16,1,opts,maxrows,maxcols>& v)
 {
   cl_float16 u;
-  u.s0 = static_cast<float>(v(0));
-  u.s1 = static_cast<float>(v(1));
-  u.s2 = static_cast<float>(v(2));
-  u.s3 = static_cast<float>(v(3));
-  u.s4 = static_cast<float>(v(4));
-  u.s5 = static_cast<float>(v(5));
-  u.s6 = static_cast<float>(v(6));
-  u.s7 = static_cast<float>(v(7));
-  u.s8 = static_cast<float>(v(8));
-  u.s9 = static_cast<float>(v(9));
-  u.sa = static_cast<float>(v(10));
-  u.sb = static_cast<float>(v(11));
-  u.sc = static_cast<float>(v(12));
-  u.sd = static_cast<float>(v(13));
-  u.se = static_cast<float>(v(14));
-  u.sf = static_cast<float>(v(15));
+  u.s[0]  = static_cast<float>(v(0));
+  u.s[1]  = static_cast<float>(v(1));
+  u.s[2]  = static_cast<float>(v(2));
+  u.s[3]  = static_cast<float>(v(3));
+  u.s[4]  = static_cast<float>(v(4));
+  u.s[5]  = static_cast<float>(v(5));
+  u.s[6]  = static_cast<float>(v(6));
+  u.s[7]  = static_cast<float>(v(7));
+  u.s[8]  = static_cast<float>(v(8));
+  u.s[9]  = static_cast<float>(v(9));
+  u.s[10] = static_cast<float>(v(10));
+  u.s[11] = static_cast<float>(v(11));
+  u.s[12] = static_cast<float>(v(12));
+  u.s[13] = static_cast<float>(v(13));
+  u.s[14] = static_cast<float>(v(14));
+  u.s[15] = static_cast<float>(v(15));
   return u;
 }
 
@@ -109,22 +109,22 @@ cl_float16 ConvertToOpenCLHelper(const Eigen::Transform<T,3,Eigen::Affine,_opts>
   cl_float16 cl_A;
 
   // store in row major
-  cl_A.s0 = static_cast<float>(A(0,0));  // affine
-  cl_A.s1 = static_cast<float>(A(0,1));  // affine
-  cl_A.s2 = static_cast<float>(A(0,2));  // affine
-  cl_A.s3 = static_cast<float>(A(0,3));  // translation
-  cl_A.s4 = static_cast<float>(A(1,0));  // affine
-  cl_A.s5 = static_cast<float>(A(1,1));  // affine
-  cl_A.s6 = static_cast<float>(A(1,2));  // affine
-  cl_A.s7 = static_cast<float>(A(1,3));  // translation
-  cl_A.s8 = static_cast<float>(A(2,0));  // affine
-  cl_A.s9 = static_cast<float>(A(2,1));  // affine
-  cl_A.sa = static_cast<float>(A(2,2));  // affine
-  cl_A.sb = static_cast<float>(A(2,3));  // translation
-  cl_A.sc = 0;
-  cl_A.sd = 0;
-  cl_A.se = 0;
-  cl_A.sf = 1;
+  cl_A.s[0]  = static_cast<float>(A(0,0));  // affine
+  cl_A.s[1]  = static_cast<float>(A(0,1));  // affine
+  cl_A.s[2]  = static_cast<float>(A(0,2));  // affine
+  cl_A.s[3]  = static_cast<float>(A(0,3));  // translation
+  cl_A.s[4]  = static_cast<float>(A(1,0));  // affine
+  cl_A.s[5]  = static_cast<float>(A(1,1));  // affine
+  cl_A.s[6]  = static_cast<float>(A(1,2));  // affine
+  cl_A.s[7]  = static_cast<float>(A(1,3));  // translation
+  cl_A.s[8]  = static_cast<float>(A(2,0));  // affine
+  cl_A.s[9]  = static_cast<float>(A(2,1));  // affine
+  cl_A.s[10] = static_cast<float>(A(2,2));  // affine
+  cl_A.s[11] = static_cast<float>(A(2,3));  // translation
+  cl_A.s[12] = 0;
+  cl_A.s[13] = 0;
+  cl_A.s[14] = 0;
+  cl_A.s[15] = 1;
 
   return cl_A;
 }
@@ -140,17 +140,17 @@ cl_float16 ConvertToOpenCLHelper(const Eigen::Transform<T,2,Eigen::Affine,topts>
   cl_float16 cl_A;  // we'll only use the first 9 elements
 
   // store in row major
-  cl_A.s0 = static_cast<float>(A(0,0));  // affine
-  cl_A.s1 = static_cast<float>(A(0,1));  // affine
-  cl_A.s2 = static_cast<float>(A(0,2));  // translation
-  cl_A.s3 = static_cast<float>(A(1,0));  // affine
-  cl_A.s4 = static_cast<float>(A(1,1));  // affine
-  cl_A.s5 = static_cast<float>(A(1,2));  // translation
-  cl_A.s6 = 0;
-  cl_A.s7 = 0;
-  cl_A.s8 = 1;
+  cl_A.s[0] = static_cast<float>(A(0,0));  // affine
+  cl_A.s[1] = static_cast<float>(A(0,1));  // affine
+  cl_A.s[2] = static_cast<float>(A(0,2));  // translation
+  cl_A.s[3] = static_cast<float>(A(1,0));  // affine
+  cl_A.s[4] = static_cast<float>(A(1,1));  // affine
+  cl_A.s[5] = static_cast<float>(A(1,2));  // translation
+  cl_A.s[6] = 0;
+  cl_A.s[7] = 0;
+  cl_A.s[8] = 1;
 
-  // s9, sa-f are invalid/not set/not required
+  // 9-15 are invalid/not set/not required
 
   return cl_A;
 }
@@ -256,9 +256,9 @@ std::vector<cl_float16> xreg::ConvertPointsToOpenCL(const Pt16List& src_pts)
 boost::compute::float4_ xreg::OpenCLFloat3ToBoostComp4(const cl_float3& f3, const float fourth_comp)
 {
   boost::compute::float4_ f4;
-  f4[0] = f3.x;
-  f4[1] = f3.y;
-  f4[2] = f3.z;
+  f4[0] = f3.s[0];
+  f4[1] = f3.s[1];
+  f4[2] = f3.s[2];
   f4[3] = fourth_comp;
 
   return f4;
@@ -267,22 +267,22 @@ boost::compute::float4_ xreg::OpenCLFloat3ToBoostComp4(const cl_float3& f3, cons
 boost::compute::float16_ xreg::OpenCLFloat16ToBoostComp16(const cl_float16& src)
 {
   boost::compute::float16_ dst;
-  dst[0]  = src.s0;
-  dst[1]  = src.s1;
-  dst[2]  = src.s2;
-  dst[3]  = src.s3;
-  dst[4]  = src.s4;
-  dst[5]  = src.s5;
-  dst[6]  = src.s6;
-  dst[7]  = src.s7;
-  dst[8]  = src.s8;
-  dst[9]  = src.s9;
-  dst[10] = src.sa;
-  dst[11] = src.sb;
-  dst[12] = src.sc;
-  dst[13] = src.sd;
-  dst[14] = src.se;
-  dst[15] = src.sf;
+  dst[0]  = src.s[0];
+  dst[1]  = src.s[1];
+  dst[2]  = src.s[2];
+  dst[3]  = src.s[3];
+  dst[4]  = src.s[4];
+  dst[5]  = src.s[5];
+  dst[6]  = src.s[6];
+  dst[7]  = src.s[7];
+  dst[8]  = src.s[8];
+  dst[9]  = src.s[9];
+  dst[10] = src.s[10];
+  dst[11] = src.s[11];
+  dst[12] = src.s[12];
+  dst[13] = src.s[13];
+  dst[14] = src.s[14];
+  dst[15] = src.s[15];
 
   return dst;
 }
