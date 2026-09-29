@@ -111,10 +111,20 @@ find_package(NLopt REQUIRED)
 
 add_subdirectory(third_party)
 
+# ITK bundles HDF5 (incl. the C++ API) under an itkhdf5 subdirectory of
+# one of its include dirs; ITK_INCLUDE_DIRS is a list, so search it.
+find_path(XREG_ITK_HDF5_INC_DIR H5Cpp.h
+          PATHS ${ITK_INCLUDE_DIRS}
+          PATH_SUFFIXES itkhdf5
+          NO_DEFAULT_PATH)
+if (NOT XREG_ITK_HDF5_INC_DIR)
+  message(SEND_ERROR "HDF5 C++ headers (H5Cpp.h) not found in ITK include dirs!")
+endif ()
+
 set(XREG_EXT_LIB_INC_DIRS ${Boost_INCLUDE_DIRS}
                           ${EIGEN3_INCLUDE_DIR}
                           ${ITK_INCLUDE_DIRS}
-                          ${ITK_INCLUDE_DIRS}/itkhdf5
+                          ${XREG_ITK_HDF5_INC_DIR}
                           ${OpenCV_INCLUDE_DIRS}
                           ${VTK_INCLUDE_DIRS}
                           ${VIENNACL_INC_DIR})

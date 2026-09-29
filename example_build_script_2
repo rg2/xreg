@@ -127,6 +127,16 @@ if [ "$NEED_TO_DOWNLOAD_THIRD_PARTY" = true ]; then
 
   rm $EIGEN_FILE
 
+  ZLIB_URL="https://www.zlib.net/zlib132.zip"
+
+  ZLIB_FILE=`basename $ZLIB_URL`
+
+  wget $ZLIB_URL
+
+  unzip -q $ZLIB_FILE
+
+  rm $ZLIB_FILE
+
   VIENNACL_URL="https://github.com/viennacl/viennacl-dev/archive/release-1.7.1.zip"
 
   VIENNACL_FILE=`basename $VIENNACL_URL`
@@ -136,16 +146,6 @@ if [ "$NEED_TO_DOWNLOAD_THIRD_PARTY" = true ]; then
   unzip -q $VIENNACL_FILE
 
   rm $VIENNACL_FILE
-
-  FMT_URL="https://github.com/fmtlib/fmt/archive/5.3.0.zip"
-
-  FMT_FILE=`basename $FMT_URL`
-
-  wget $FMT_URL
-
-  unzip -q $FMT_FILE
-
-  rm $FMT_FILE
 
   NLOPT_URL="https://github.com/stevengj/nlopt/archive/v2.5.0.zip"
 
@@ -167,7 +167,7 @@ if [ "$NEED_TO_DOWNLOAD_THIRD_PARTY" = true ]; then
 
   rm $VTK_FILE
 
-  ITK_URL="https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.2.1/InsightToolkit-5.2.1.zip"
+  ITK_URL="https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.4.7/InsightToolkit-5.4.7.zip"
 
   ITK_FILE=`basename $ITK_URL`
 
@@ -201,9 +201,9 @@ BOOST_DIR="$DEPS_DIR/`ls | grep "boost_*"`"
 
 EIGEN_DIR="$DEPS_DIR/`ls | grep "eigen-*"`"
 
-VIENNACL_DIR="$DEPS_DIR/`ls | grep "viennacl-dev-release-*"`"
+ZLIB_DIR="$DEPS_DIR/`ls | grep "zlib-*"`"
 
-FMT_DIR="$DEPS_DIR/`ls | grep "fmt-*"`"
+VIENNACL_DIR="$DEPS_DIR/`ls | grep "viennacl-dev-release-*"`"
 
 NLOPT_DIR="$DEPS_DIR/`ls | grep "nlopt-*"`"
 
@@ -240,25 +240,6 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
   cmake --install .
   cd ../../
 
-  echo "Building fmt..."
-
-  cd $FMT_DIR
-  mkdir build
-  cd build
-  cmake -G Ninja .. \
-    -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR \
-    -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
-    -DCMAKE_CXX_STANDARD:STRING="11" \
-    -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
-    -DFMT_USE_CPP11:BOOL=ON \
-    -DFMT_TEST:BOOL=OFF \
-    -DFMT_INSTALL:BOOL=ON \
-    -DFMT_DOC:BOOL=OFF \
-    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-  cmake --build .
-  cmake --install .
-  cd ../../
-
   echo "Building nlopt..."
 
   cd $NLOPT_DIR
@@ -268,7 +249,7 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
   cmake -G Ninja .. \
     -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR \
     -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
-    -DCMAKE_CXX_STANDARD:STRING="11" \
+    -DCMAKE_CXX_STANDARD:STRING="17" \
     -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
     -DNLOPT_CXX:BOOL=OFF \
     -DNLOPT_PYTHON:BOOL=OFF \
@@ -287,6 +268,30 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
   
   cd ../../
 
+  echo "building ZLIB..."
+
+  cd $ZLIB_DIR
+  mkdir build
+  cd build
+
+  if [ "$BUILD_SHARED" = "true" ]; then
+    ZLIB_BUILD_STATIC=false
+  else
+    ZLIB_BUILD_STATIC=true
+  fi
+
+  cmake -G Ninja .. \
+    -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR \
+    -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
+    -DZLIB_BUILD_SHARED:BOOL=$BUILD_SHARED \
+    -DZLIB_BUILD_STATIC:BOOL=$ZLIB_BUILD_STATIC \
+    -DZLIB_BUILD_TESTING:BOOL=OFF
+  
+  cmake --build .
+  cmake --install .
+
+  cd ../../
+
   echo "building VTK..."
 
   cd $VTK_DIR
@@ -301,7 +306,7 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
   TBB_ROOT="$TBB_INC_DIR/.." cmake -G Ninja .. \
     -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR \
     -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
-    -DCMAKE_CXX_STANDARD:STRING="11" \
+    -DCMAKE_CXX_STANDARD:STRING="17" \
     -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
     -DVTK_GROUP_ENABLE_Imaging=YES \
     -DVTK_GROUP_ENABLE_Views=YES \
@@ -321,10 +326,8 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
 
   cmake -G Ninja .. \
       -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR \
-      -DCMAKE_CXX_FLAGS:STRING="-include cstdint" \
-      -DCMAKE_C_FLAGS:STRING="-std=gnu17" \
       -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
-      -DCMAKE_CXX_STANDARD:STRING="11" \
+      -DCMAKE_CXX_STANDARD:STRING="17" \
       -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
       -DBUILD_TESTING:BOOL=OFF \
       -DBUILD_EXAMPLES:BOOL=OFF \
@@ -332,6 +335,8 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
       -DModule_ITKReview:BOOL=ON \
       -DModule_LabelErodeDilate:BOOL=ON \
       -DITK_USE_SYSTEM_EIGEN=ON \
+      -DITK_USE_SYSTEM_ZLIB:BOOL=ON \
+      -DZLIB_ROOT:PATH=$DEPS_INSTALL_DIR \
       -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 
   cmake --build .
@@ -354,7 +359,7 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
   cmake -G Ninja .. \
         -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR \
         -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
-        -DCMAKE_CXX_STANDARD:STRING="11" \
+        -DCMAKE_CXX_STANDARD:STRING="17" \
         -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
         -DBUILD_TESTS:BOOL=OFF \
         -DBUILD_EXAMPLES:BOOL=OFF \
@@ -370,6 +375,8 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
         -DWITH_EIGEN:BOOL=OFF \
         -DWITH_TIFF:BOOL=OFF \
         -DBUILD_TIFF:BOOL=OFF \
+        -DBUILD_ZLIB:BOOL=OFF \
+        -DZLIB_ROOT:PATH=$DEPS_INSTALL_DIR \
         -DBUILD_opencv_java_bindings_generator:BOOL=OFF \
         -DBUILD_opencv_python_tests:BOOL=OFF \
         -DBUILD_opencv_python_bindings_generator:BOOL=OFF $OPENCV_GUI_FLAGS
