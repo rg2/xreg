@@ -10,8 +10,8 @@ set -e
 # Catch errors and print helpful details before exiting
 trap 'echo "Error: Command \"$BASH_COMMAND\" failed on line $LINENO with exit code $?" >&2' ERR
 
-NEED_TO_DOWNLOAD=false
-NEED_TO_BUILD_THIRD_PARTY=false
+NEED_TO_DOWNLOAD=true
+NEED_TO_BUILD_THIRD_PARTY=true
 NEED_TO_START_XREG=true
 
 DO_GUI=true
