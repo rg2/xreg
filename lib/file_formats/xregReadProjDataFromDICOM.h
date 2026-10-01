@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021 Robert Grupp
+ * Copyright (c) 2021-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 #ifndef XREGREADPROJDATAFROMDICOM_H_
 #define XREGREADPROJDATAFROMDICOM_H_
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include "xregProjData.h"
 
@@ -42,7 +42,7 @@ struct ReadProjDataFromDICOMParams
   bool guess_spacing = true;
 
   // will auto-set the projective frame based on modality when no value is provided
-  boost::optional<CameraModel::CameraCoordFrame> proj_frame;
+  std::optional<CameraModel::CameraCoordFrame> proj_frame;
 
   bool no_bayview_check = false;
 

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2021 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,7 @@ using namespace xreg;
 template <class tScalar>
 void ProcessAndSave(itk::Image<tScalar,2>* img,
                     const std::string& path,
-                    const boost::optional<ProjDataRotToPatUp>& rot_to_pat_up,
+                    const std::optional<ProjDataRotToPatUp>& rot_to_pat_up,
                     const double ds_factor,
                     const bool discard_geom,
                     std::ostream& vout)
@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
 
       const auto& cur_meta = pd_metas[src_proj_idx];
 
-      boost::optional<ProjDataRotToPatUp> rot_to_pat_up;
+      std::optional<ProjDataRotToPatUp> rot_to_pat_up;
 
       if (!ignore_pat_rot_up)
       {

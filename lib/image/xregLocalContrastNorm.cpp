@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021 Robert Grupp
+ * Copyright (c) 2021-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -166,7 +166,7 @@ std::tuple<cv::Mat,cv::Mat> LocalContrastNormJarrettHelper(const cv::Mat& input_
 
 cv::Mat xreg::LocalContrastNormStdNorm(const cv::Mat& input_img, const int win_len_rows,
                                        const int win_len_cols,
-                                       const boost::optional<float>& border_val)
+                                       const std::optional<float>& border_val)
 {
   xregASSERT(input_img.channels() == 1);
 
@@ -224,7 +224,7 @@ cv::Mat xreg::LocalContrastNormStdNorm(const cv::Mat& input_img, const int win_l
 cv::Mat xreg::LocalContrastNormJarrett(const cv::Mat& input_img,
                                        const int win_len_rows,
                                        const int win_len_cols,
-                                       const boost::optional<float>& border_val)
+                                       const std::optional<float>& border_val)
 {
   constexpr float sigma_lower_bound = 1.0e-6f;
   

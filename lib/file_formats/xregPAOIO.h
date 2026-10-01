@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,14 +25,14 @@
 #ifndef XREGPAOIO_H_
 #define XREGPAOIO_H_
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include "xregPAOCuts.h"
 
 namespace xreg
 {
 
-std::tuple<PAOCutPlanes,boost::optional<PAOCutDispInfo>,boost::optional<PAOCutSlabs>>
+std::tuple<PAOCutPlanes,std::optional<PAOCutDispInfo>,std::optional<PAOCutSlabs>>
 ReadPAOCutPlanesFile(const std::string& path);
 
 void WritePAOCutPlanesFile(const PAOCutPlanes& cut_defs,

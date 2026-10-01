@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2021 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -1122,7 +1122,7 @@ int main( int argc, char* argv[] )
   // Replace invalid/undesired characters in a path string using the file_name_char_remap LUT.
   // When the optional variable for the input string indicates the value is not available, then
   // and empty string is returned
-  auto get_valid_name_for_path = [file_name_char_remap] (const boost::optional<std::string>& s)
+  auto get_valid_name_for_path = [file_name_char_remap] (const std::optional<std::string>& s)
   {
     std::string ss;
     

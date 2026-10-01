@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2021 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -1394,7 +1394,7 @@ namespace
 
 template <class tScalar>
 void WriteOptionalScalarH5(const std::string& field_name,
-                           const boost::optional<tScalar>& opt_val,
+                           const std::optional<tScalar>& opt_val,
                            H5::Group* h5)
 {
   if (opt_val)
@@ -1404,7 +1404,7 @@ void WriteOptionalScalarH5(const std::string& field_name,
 }
 
 void WriteOptionalStringH5(const std::string& field_name,
-                           const boost::optional<std::string>& opt_str,
+                           const std::optional<std::string>& opt_str,
                            H5::Group* h5)
 {
   if (opt_str)
@@ -1414,7 +1414,7 @@ void WriteOptionalStringH5(const std::string& field_name,
 }
 
 void WriteOptionalListOfStrings(const std::string& field_name,
-                                const boost::optional<std::vector<std::string>>& opt_strs,
+                                const std::optional<std::vector<std::string>>& opt_strs,
                                 H5::Group* h5)
 {
   using namespace xreg;
@@ -1435,12 +1435,12 @@ void WriteOptionalListOfStrings(const std::string& field_name,
 }
 
 template <class tScalar>
-boost::optional<tScalar> ReadOptionalScalarH5(const std::string& field_name,
+std::optional<tScalar> ReadOptionalScalarH5(const std::string& field_name,
                                               const H5::Group& h5)
 {
   using Scalar = tScalar;
 
-  boost::optional<Scalar> opt_val;
+  std::optional<Scalar> opt_val;
 
   if (xreg::ObjectInGroupH5(field_name, h5))
   {
@@ -1450,10 +1450,10 @@ boost::optional<tScalar> ReadOptionalScalarH5(const std::string& field_name,
   return opt_val;
 }
 
-boost::optional<std::string> ReadOptionalStringH5(const std::string& field_name,
+std::optional<std::string> ReadOptionalStringH5(const std::string& field_name,
                                                   const H5::Group& h5)
 {
-  boost::optional<std::string> opt_str;
+  std::optional<std::string> opt_str;
 
   if (xreg::ObjectInGroupH5(field_name, h5))
   {
@@ -1463,13 +1463,13 @@ boost::optional<std::string> ReadOptionalStringH5(const std::string& field_name,
   return opt_str;
 }
 
-boost::optional<std::vector<std::string>>
+std::optional<std::vector<std::string>>
 ReadOptionalListOfStrings(const std::string& field_name,
                           const H5::Group& h5)
 {
   using namespace xreg;
   
-  boost::optional<std::vector<std::string>> opt_strs;
+  std::optional<std::vector<std::string>> opt_strs;
   
   if (ObjectInGroupH5(field_name, h5))
   {

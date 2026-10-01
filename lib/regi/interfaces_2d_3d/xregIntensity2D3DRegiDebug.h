@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 #ifndef XREGINTENSITYREGI2D3DDEBUG_H_
 #define XREGINTENSITYREGI2D3DDEBUG_H_
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include "xregIntensity2D3DRegi.h"
 
@@ -121,7 +121,7 @@ struct SingleRegiDebugResults
   /// \brief Elapsed time to only run the registration
   ///
   /// This does not include pre-processing, etc.
-  boost::optional<double> regi_time_secs;
+  std::optional<double> regi_time_secs;
 
   /// \brief Auxiliary info saved by the optimizer
   std::shared_ptr<H5ReadWriteInterface> opt_aux;
