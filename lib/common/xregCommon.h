@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,11 +25,10 @@
 #ifndef XREGCOMMON_H_
 #define XREGCOMMON_H_
 
+#include <any>
 #include <vector>
 #include <string>
 #include <unordered_map>
-
-#include <boost/any.hpp>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -139,7 +138,7 @@ using MaskVec = std::vector<bool>;
 constexpr CoordScalar kDEG2RAD = 3.141592653589793 / 180.0;
 constexpr CoordScalar kRAD2DEG = 180.0 / 3.141592653589793;
 
-using AnyParamMap = std::unordered_map<std::string,boost::any>;
+using AnyParamMap = std::unordered_map<std::string,std::any>;
 
 }  // xreg
 
