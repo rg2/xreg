@@ -208,8 +208,10 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
     -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
     -DZLIB_BUILD_SHARED:BOOL=OFF \
     -DZLIB_BUILD_STATIC:BOOL=ON \
-    -DZLIB_BUILD_TESTING:BOOL=OFF
+    -DZLIB_BUILD_TESTING:BOOL=OFF \
+    -DCMAKE_INSTALL_PREFIX:PATH=$ZLIB_DIR/install
   ninja
+  ninja install
   cd ../../
 
   echo "building VTK..."
@@ -254,7 +256,7 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
       -DEigen3_DIR:PATH=$EIGEN_DIR/build \
       -DITK_USE_SYSTEM_EIGEN:BOOL=ON \
       -DITK_USE_SYSTEM_ZLIB:BOOL=ON \
-      -DZLIB_ROOT:PATH=$ZLIB_DIR/build \
+      -DZLIB_ROOT:PATH=$ZLIB_DIR/install \
       -DModule_LabelErodeDilate:BOOL=ON \
       -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 
@@ -296,7 +298,7 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
         -DWITH_TIFF:BOOL=OFF \
         -DBUILD_TIFF:BOOL=OFF \
         -DBUILD_ZLIB:BOOL=OFF \
-        -DZLIB_ROOT:PATH=$ZLIB_DIR/build \
+        -DZLIB_ROOT:PATH=$ZLIB_DIR/install \
         -DBUILD_opencv_java_bindings_generator:BOOL=OFF \
         -DBUILD_opencv_python_tests:BOOL=OFF \
         -DBUILD_opencv_python_bindings_generator:BOOL=OFF $OPENCV_GUI_FLAGS
