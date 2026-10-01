@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,8 +38,7 @@
 #include <tuple>
 #include <iterator>
 #include <type_traits>
-
-#include <boost/variant.hpp>
+#include <variant>
 
 #include "xregCommon.h"
 #include "xregTBBUtils.h"
@@ -372,7 +371,7 @@ public:
     visitor.query_pt = &x;
     visitor.shp      = shp;
 
-    return boost::apply_visitor(visitor, data_);
+    return std::visit(visitor, data_);
   }
 
   /**
@@ -475,7 +474,7 @@ public:
    **/
   size_type depth() const
   {
-    return boost::apply_visitor(depth_visitor(), data_);
+    return std::visit(depth_visitor(), data_);
   }
 
   /// \brief Finds all points within a radius to the query point.
@@ -519,7 +518,7 @@ private:
     visitor.mins = mins;
     visitor.maxs = maxs;
 
-    boost::apply_visitor(visitor, data_);
+    std::visit(visitor, data_);
   }
 
   void find_pts_in_radius_helper(const Pt& x, const CoordScalar radius, PtList* pts, DistList* dists) const
@@ -530,7 +529,7 @@ private:
     visitor.pts      = pts;
     visitor.dists    = dists;
     
-    boost::apply_visitor(visitor, data_);
+    std::visit(visitor, data_);
   }
 
   struct NonLeafNodeData
@@ -555,7 +554,7 @@ private:
   struct InvalidNodeData { };
 
   // Using InvalidNodeData first defaults the node to be invalid upon default construction
-  using NodeData = boost::variant<InvalidNodeData,NonLeafNodeData,LeafNodeData>;
+  using NodeData = std::variant<InvalidNodeData,NonLeafNodeData,LeafNodeData>;
 
   NodeData data_;
   
@@ -623,7 +622,7 @@ private:
     return std::make_tuple(leaf_data_pt, (query_pt - leaf_data_pt).norm());
   }
 
-  struct find_closest_point_visitor : public boost::static_visitor<std::tuple<Pt,CoordScalar>>
+  struct find_closest_point_visitor
   {
     const Pt* query_pt;
 
@@ -728,7 +727,7 @@ private:
   };
  
   // This only works for fixed sized points
-  struct update_bounds_visitor : public boost::static_visitor<void>
+  struct update_bounds_visitor
   {
     Pt* mins;
     Pt* maxs;
@@ -781,7 +780,7 @@ private:
     }
   };
 
-  struct depth_visitor : public boost::static_visitor<size_type>
+  struct depth_visitor
   {
     size_type operator()(const InvalidNodeData&) const
     {
@@ -801,7 +800,7 @@ private:
     }
   };
 
-  struct find_pts_in_radius_helper_visitor : public boost::static_visitor<void>
+  struct find_pts_in_radius_helper_visitor
   {
     const Pt* query_pt;
     CoordScalar radius;

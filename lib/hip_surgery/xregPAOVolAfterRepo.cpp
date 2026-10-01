@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -194,7 +194,7 @@ namespace
 
 using namespace xreg;
 
-struct PtInObjVisitor : public boost::static_visitor<bool>
+struct PtInObjVisitor
 {
   Pt3 p;
 
@@ -237,7 +237,7 @@ void xreg::AddPAOScrewKWireToVol::operator()()
   std::uniform_real_distribution<PixelScalar> screw_hu_dist(14000, 16000);
   std::uniform_real_distribution<PixelScalar> kwire_hu_dist(14000, 26000);
 
-  using ObjVar = boost::variant<NaiveScrewModel,NaiveKWireModel>;
+  using ObjVar = std::variant<NaiveScrewModel,NaiveKWireModel>;
   using ObjVarList = std::vector<ObjVar>;
 
   ObjVarList objs;
@@ -464,7 +464,7 @@ void xreg::AddPAOScrewKWireToVol::operator()()
         
         pt_in_obj.p = vol_idx_to_obj_pts * idx;
 
-        if (boost::apply_visitor(pt_in_obj, obj))
+        if (std::visit(pt_in_obj, obj))
         {
           vol_sup->SetPixel(itk_idx, obj_hu);
 

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@
 
 #include "xregLineSearchOpt.h"
 
-#include <boost/variant.hpp>
+#include <variant>
 
 #include <fmt/printf.h>
 
@@ -41,7 +41,7 @@ using Mat = LineSearchOptimization::Mat;
 using SearchDirFnFirstOrder = LineSearchOptimization::SearchDirFnFirstOrder;
 using SearchDirFnSecOrder   = LineSearchOptimization::SearchDirFnSecOrder;
 
-struct SearchDirNeedsHessian : public boost::static_visitor<bool>
+struct SearchDirNeedsHessian
 {
   bool operator()(const SearchDirFnFirstOrder& search_fn) const
   {
@@ -56,7 +56,7 @@ struct SearchDirNeedsHessian : public boost::static_visitor<bool>
   }
 };
 
-struct ComputeSearchDir : public boost::static_visitor<Pt>
+struct ComputeSearchDir
 {
   const Pt*  g;
   const Mat* H;
@@ -95,7 +95,7 @@ xreg::LineSearchOptimization::solve(const Pt& init_x) const
 
   Pt prev_x;
 
-  const bool requires_hessian = boost::apply_visitor(SearchDirNeedsHessian(), search_dir_fn);
+  const bool requires_hessian = std::visit(SearchDirNeedsHessian(), search_dir_fn);
   
   std::tie(cur_F,cur_grad,cur_H) = obj_fn(cur_x, true, requires_hessian);
 
@@ -135,7 +135,7 @@ xreg::LineSearchOptimization::solve(const Pt& init_x) const
         compute_search_dir_visitor.g = &cur_grad;
         compute_search_dir_visitor.H = &cur_H;
 
-        p = boost::apply_visitor(compute_search_dir_visitor, search_dir_fn);
+        p = std::visit(compute_search_dir_visitor, search_dir_fn);
       }
 
       prev_x = cur_x;

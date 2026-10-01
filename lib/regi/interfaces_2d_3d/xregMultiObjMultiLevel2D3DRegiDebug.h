@@ -25,7 +25,7 @@
 #ifndef XREGMULTIOBJMULTILEVEL2D3DREGIDEBUG_H_
 #define XREGMULTIOBJMULTILEVEL2D3DREGIDEBUG_H_
 
-#include <boost/variant.hpp>
+#include <variant>
 
 #include "xregProjData.h"
 #include "xregProjPreProc.h"
@@ -61,7 +61,7 @@ struct DebugRegiResultsMultiLevel
   // either provide the volumes directly, in which case they will be serialized
   // into the debug file, or to provide paths on disk in order to avoid duplicating
   // storage of the volumes.
-  std::vector<boost::variant<RayCaster::VolPtr,VolPathInfo>> vols;
+  std::vector<std::variant<RayCaster::VolPtr,VolPathInfo>> vols;
 
   struct ProjDataPathInfo
   {
@@ -73,7 +73,7 @@ struct DebugRegiResultsMultiLevel
   };
 
   // see above note about using variant - just for proj data this time
-  boost::variant<ProjDataF32List,ProjDataPathInfo> fixed_projs;
+  std::variant<ProjDataF32List,ProjDataPathInfo> fixed_projs;
 
   std::optional<double> pre_proc_time_secs;
   
