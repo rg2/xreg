@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -959,14 +959,14 @@ void xreg::VTK3DPlotter::add_mesh_w_scalar_map(const TriMesh& mesh, const CoordS
     if (scalar_override_min_it != scalar_map_params.end())
     {
       do_scalar_override_min = true;
-      scalar_override_min    = boost::any_cast<CoordScalar>(scalar_override_min_it->second);
+      scalar_override_min    = std::any_cast<CoordScalar>(scalar_override_min_it->second);
     }
 
     auto scalar_override_max_it = scalar_map_params.find("max");
     if (scalar_override_max_it != scalar_map_params.end())
     {
       do_scalar_override_max = true;
-      scalar_override_max    = boost::any_cast<CoordScalar>(scalar_override_max_it->second);
+      scalar_override_max    = std::any_cast<CoordScalar>(scalar_override_max_it->second);
     }
 
     auto scalars_title_it = scalar_map_params.find("title");
@@ -976,11 +976,11 @@ void xreg::VTK3DPlotter::add_mesh_w_scalar_map(const TriMesh& mesh, const CoordS
 
       if (t == typeid(std::string))
       {
-        scalars_title = boost::any_cast<std::string>(scalars_title_it->second);
+        scalars_title = std::any_cast<std::string>(scalars_title_it->second);
       }
       else if (t == typeid(const char*))
       {
-        scalars_title = boost::any_cast<const char*>(scalars_title_it->second);
+        scalars_title = std::any_cast<const char*>(scalars_title_it->second);
       }
       else
       {
@@ -991,7 +991,7 @@ void xreg::VTK3DPlotter::add_mesh_w_scalar_map(const TriMesh& mesh, const CoordS
     auto scalars_ticks_it = scalar_map_params.find("ticks");
     if (scalars_ticks_it != scalar_map_params.end())
     {
-      scalars_ticks = boost::any_cast<int>(scalars_ticks_it->second);
+      scalars_ticks = std::any_cast<int>(scalars_ticks_it->second);
     }
   }
 

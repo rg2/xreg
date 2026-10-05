@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 #ifndef XREGMULTIOBJMULTILEVEL2D3DREGIDEBUG_H_
 #define XREGMULTIOBJMULTILEVEL2D3DREGIDEBUG_H_
 
-#include <boost/variant.hpp>
+#include <variant>
 
 #include "xregProjData.h"
 #include "xregProjPreProc.h"
@@ -61,7 +61,7 @@ struct DebugRegiResultsMultiLevel
   // either provide the volumes directly, in which case they will be serialized
   // into the debug file, or to provide paths on disk in order to avoid duplicating
   // storage of the volumes.
-  std::vector<boost::variant<RayCaster::VolPtr,VolPathInfo>> vols;
+  std::vector<std::variant<RayCaster::VolPtr,VolPathInfo>> vols;
 
   struct ProjDataPathInfo
   {
@@ -73,14 +73,14 @@ struct DebugRegiResultsMultiLevel
   };
 
   // see above note about using variant - just for proj data this time
-  boost::variant<ProjDataF32List,ProjDataPathInfo> fixed_projs;
+  std::variant<ProjDataF32List,ProjDataPathInfo> fixed_projs;
 
-  boost::optional<double> pre_proc_time_secs;
+  std::optional<double> pre_proc_time_secs;
   
   double multi_level_run_time_secs;
 
   // this can include I/O
-  boost::optional<double> tot_time_secs;
+  std::optional<double> tot_time_secs;
 
   ScalarList multi_res_levels;
 
@@ -94,7 +94,7 @@ struct DebugRegiResultsMultiLevel
   /// multi-resolution level.
   ListOfStrLists regi_names;
 
-  boost::optional<ProjPreProcParams> proj_pre_proc_info;
+  std::optional<ProjPreProcParams> proj_pre_proc_info;
 
   /// \brief Computes the total number of projections (per view) that would
   ///        correspond to each registration's initial and final poses, and each

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 #ifndef XREGLINESEARCHOPTIMIZATION_H_
 #define XREGLINESEARCHOPTIMIZATION_H_
 
-#include <boost/variant/variant.hpp>
+#include <variant>
 
 #include <Eigen/Eigen>
 
@@ -58,7 +58,7 @@ struct LineSearchOptimization : public ObjWithOStream
   // Outputs: search direction in parameter space
   using SearchDirFnSecOrder = std::function<Pt(const Pt&,const Mat&)>;
 
-  using SearchDirFn = boost::variant<SearchDirFnFirstOrder,SearchDirFnSecOrder>;
+  using SearchDirFn = std::variant<SearchDirFnFirstOrder,SearchDirFnSecOrder>;
 
   //   Input: ( f , search dir p , x_0, grad f(x_0), compute Hessian )
   // Outputs: ( x_1, f(x_1) , grad f(x_1) , Hessian f(x_1) )

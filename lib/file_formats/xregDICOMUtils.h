@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2021 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,11 +27,10 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 #include <ostream>
 #include <unordered_map>
 #include <array>
-
-#include <boost/optional.hpp>
 
 #include "xregCommon.h"
 #include "xregFilesystemUtils.h"
@@ -61,9 +60,9 @@ struct DICOMFIleBasicFields
   std::string patient_name;
   
   double study_time;
-  boost::optional<double> series_time;
-  boost::optional<double> acquisition_time;
-  boost::optional<double> content_time;
+  std::optional<double> series_time;
+  std::optional<double> acquisition_time;
+  std::optional<double> content_time;
 
   std::string modality;
 
@@ -78,66 +77,66 @@ struct DICOMFIleBasicFields
   unsigned long num_rows;
   unsigned long num_cols;
 
-  boost::optional<std::string> pat_pos;
+  std::optional<std::string> pat_pos;
 
-  boost::optional<std::array<std::string,2>> pat_orient;
+  std::optional<std::array<std::string,2>> pat_orient;
 
-  boost::optional<std::string> study_desc;
+  std::optional<std::string> study_desc;
 
-  boost::optional<std::string> series_desc;
+  std::optional<std::string> series_desc;
 
-  boost::optional<std::vector<std::string>> image_type;
+  std::optional<std::vector<std::string>> image_type;
 
   std::string manufacturer;
 
-  boost::optional<std::string> institution_name;
+  std::optional<std::string> institution_name;
 
-  boost::optional<std::string> department_name;
+  std::optional<std::string> department_name;
 
-  boost::optional<std::string> manufacturers_model_name;
+  std::optional<std::string> manufacturers_model_name;
 
-  boost::optional<std::string> sec_cap_dev_manufacturer;
+  std::optional<std::string> sec_cap_dev_manufacturer;
 
-  boost::optional<std::string> sec_cap_dev_software_versions;
+  std::optional<std::string> sec_cap_dev_software_versions;
 
-  boost::optional<std::vector<std::string>> software_versions;
+  std::optional<std::vector<std::string>> software_versions;
 
-  boost::optional<std::string> vol_props;
+  std::optional<std::string> vol_props;
 
-  boost::optional<unsigned long> num_frames;
+  std::optional<unsigned long> num_frames;
 
-  boost::optional<std::string> proto_name;
+  std::optional<std::string> proto_name;
 
-  boost::optional<std::string> conv_kernel;
+  std::optional<std::string> conv_kernel;
 
   // Fields that we would like to use from 2D radiographs/fluoro:
 
-  boost::optional<std::string> body_part_examined;
+  std::optional<std::string> body_part_examined;
 
-  boost::optional<std::string> view_position;
+  std::optional<std::string> view_position;
 
-  boost::optional<double> dist_src_to_det_mm;
+  std::optional<double> dist_src_to_det_mm;
   
-  boost::optional<double> dist_src_to_pat_mm;
+  std::optional<double> dist_src_to_pat_mm;
   
-  boost::optional<double> kvp;
+  std::optional<double> kvp;
 
-  boost::optional<double> tube_current_mA;
+  std::optional<double> tube_current_mA;
 
-  boost::optional<double> exposure_mAs;
+  std::optional<double> exposure_mAs;
 
-  boost::optional<double> exposure_muAs;
+  std::optional<double> exposure_muAs;
 
-  boost::optional<double> exposure_time_ms;
+  std::optional<double> exposure_time_ms;
 
   // units are dGy * cm * cm
-  boost::optional<double> dose_area_product_dGy_cm_sq;
+  std::optional<double> dose_area_product_dGy_cm_sq;
 
-  boost::optional<std::string> fov_shape;
+  std::optional<std::string> fov_shape;
   
-  boost::optional<std::vector<unsigned long>> fov_dims;
+  std::optional<std::vector<unsigned long>> fov_dims;
 
-  boost::optional<std::array<unsigned long,2>> fov_origin_off;
+  std::optional<std::array<unsigned long,2>> fov_origin_off;
   
   enum FOVRot
   {
@@ -147,22 +146,22 @@ struct DICOMFIleBasicFields
     kTWO_SEVENTY = 270
   };
   
-  boost::optional<FOVRot> fov_rot;
+  std::optional<FOVRot> fov_rot;
 
-  boost::optional<bool> fov_horizontal_flip;
+  std::optional<bool> fov_horizontal_flip;
 
-  boost::optional<double> intensifier_diameter_mm;
+  std::optional<double> intensifier_diameter_mm;
 
   // This is usally populated for 2D X-ray images, e.g. when the standard
   // pixel spacing fields are not appropriate as they are required to be
   // in "patient space."
   // row spacing , col spacing
-  boost::optional<std::array<CoordScalar,2>> imager_pixel_spacing;
+  std::optional<std::array<CoordScalar,2>> imager_pixel_spacing;
   
-  boost::optional<double> grid_focal_dist_mm;
+  std::optional<double> grid_focal_dist_mm;
   
-  boost::optional<double> window_center;
-  boost::optional<double> window_width;
+  std::optional<double> window_center;
+  std::optional<double> window_width;
 };
 
 using DICOMFIleBasicFieldsList = std::vector<DICOMFIleBasicFields>;

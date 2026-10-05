@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2020-2021 Robert Grupp
+# Copyright (c) 2020-2026 Robert Grupp
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -30,8 +30,12 @@ cmake_minimum_required(VERSION 3.13.0 FATAL_ERROR)
 # Version format is YYYY.MM.DD for a release and YYYY.MM.DD.1 for devel after the release
 project(xreg VERSION 2021.09.19.1)
 
-set (CMAKE_CXX_STANDARD "11" CACHE STRING "C++ Standard (needs at least 11)")
+set (CMAKE_CXX_STANDARD "17" CACHE STRING "C++ Standard (needs at least 17)")
 mark_as_advanced(CMAKE_CXX_STANDARD)
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
+if (CMAKE_CXX_STANDARD LESS 17)
+  message(FATAL_ERROR "xreg requires C++17 or newer (CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD})")
+endif ()
 
 set (XREG_TOP_LEVEL_PROJ FALSE)
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -51,6 +55,9 @@ endif ()
 
 option(XREG_USE_SYSTEM_OPENCL "Use a system install of OpenCL instead of the bundled loader" ${XREG_USE_SYSTEM_OPENCL_DEFAULT})
 mark_as_advanced(XREG_USE_SYSTEM_OPENCL)
+
+option(XREG_USE_SYSTEM_FMT "Use a system (find_package) install of fmt instead of the bundled version" OFF)
+mark_as_advanced(XREG_USE_SYSTEM_FMT)
 
 if (APPLE OR WIN32)
   set(XREG_USE_LEGACY_FIND_TBB_DEFAULT OFF)
@@ -93,7 +100,9 @@ find_package(Boost REQUIRED)
 
 find_package(Eigen3 REQUIRED)
 
-find_package(fmt REQUIRED)
+if (XREG_USE_SYSTEM_FMT)
+  find_package(fmt REQUIRED)
+endif ()
 
 find_package(ITK REQUIRED)
 include(${ITK_USE_FILE})
@@ -106,11 +115,20 @@ find_package(NLopt REQUIRED)
 
 add_subdirectory(third_party)
 
+# ITK bundles HDF5 (incl. the C++ API) under an itkhdf5 subdirectory of
+# one of its include dirs; ITK_INCLUDE_DIRS is a list, so search it.
+find_path(XREG_ITK_HDF5_INC_DIR H5Cpp.h
+          PATHS ${ITK_INCLUDE_DIRS}
+          PATH_SUFFIXES itkhdf5
+          NO_DEFAULT_PATH)
+if (NOT XREG_ITK_HDF5_INC_DIR)
+  message(SEND_ERROR "HDF5 C++ headers (H5Cpp.h) not found in ITK include dirs!")
+endif ()
+
 set(XREG_EXT_LIB_INC_DIRS ${Boost_INCLUDE_DIRS}
                           ${EIGEN3_INCLUDE_DIR}
-                          ${FMT_INCLUDE_DIRS}
                           ${ITK_INCLUDE_DIRS}
-                          ${ITK_INCLUDE_DIRS}/itkhdf5
+                          ${XREG_ITK_HDF5_INC_DIR}
                           ${OpenCV_INCLUDE_DIRS}
                           ${VTK_INCLUDE_DIRS}
                           ${VIENNACL_INC_DIR})
@@ -157,6 +175,15 @@ if (XREG_TOP_LEVEL_PROJ)
     install(DIRECTORY third_party/OpenCL-Headers-2020.06.16/CL DESTINATION ${XREG_INC_INSTALL_DIR})
   endif ()
 
+  if (NOT XREG_USE_SYSTEM_FMT)
+    # bundled fmt must be in the export set since xreg links to it;
+    # its headers go to include/fmt to match fmt's INSTALL_INTERFACE include dir
+    install(TARGETS fmt EXPORT xreg-targets
+            RUNTIME       DESTINATION ${CMAKE_INSTALL_BINDIR}
+            LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/fmt)
+  endif ()
 
   install(TARGETS ${XREG_TARGETS_TO_EXPORT} EXPORT xreg-targets
           RUNTIME       DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -174,7 +201,12 @@ if (XREG_TOP_LEVEL_PROJ)
 
   write_basic_package_version_file(${PROJECT_BINARY_DIR}/xregConfigVersion.cmake COMPATIBILITY AnyNewerVersion)
 
-  export(TARGETS ${XREG_TARGETS_TO_EXPORT} NAMESPACE xreg:: FILE ${PROJECT_BINARY_DIR}/xreg-targets.cmake)
+  set(XREG_TARGETS_FOR_BUILD_TREE_EXPORT ${XREG_TARGETS_TO_EXPORT})
+  if (NOT XREG_USE_SYSTEM_FMT)
+    list(APPEND XREG_TARGETS_FOR_BUILD_TREE_EXPORT fmt)
+  endif ()
+
+  export(TARGETS ${XREG_TARGETS_FOR_BUILD_TREE_EXPORT} NAMESPACE xreg:: FILE ${PROJECT_BINARY_DIR}/xreg-targets.cmake)
 
   install(FILES ${PROJECT_BINARY_DIR}/xregConfig.cmake ${PROJECT_BINARY_DIR}/xregConfigVersion.cmake
           DESTINATION ${XREG_CMAKE_CONFIG_INSTALL_DIR})

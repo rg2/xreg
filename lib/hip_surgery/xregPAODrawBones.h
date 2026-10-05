@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 #ifndef XREGPAODRAWBONES_H_
 #define XREGPAODRAWBONES_H_
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include "xregVTK3DPlotter.h"
 #include "xregPAOCuts.h"
@@ -59,13 +59,13 @@ struct DrawPAOBones : ObjWithOStream
 
   bool render_to_ocv_mat = false;
 
-  boost::optional<unsigned char> pelvis_label_arg;
+  std::optional<unsigned char> pelvis_label_arg;
 
-  boost::optional<unsigned char> frag_label_arg;
+  std::optional<unsigned char> frag_label_arg;
 
-  boost::optional<unsigned char> femur_label_arg;
+  std::optional<unsigned char> femur_label_arg;
 
-  boost::optional<unsigned char> contra_femur_label_arg;
+  std::optional<unsigned char> contra_femur_label_arg;
 
   FrameTransform delta_Frag_and_Femur = FrameTransform::Identity();
   
@@ -75,7 +75,7 @@ struct DrawPAOBones : ObjWithOStream
 
   bool show_contra_femur = true;
 
-  boost::optional<FrameTransform> delta_sec_frag;
+  std::optional<FrameTransform> delta_sec_frag;
 
   bool do_frag_alpha = false;
 
@@ -95,18 +95,18 @@ struct DrawPAOBones : ObjWithOStream
 
   bool use_vol_frame = false;
 
-  boost::optional<std::tuple<PAOCutPlanes,PAOCutDispInfo>> cuts;
+  std::optional<std::tuple<PAOCutPlanes,PAOCutDispInfo>> cuts;
   
-  boost::optional<Pt3List> other_pts;
+  std::optional<Pt3List> other_pts;
 
   bool no_draw_frag = false;
 
   bool no_draw_femurs = false;
 
-  boost::optional<TriMesh> pelvis_mesh_arg;
-  boost::optional<TriMesh> frag_mesh_arg;
-  boost::optional<TriMesh> femur_mesh_arg;
-  boost::optional<TriMesh> contra_femur_mesh_arg;
+  std::optional<TriMesh> pelvis_mesh_arg;
+  std::optional<TriMesh> frag_mesh_arg;
+  std::optional<TriMesh> femur_mesh_arg;
+  std::optional<TriMesh> contra_femur_mesh_arg;
   
   Pt3 pelvis_color = { 1.0, 0.9922, 0.890 };
   
@@ -118,7 +118,7 @@ struct DrawPAOBones : ObjWithOStream
 
   Pt3 contra_femur_color = { 1.0, 1.0, 0.0 };
 
-  boost::optional<Pt3> bg_color_arg;
+  std::optional<Pt3> bg_color_arg;
 
   // Start computed values, that may be useful to a user
   LabelType pelvis_label    = 0;

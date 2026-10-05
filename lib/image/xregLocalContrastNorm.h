@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021 Robert Grupp
+ * Copyright (c) 2021-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 #ifndef XREGLOCALCONTRASTNORM_H_
 #define XREGLOCALCONTRASTNORM_H_
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <opencv2/core/core.hpp>
 
@@ -37,8 +37,8 @@ namespace xreg
 // mean and unit standard deviation. 
 cv::Mat LocalContrastNormStdNorm(const cv::Mat& input_img, const int win_len_rows,
                                  const int win_len_cols,
-                                 const boost::optional<float>& border_val =
-                                   boost::optional<float>());
+                                 const std::optional<float>& border_val =
+                                   std::optional<float>());
 
 // Implements local contrast normalization according to:
 // What is the Best Multi-Stage Architecture for Object Recognition?
@@ -46,8 +46,8 @@ cv::Mat LocalContrastNormStdNorm(const cv::Mat& input_img, const int win_len_row
 // Section 2: Model Architecture, Local Contrast Normalization Layer.
 cv::Mat LocalContrastNormJarrett(const cv::Mat& input_img, const int win_len_rows,
                                  const int win_len_cols,
-                                 const boost::optional<float>& border_val =
-                                   boost::optional<float>());
+                                 const std::optional<float>& border_val =
+                                   std::optional<float>());
 
 
 }  // xreg

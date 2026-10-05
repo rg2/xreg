@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -54,7 +54,7 @@ namespace  // un-named
 
 using namespace xreg;
 
-struct WriteDebugVolInfo : boost::static_visitor<void>
+struct WriteDebugVolInfo
 {
   H5::Group* g;
 
@@ -82,7 +82,7 @@ struct WriteDebugVolInfo : boost::static_visitor<void>
   }
 };
 
-struct WriteDebugProjDataInfo : boost::static_visitor<void>
+struct WriteDebugProjDataInfo
 {
   H5::Group* g;
 
@@ -126,7 +126,7 @@ void xreg::WriteMultiLevel2D3DRegiDebugH5(const DebugRegiResultsMultiLevel& resu
       WriteDebugVolInfo write_debug_vol_info;
       write_debug_vol_info.g = &cur_vol_g;
       
-      boost::apply_visitor(write_debug_vol_info, results.vols[vol_idx]);
+      std::visit(write_debug_vol_info, results.vols[vol_idx]);
     }
   }
 
@@ -136,7 +136,7 @@ void xreg::WriteMultiLevel2D3DRegiDebugH5(const DebugRegiResultsMultiLevel& resu
     WriteDebugProjDataInfo write_pd_info;
     write_pd_info.g = &pd_g;
 
-    boost::apply_visitor(write_pd_info, results.fixed_projs);
+    std::visit(write_pd_info, results.fixed_projs);
   }
 
   WriteSingleScalarH5("multi-level-time", results.multi_level_run_time_secs, h5);
@@ -369,7 +369,6 @@ namespace  // un-named
 using namespace xreg;
 
 struct ReadVolDataFromDebug
-  : boost::static_visitor<std::tuple<RayCaster::VolList,RayCaster::VolList>>
 {
   using Vol         = RayCaster::Vol;
   using VolPtr      = RayCaster::VolPtr;
@@ -475,7 +474,7 @@ struct ReadVolDataFromDebug
   }
 };
 
-struct ReadProjDataFromDebug : boost::static_visitor<ProjDataF32List>
+struct ReadProjDataFromDebug
 {
   const H5::Group* h5;
 
@@ -535,7 +534,7 @@ xreg::VolDataFromDebug(const DebugRegiResultsMultiLevel& results,
 
   for (const auto& vol_info : results.vols)
   {
-    const auto cur_vols = boost::apply_visitor(vol_data_visitor, vol_info);
+    const auto cur_vols = std::visit(vol_data_visitor, vol_info);
     
     const auto& cur_hu_vols = std::get<0>(cur_vols);
     
@@ -558,6 +557,6 @@ xreg::ProjDataF32List xreg::ProjDataFromDebug(const DebugRegiResultsMultiLevel& 
   ReadProjDataFromDebug r;
   r.h5 = h5;
 
-  return boost::apply_visitor(r, results.fixed_projs);
+  return std::visit(r, results.fixed_projs);
 }
 

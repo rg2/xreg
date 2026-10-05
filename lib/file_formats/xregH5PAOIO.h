@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 #ifndef XREGH5PAOIO_H_
 #define XREGH5PAOIO_H_
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include "xregPAOCuts.h"
 
@@ -45,7 +45,7 @@ namespace xreg
 /// The display information is optional, however if a valid pointer
 /// is provided, then exceptions will be thrown if the appropriate
 /// entries are not found.
-std::tuple<PAOCutPlanes,boost::optional<PAOCutDispInfo>,boost::optional<PAOCutSlabs>>
+std::tuple<PAOCutPlanes,std::optional<PAOCutDispInfo>,std::optional<PAOCutSlabs>>
 ReadPAOCutPlanesH5(const H5::Group& h5);
 
 /// \brief Read cut planes from a file in HDF5 format.
@@ -53,7 +53,7 @@ ReadPAOCutPlanesH5(const H5::Group& h5);
 /// The display information is optional, however if a valid pointer
 /// is provided, then exceptions will be thrown if the appropriate
 /// entries are not found.
-std::tuple<PAOCutPlanes,boost::optional<PAOCutDispInfo>,boost::optional<PAOCutSlabs>>
+std::tuple<PAOCutPlanes,std::optional<PAOCutDispInfo>,std::optional<PAOCutSlabs>>
 ReadPAOCutPlanesH5File(const std::string& path);
 
 /// \brief Write cut planes to HDF5.

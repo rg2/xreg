@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2022 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -382,7 +382,7 @@ cv::Mat xreg::OverlayPtsAsCircles(const cv::Mat& img, const Pt2List& pts, const 
   auto radius_it = other_params.find("radius");
   if (radius_it != other_params.end())
   {
-    radius = boost::any_cast<int>(radius_it->second);
+    radius = std::any_cast<int>(radius_it->second);
   }
 
   int thickness = 1;
@@ -390,7 +390,7 @@ cv::Mat xreg::OverlayPtsAsCircles(const cv::Mat& img, const Pt2List& pts, const 
   auto thick_it = other_params.find("thickness");
   if (thick_it != other_params.end())
   {
-    thickness = boost::any_cast<int>(thick_it->second);
+    thickness = std::any_cast<int>(thick_it->second);
   }
 
   const auto& color_lut = OpenCVColorNameToScalar();
@@ -405,15 +405,15 @@ cv::Mat xreg::OverlayPtsAsCircles(const cv::Mat& img, const Pt2List& pts, const 
 
     if (t == typeid(const char*))
     {
-      colors = { color_lut.at(boost::any_cast<const char*>(color_it->second)) };
+      colors = { color_lut.at(std::any_cast<const char*>(color_it->second)) };
     }
     else if (t == typeid(std::string))
     {
-      colors = { color_lut.at(boost::any_cast<std::string>(color_it->second)) };
+      colors = { color_lut.at(std::any_cast<std::string>(color_it->second)) };
     }
     else if (t == typeid(std::vector<std::string>))
     {
-      const auto& color_strs = boost::any_cast<std::vector<std::string>>(color_it->second);
+      const auto& color_strs = std::any_cast<std::vector<std::string>>(color_it->second);
       
       colors.clear();
       for (const auto& s : color_strs)
@@ -497,7 +497,7 @@ cv::Mat xreg::OverlayPts(const cv::Mat& img, const Pt2List& pts,
   auto radius_it = other_params.find("radius");
   if (radius_it != other_params.end())
   {
-    radius = boost::any_cast<int>(radius_it->second);
+    radius = std::any_cast<int>(radius_it->second);
   }
 
   int thickness = 1;
@@ -505,7 +505,7 @@ cv::Mat xreg::OverlayPts(const cv::Mat& img, const Pt2List& pts,
   auto thick_it = other_params.find("thickness");
   if (thick_it != other_params.end())
   {
-    thickness = boost::any_cast<int>(thick_it->second);
+    thickness = std::any_cast<int>(thick_it->second);
   }
 
   const auto& color_lut = OpenCVColorNameToScalar();
@@ -520,15 +520,15 @@ cv::Mat xreg::OverlayPts(const cv::Mat& img, const Pt2List& pts,
 
     if (t == typeid(const char*))
     {
-      colors = { color_lut.at(boost::any_cast<const char*>(color_it->second)) };
+      colors = { color_lut.at(std::any_cast<const char*>(color_it->second)) };
     }
     else if (t == typeid(std::string))
     {
-      colors = { color_lut.at(boost::any_cast<std::string>(color_it->second)) };
+      colors = { color_lut.at(std::any_cast<std::string>(color_it->second)) };
     }
     else if (t == typeid(std::vector<std::string>))
     {
-      const auto& color_strs = boost::any_cast<std::vector<std::string>>(color_it->second);
+      const auto& color_strs = std::any_cast<std::vector<std::string>>(color_it->second);
       
       colors.clear();
       for (const auto& s : color_strs)
@@ -554,15 +554,15 @@ cv::Mat xreg::OverlayPts(const cv::Mat& img, const Pt2List& pts,
 
     if (t == typeid(const char*))
     {
-      marker_type_names = { boost::any_cast<const char*>(marker_type_it->second) };
+      marker_type_names = { std::any_cast<const char*>(marker_type_it->second) };
     }
     else if (t == typeid(std::string))
     {
-      marker_type_names = { boost::any_cast<std::string>(marker_type_it->second) };
+      marker_type_names = { std::any_cast<std::string>(marker_type_it->second) };
     }
     else if (t == typeid(std::vector<std::string>))
     {
-      marker_type_names = boost::any_cast<std::vector<std::string>>(marker_type_it->second);
+      marker_type_names = std::any_cast<std::vector<std::string>>(marker_type_it->second);
     }
     else
     {

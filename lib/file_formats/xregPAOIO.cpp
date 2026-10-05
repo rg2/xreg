@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@
 #include "xregFilesystemUtils.h"
 #include "xregStringUtils.h"
 
-std::tuple<xreg::PAOCutPlanes,boost::optional<xreg::PAOCutDispInfo>,boost::optional<xreg::PAOCutSlabs>>
+std::tuple<xreg::PAOCutPlanes,std::optional<xreg::PAOCutDispInfo>,std::optional<xreg::PAOCutSlabs>>
 xreg::ReadPAOCutPlanesFile(const std::string& path)
 {
   const std::string file_ext = ToLowerCase(Path(path).file_extension());

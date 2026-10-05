@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,13 +26,13 @@
 
 #include "xregHDF5.h"
 
-std::tuple<xreg::PAOCutPlanes,boost::optional<xreg::PAOCutDispInfo>,boost::optional<xreg::PAOCutSlabs>>
+std::tuple<xreg::PAOCutPlanes,std::optional<xreg::PAOCutDispInfo>,std::optional<xreg::PAOCutSlabs>>
 xreg::ReadPAOCutPlanesH5(const H5::Group& h5)
 {
   PAOCutPlanes cut_defs;
 
-  boost::optional<PAOCutDispInfo> disp_info_ret;
-  boost::optional<PAOCutSlabs> slabs_ret;
+  std::optional<PAOCutDispInfo> disp_info_ret;
+  std::optional<PAOCutSlabs> slabs_ret;
 
   cut_defs.ilium.normal = ReadMatrixH5CoordScalar("ilium-normal", h5);
   cut_defs.ilium.scalar = ReadSingleScalarH5CoordScalar("ilium-scalar", h5);
@@ -111,7 +111,7 @@ xreg::ReadPAOCutPlanesH5(const H5::Group& h5)
   return std::make_tuple(cut_defs, disp_info_ret, slabs_ret);
 }
 
-std::tuple<xreg::PAOCutPlanes,boost::optional<xreg::PAOCutDispInfo>,boost::optional<xreg::PAOCutSlabs>>
+std::tuple<xreg::PAOCutPlanes,std::optional<xreg::PAOCutDispInfo>,std::optional<xreg::PAOCutSlabs>>
 xreg::ReadPAOCutPlanesH5File(const std::string& path)
 {
   return ReadPAOCutPlanesH5(H5::H5File(path, H5F_ACC_RDONLY));

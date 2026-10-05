@@ -89,6 +89,10 @@ vtk_module_autoinit(TARGETS xreg_vtk MODULES ${VTK_LIBRARIES})
 # combine the subcomponents into a single library
 add_library(xreg ${XREG_LIB_OBJS})
 
+# public headers use C++17 features (e.g. std::optional), so propagate the
+# requirement to anything linking against xreg (including installed exports)
+target_compile_features(xreg PUBLIC cxx_std_17)
+
 if (WIN32)
     target_compile_definitions(xreg PUBLIC BOOST_CHRONO_HEADER_ONLY)
 endif () 

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2021 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 #ifndef XREGPROJDATA_H_
 #define XREGPROJDATA_H_
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include "xregCommon.h"
 
@@ -67,14 +67,14 @@ struct ProjData
   // so that the superior portion is approximately located in the top
   // of the image and the inferior portion is approximately located in
   // the bottom of the image.
-  boost::optional<ProjDataRotToPatUp> rot_to_pat_up;
+  std::optional<ProjDataRotToPatUp> rot_to_pat_up;
   
   // Indicates that the detector spacings specified in cam were explicitly
   // defined from metadata fields in the original source. Examples where this
   // can be false are when converting from DICOM and the user overrides the
   // spacing value manually or the spacing values are guessed from other
   // metadata values (e.g. the detector diameter).
-  boost::optional<bool> det_spacings_from_orig_meta;
+  std::optional<bool> det_spacings_from_orig_meta;
 
   // Original DICOM metadata this image - does not need
   // to be set, e.g. for the case of simulated data

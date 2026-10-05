@@ -1,6 +1,12 @@
 
 @PACKAGE_INIT@
 
+set(XREG_USE_SYSTEM_FMT @XREG_USE_SYSTEM_FMT@)
+if (XREG_USE_SYSTEM_FMT)
+  include(CMakeFindDependencyMacro)
+  find_dependency(fmt)
+endif ()
+
 include(${CMAKE_CURRENT_LIST_DIR}/xreg-targets.cmake)
 
 set(XREG_USE_SYSTEM_OPENCL @XREG_USE_SYSTEM_OPENCL@)
