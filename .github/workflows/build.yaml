@@ -5,9 +5,17 @@
 name: Build
 on:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which build to run
+        type: choice
+        options: [all, ubuntu-26.04, ubuntu-24.04, ubuntu-22.04]
+        default: all
 
 jobs:
   ubuntu_26_04_build:
+    if: github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'ubuntu-26.04'
     runs-on: ubuntu-latest
     container: ghcr.io/rg2/xreg-deps-ubuntu-26.04:latest
 
@@ -25,6 +33,7 @@ jobs:
           path: xreg-ubuntu-26.04.tar.gz
   
   ubuntu_24_04_build:
+    if: github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'ubuntu-24.04'
     runs-on: ubuntu-latest
     container: ghcr.io/rg2/xreg-deps-ubuntu-24.04:latest
 
@@ -42,6 +51,7 @@ jobs:
           path: xreg-ubuntu-24.04.tar.gz
   
   ubuntu_22_04_build:
+    if: github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'ubuntu-22.04'
     runs-on: ubuntu-latest
     container: ghcr.io/rg2/xreg-deps-ubuntu-22.04:latest
 
