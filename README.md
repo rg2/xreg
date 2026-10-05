@@ -55,17 +55,16 @@ Example scripts for building all dependencies and the xReg repository are provid
 The [docker](docker) directory demonstrates how Docker may be used to build the software.
 
 ### Dependencies
-* C++ 11 compatible compiler
-  * Tested with various flavors of gcc and Apple clang, and Visual Studio 2019
-* External libraries (compatible versions are listed):
+* C++ 17 compatible compiler
+  * Tested with various flavors of gcc and Apple clang, and Visual Studio 2022
+* External libraries (example compatible versions are listed):
   * [Intel Threading Building Blocks (TBB)](https://github.com/oneapi-src/oneTBB) (20170919oss, v2020.3)
-  * [Boost](https://www.boost.org) (header only) (1.74)
-  * [Eigen3](http://eigen.tuxfamily.org) (3.3.4)
-  * [fmt](https://fmt.dev) (5.3.0)
+  * [Boost](https://www.boost.org) (header only) (1.87.0)
+  * [Eigen3](http://eigen.tuxfamily.org) (3.4.1)
   * [NLOpt](https://github.com/stevengj/nlopt) (2.5.0)
-  * [ITK](https://itk.org) (5.1.1)
-  * [VTK](https://vtk.org) (8.2.0)
-  * [OpenCV](https://opencv.org) (3.4.12)
+  * [ITK](https://itk.org) (5.4.7)
+  * [VTK](https://vtk.org) (9.6.2)
+  * [OpenCV](https://opencv.org) (4.12.0)
   * [ViennaCL](http://viennacl.sourceforge.net) (1.7.1)
   * Highly recomended for GPU acceleration: OpenCL (1.x)
     * Only needed at runtime on Windows and Linux and is typically provided with your graphics drivers or CUDA SDK
