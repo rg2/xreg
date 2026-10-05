@@ -42,12 +42,6 @@ RUN mkdir eigen_dl && cd eigen_dl && \
     cmake --build . && cmake --build . --target install && \
     cd / && rm -rf eigen_dl
 
-# bring in viennacl header only
-RUN mkdir viennacl_dl && cd viennacl_dl && \
-    wget https://github.com/viennacl/viennacl-dev/archive/release-1.7.1.tar.gz && \
-    tar xf release-1.7.1.tar.gz && cd viennacl-dev-release-1.7.1 && mv viennacl /usr/local/include && \
-    cd / && rm -rf viennacl_dl
-
 # build format
 RUN mkdir fmt_build && cd fmt_build && \
     wget https://github.com/fmtlib/fmt/archive/5.3.0.tar.gz && \

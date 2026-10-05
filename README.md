@@ -65,13 +65,21 @@ The [docker](docker) directory demonstrates how Docker may be used to build the 
   * [ITK](https://itk.org) (5.4.7)
   * [VTK](https://vtk.org) (9.6.2)
   * [OpenCV](https://opencv.org) (4.12.0)
-  * [ViennaCL](http://viennacl.sourceforge.net) (1.7.1)
   * Highly recomended for GPU acceleration: OpenCL (1.x)
     * Only needed at runtime on Windows and Linux and is typically provided with your graphics drivers or CUDA SDK
     * Included with MacOS
   * Optional: [ffmpeg](https://ffmpeg.org) is used for writing videos when it is found in the system path. When ffmpeg is not found, the following fallbacks are used:
     * MacOS: a video writer using AVFoundation,
     * Windows, Linux, something else: a writer using OpenCV.
+* Bundled libraries (in [third_party](third_party), no separate install needed):
+  * [CMA-ES](https://github.com/CMA-ES/c-cmaes) (C implementation by Nikolaus Hansen)
+  * [fmt](https://github.com/fmtlib/fmt) (12.2.0)
+    * Set `XREG_USE_SYSTEM_FMT=ON` to use an external install instead
+  * [OpenCL Headers](https://github.com/KhronosGroup/OpenCL-Headers) (2020.06.16)
+  * [OpenCL ICD Loader](https://github.com/KhronosGroup/OpenCL-ICD-Loader) (2020.06.16)
+    * Not used by default on MacOS; set `XREG_USE_SYSTEM_OPENCL=ON` to use a system install of OpenCL instead
+  * [ViennaCL](http://viennacl.sourceforge.net) (1.7.1, header only)
+    * Set `XREG_USE_SYSTEM_VIENNACL=ON` and `ViennaCL_DIR` to use an external copy instead
 
 ## Testing
 Functional testing is available in the form of a [python script](tests/wiki_cmds.py) that runs the commands found on the [wiki walkthrough](https://github.com/rg2/xreg/wiki#walkthrough).

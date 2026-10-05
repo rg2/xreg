@@ -138,17 +138,6 @@ curl -L -O -J https://gitlab.com/libeigen/eigen/-/archive/3.3.4/eigen-3.3.4.zip 
 ECHO Extracting Eigen
 tar -xf eigen-3.3.4.zip || EXIT /b
 
-ECHO Downloading ViennaCL
-curl -L -O -J https://github.com/viennacl/viennacl-dev/archive/release-1.7.1.zip || EXIT /b
-
-REM This command will complete but return with errors, so we are not checking the return code.
-REM Several of the CUDA backend files fail to extract. However, as we do not use the CUDA
-REM backend and may proceed. Using the standard file explorer right-click extract functionality
-REM works fine. This can be investigated in the future
-
-ECHO Extracting ViennaCL
-tar -xf viennacl-dev-release-1.7.1.zip
-
 ECHO Downloading fmt
 curl -L -O -J https://github.com/fmtlib/fmt/archive/5.3.0.zip || EXIT /b
 
@@ -158,7 +147,7 @@ tar -xf fmt-5.3.0.zip || EXIT /b
 ECHO Downloading nlopt
 curl -L -O -J https://github.com/stevengj/nlopt/archive/v2.5.0.zip || EXIT /b
 
-REM This command also returns with errors, similar to the case described above for Vienna CL.
+REM This command will complete but return with errors, so we are not checking the return code.
 REM In this case a PNG file could not be extracted.
 ECHO Extracting nlopt
 tar -xf nlopt-2.5.0.zip
@@ -201,9 +190,6 @@ ECHO Installing Eigen
 MOVE eigen-3.3.4\Eigen %INSTALL_ROOT%\include\Eigen || EXIT /b
 MOVE eigen-3.3.4\unsupported %INSTALL_ROOT%\include\unsupported || EXIT /b
 MOVE eigen-3.3.4\signature_of_eigen3_matrix_library %INSTALL_ROOT%\include\signature_of_eigen3_matrix_library || EXIT /b
-
-ECHO Installing ViennaCL
-MOVE viennacl-dev-release-1.7.1\viennacl %INSTALL_ROOT%\include\viennacl || EXIT /b
 
 ECHO Building fmt, setting up...
 cd fmt-5.3.0 || EXIT /b

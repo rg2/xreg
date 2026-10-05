@@ -84,4 +84,5 @@ add_library(xreg_regi OBJECT ${XREG_CUR_LIB_HEADERS}
                              interfaces_2d_3d/xregMultiObjMultiLevel2D3DRegiDebug.cpp)
 
 target_compile_definitions(xreg_regi PRIVATE VIENNACL_WITH_OPENCL)
+target_include_directories(xreg_regi SYSTEM BEFORE PRIVATE ${VIENNACL_INC_DIR})
 
