@@ -60,7 +60,6 @@ The [docker](docker) directory demonstrates how Docker may be used to build the 
 * External libraries (example compatible versions are listed):
   * [Intel Threading Building Blocks (TBB)](https://github.com/oneapi-src/oneTBB) (20170919oss, v2020.3)
   * [Boost](https://www.boost.org) (header only) (1.87.0)
-  * [Eigen3](http://eigen.tuxfamily.org) (3.4.1)
   * [NLOpt](https://github.com/stevengj/nlopt) (2.5.0)
   * [ITK](https://itk.org) (5.4.7)
   * [VTK](https://vtk.org) (9.6.2)
@@ -73,6 +72,8 @@ The [docker](docker) directory demonstrates how Docker may be used to build the 
     * Windows, Linux, something else: a writer using OpenCV.
 * Bundled libraries (in [third_party](third_party), no separate install needed):
   * [CMA-ES](https://github.com/CMA-ES/c-cmaes) (C implementation by Nikolaus Hansen)
+  * [Eigen](https://eigen.tuxfamily.org) (3.4.1, header only)
+    * Set `XREG_USE_SYSTEM_EIGEN=ON` to use an external install instead (e.g. to match the Eigen used by ITK)
   * [fmt](https://github.com/fmtlib/fmt) (12.2.0)
     * Set `XREG_USE_SYSTEM_FMT=ON` to use an external install instead
   * [OpenCL Headers](https://github.com/KhronosGroup/OpenCL-Headers) (2020.06.16)

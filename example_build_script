@@ -75,16 +75,6 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   rm $BOOST_FILE
 
-  EIGEN_URL="https://gitlab.com/libeigen/eigen/-/archive/3.4.1/eigen-3.4.1.zip"
-
-  EIGEN_FILE=`basename $EIGEN_URL`
-
-  wget $EIGEN_URL
-
-  unzip -q $EIGEN_FILE
-
-  rm $EIGEN_FILE
-
   ZLIB_URL="https://www.zlib.net/zlib132.zip"
 
   ZLIB_FILE=`basename $ZLIB_URL`
@@ -143,7 +133,9 @@ TBB_DIR="$DEPS_DIR/tbb2018_20170919oss/cmake"
 
 BOOST_DIR="$DEPS_DIR/`ls | grep "boost_*"`"
 
-EIGEN_DIR="$DEPS_DIR/`ls | grep "eigen-*"`"
+# Eigen is bundled with xReg
+EIGEN_DIR="$XREG_DIR/third_party/eigen-3.4.1"
+EIGEN_BUILD_DIR="$DEPS_DIR/eigen_build"
 
 ZLIB_DIR="$DEPS_DIR/`ls | grep "zlib-*"`"
 
@@ -160,12 +152,18 @@ echo "Finished setting third party downloaded directories..."
 if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
   echo "Building third-party libraries..."
 
-  echo "Building Eigen..."
-  cd $EIGEN_DIR
-  mkdir build
-  cd build
-  cmake ..
-  cd ../../
+  echo "Configuring Eigen..."
+  # Eigen is header only, this generates the CMake config files needed by ITK
+  mkdir -p $EIGEN_BUILD_DIR
+  cd $EIGEN_BUILD_DIR
+  cmake $EIGEN_DIR \
+    -DBUILD_TESTING:BOOL=OFF \
+    -DEIGEN_BUILD_DOC:BOOL=OFF \
+    -DEIGEN_BUILD_BLAS:BOOL=OFF \
+    -DEIGEN_BUILD_LAPACK:BOOL=OFF \
+    -DEIGEN_BUILD_DEMOS:BOOL=OFF \
+    -DCMAKE_EXPORT_PACKAGE_REGISTRY:BOOL=OFF
+  cd $DEPS_DIR
 
   echo "Building nlopt..."
 
@@ -241,7 +239,7 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
       -DBUILD_EXAMPLES:BOOL=OFF \
       -DITK_USE_GPU:BOOL=OFF \
       -DModule_ITKReview:BOOL=ON \
-      -DEigen3_DIR:PATH=$EIGEN_DIR/build \
+      -DEigen3_DIR:PATH=$EIGEN_BUILD_DIR \
       -DITK_USE_SYSTEM_EIGEN:BOOL=ON \
       -DITK_USE_SYSTEM_ZLIB:BOOL=ON \
       -DZLIB_ROOT:PATH=$ZLIB_DIR/install \
@@ -308,7 +306,6 @@ if [ "$NEED_TO_START_XREG" = true ]; then
   cmake -G Ninja .. \
     -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
     -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON \
-    -DEIGEN3_INCLUDE_DIR:PATH="$EIGEN_DIR" \
     -DBoost_INCLUDE_DIR:PATH="$BOOST_DIR" \
     -DNLopt_DIR:PATH="$NLOPT_DIR/build" \
     -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
