@@ -1723,7 +1723,11 @@ xreg::DICOMFIleBasicFields xreg::ReadDICOMFieldsH5(const H5::Group& h5)
                                             ReadSingleScalarH5Int("fov-rot", h5));
   }
 
-  dcm_info.fov_horizontal_flip = ReadOptionalScalarH5<unsigned char>("fov-horizontal-flip", h5);
+  // explicit conversion: libstdc++ < 13 rejects std::optional<bool> = std::optional<unsigned char>
+  if (const auto fov_horiz_flip = ReadOptionalScalarH5<unsigned char>("fov-horizontal-flip", h5))
+  {
+    dcm_info.fov_horizontal_flip = *fov_horiz_flip != 0;
+  }
 
   dcm_info.intensifier_diameter_mm = ReadOptionalScalarH5<double>("intensifier-diameter-mm", h5);
 
