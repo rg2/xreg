@@ -72,6 +72,12 @@ The [docker](docker) directory demonstrates how Docker may be used to build the 
     * MacOS: a video writer using AVFoundation,
     * Windows, Linux, something else: a writer using OpenCV.
 * Bundled libraries (in [third_party](third_party), no separate install needed):
+  * [CMA-ES](https://github.com/CMA-ES/c-cmaes) (C implementation by Nikolaus Hansen)
+  * [fmt](https://github.com/fmtlib/fmt) (12.2.0)
+    * Set `XREG_USE_SYSTEM_FMT=ON` to use an external install instead
+  * [OpenCL Headers](https://github.com/KhronosGroup/OpenCL-Headers) (2020.06.16)
+  * [OpenCL ICD Loader](https://github.com/KhronosGroup/OpenCL-ICD-Loader) (2020.06.16)
+    * Not used by default on MacOS; set `XREG_USE_SYSTEM_OPENCL=ON` to use a system install of OpenCL instead
   * [ViennaCL](http://viennacl.sourceforge.net) (1.7.1, header only)
     * Set `XREG_USE_SYSTEM_VIENNACL=ON` and `ViennaCL_DIR` to use an external copy instead
 
