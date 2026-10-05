@@ -52,6 +52,9 @@ REM Root directory of the xReg source code. Assumed to be located in the same
 REM directory that this script was invoked from.
 SET XREG_SOURCE_DIR="%~dp0"
 
+REM Eigen is bundled with the xReg source code
+SET "EIGEN_SOURCE_DIR=%XREG_SOURCE_DIR%\third_party\eigen-3.4.1"
+
 REM create the temporary dir if necessary
 IF EXIST %BUILD_ROOT% (
 ECHO %BUILD_ROOT% exists
@@ -132,12 +135,6 @@ curl -L -O -J https://archives.boost.io/release/1.87.0/source/boost_1_87_0.zip |
 ECHO Extracting boost
 tar -xf boost_1_87_0.zip || EXIT /b
 
-ECHO Downloading Eigen
-curl -L -O -J https://gitlab.com/libeigen/eigen/-/archive/3.3.4/eigen-3.3.4.zip || EXIT /b
-
-ECHO Extracting Eigen
-tar -xf eigen-3.3.4.zip || EXIT /b
-
 ECHO Downloading fmt
 curl -L -O -J https://github.com/fmtlib/fmt/archive/5.3.0.zip || EXIT /b
 
@@ -186,10 +183,11 @@ COPY %INSTALL_ROOT%\tbb\bin\intel64\vc14\tbb.dll %INSTALL_ROOT%\bin || EXIT /b
 ECHO Installing boost
 MOVE boost_1_87_0\boost %INSTALL_ROOT%\include\boost || EXIT /b
 
+REM Eigen is bundled with xReg, copy the headers so other dependencies may use them
 ECHO Installing Eigen
-MOVE eigen-3.3.4\Eigen %INSTALL_ROOT%\include\Eigen || EXIT /b
-MOVE eigen-3.3.4\unsupported %INSTALL_ROOT%\include\unsupported || EXIT /b
-MOVE eigen-3.3.4\signature_of_eigen3_matrix_library %INSTALL_ROOT%\include\signature_of_eigen3_matrix_library || EXIT /b
+XCOPY /E /I /Q "%EIGEN_SOURCE_DIR%\Eigen" %INSTALL_ROOT%\include\Eigen || EXIT /b
+XCOPY /E /I /Q "%EIGEN_SOURCE_DIR%\unsupported" %INSTALL_ROOT%\include\unsupported || EXIT /b
+COPY "%EIGEN_SOURCE_DIR%\signature_of_eigen3_matrix_library" %INSTALL_ROOT%\include || EXIT /b
 
 ECHO Building fmt, setting up...
 cd fmt-5.3.0 || EXIT /b

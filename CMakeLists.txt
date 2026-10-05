@@ -62,6 +62,9 @@ mark_as_advanced(XREG_USE_SYSTEM_FMT)
 option(XREG_USE_SYSTEM_VIENNACL "Use a system install of ViennaCL instead of the bundled version" OFF)
 mark_as_advanced(XREG_USE_SYSTEM_VIENNACL)
 
+option(XREG_USE_SYSTEM_EIGEN "Use a system (find_package) install of Eigen instead of the bundled version" OFF)
+mark_as_advanced(XREG_USE_SYSTEM_EIGEN)
+
 if (APPLE OR WIN32)
   set(XREG_USE_LEGACY_FIND_TBB_DEFAULT OFF)
 else ()
@@ -107,7 +110,17 @@ find_package(TBB REQUIRED)
 
 find_package(Boost REQUIRED)
 
-find_package(Eigen3 REQUIRED)
+# Eigen is header only and is used in xreg's public headers, so the bundled copy is
+# installed alongside xreg's headers to keep the exported target usable.
+# NOTE: the doc, test, failtest, bench, blas, lapack, demos, and ci directories (and the
+#       unsupported/{doc,test,bench} directories) were removed from the upstream archive.
+if (XREG_USE_SYSTEM_EIGEN)
+  find_package(Eigen3 REQUIRED)
+  set(XREG_EIGEN_INC_DIRS ${EIGEN3_INCLUDE_DIR})
+else ()
+  set(XREG_EIGEN_INC_DIRS "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen-3.4.1>"
+                          "$<INSTALL_INTERFACE:${XREG_INC_INSTALL_DIR}/eigen3>")
+endif ()
 
 if (XREG_USE_SYSTEM_FMT)
   find_package(fmt REQUIRED)
@@ -135,7 +148,7 @@ if (NOT XREG_ITK_HDF5_INC_DIR)
 endif ()
 
 set(XREG_EXT_LIB_INC_DIRS ${Boost_INCLUDE_DIRS}
-                          ${EIGEN3_INCLUDE_DIR}
+                          ${XREG_EIGEN_INC_DIRS}
                           ${ITK_INCLUDE_DIRS}
                           ${XREG_ITK_HDF5_INC_DIR}
                           ${OpenCV_INCLUDE_DIRS}
@@ -181,6 +194,13 @@ if (XREG_TOP_LEVEL_PROJ)
   if (NOT XREG_USE_SYSTEM_OPENCL)
     set (XREG_TARGETS_TO_EXPORT ${XREG_TARGETS_TO_EXPORT} OpenCL)
     install(DIRECTORY third_party/OpenCL-Headers-2020.06.16/CL DESTINATION ${XREG_INC_INSTALL_DIR})
+  endif ()
+
+  if (NOT XREG_USE_SYSTEM_EIGEN)
+    install(DIRECTORY third_party/eigen-3.4.1/Eigen third_party/eigen-3.4.1/unsupported
+            DESTINATION ${XREG_INC_INSTALL_DIR}/eigen3
+            PATTERN "CMakeLists.txt" EXCLUDE
+            PATTERN "README.txt" EXCLUDE)
   endif ()
 
   if (NOT XREG_USE_SYSTEM_FMT)

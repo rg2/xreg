@@ -10,6 +10,7 @@ endif ()
 include(${CMAKE_CURRENT_LIST_DIR}/xreg-targets.cmake)
 
 set(XREG_USE_SYSTEM_OPENCL @XREG_USE_SYSTEM_OPENCL@)
+set(XREG_USE_SYSTEM_EIGEN @XREG_USE_SYSTEM_EIGEN@)
 set(XREG_USE_LEGACY_FIND_TBB @XREG_USE_LEGACY_FIND_TBB@)
 
 check_required_components(xreg)
