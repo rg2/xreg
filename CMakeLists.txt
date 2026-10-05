@@ -118,7 +118,8 @@ if (XREG_USE_SYSTEM_EIGEN)
   find_package(Eigen3 REQUIRED)
   set(XREG_EIGEN_INC_DIRS ${EIGEN3_INCLUDE_DIR})
 else ()
-  set(XREG_EIGEN_INC_DIRS "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen-3.4.1>"
+  set(XREG_BUNDLED_EIGEN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen-3.4.1")
+  set(XREG_EIGEN_INC_DIRS "$<BUILD_INTERFACE:${XREG_BUNDLED_EIGEN_DIR}>"
                           "$<INSTALL_INTERFACE:${XREG_INC_INSTALL_DIR}/eigen3>")
 endif ()
 
@@ -147,9 +148,23 @@ if (NOT XREG_ITK_HDF5_INC_DIR)
   message(SEND_ERROR "HDF5 C++ headers (H5Cpp.h) not found in ITK include dirs!")
 endif ()
 
+set(XREG_ITK_INC_DIRS ${ITK_INCLUDE_DIRS})
+if (NOT XREG_USE_SYSTEM_EIGEN)
+  # When ITK was built against the bundled Eigen (e.g. by example_build_script), the
+  # bundled Eigen source dir is in ITK's include dirs. It is already provided by
+  # XREG_EIGEN_INC_DIRS and a path into the source tree may not be exported, so remove it.
+  get_filename_component(XREG_BUNDLED_EIGEN_REAL_DIR "${XREG_BUNDLED_EIGEN_DIR}" REALPATH)
+  foreach (XREG_CUR_ITK_INC_DIR ${ITK_INCLUDE_DIRS})
+    get_filename_component(XREG_CUR_ITK_INC_REAL_DIR "${XREG_CUR_ITK_INC_DIR}" REALPATH)
+    if (XREG_CUR_ITK_INC_REAL_DIR STREQUAL XREG_BUNDLED_EIGEN_REAL_DIR)
+      list(REMOVE_ITEM XREG_ITK_INC_DIRS "${XREG_CUR_ITK_INC_DIR}")
+    endif ()
+  endforeach ()
+endif ()
+
 set(XREG_EXT_LIB_INC_DIRS ${Boost_INCLUDE_DIRS}
                           ${XREG_EIGEN_INC_DIRS}
-                          ${ITK_INCLUDE_DIRS}
+                          ${XREG_ITK_INC_DIRS}
                           ${XREG_ITK_HDF5_INC_DIR}
                           ${OpenCV_INCLUDE_DIRS}
                           ${VTK_INCLUDE_DIRS})
