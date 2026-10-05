@@ -85,16 +85,6 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   rm $ZLIB_FILE
 
-  NLOPT_URL="https://github.com/stevengj/nlopt/archive/v2.5.0.zip"
-
-  NLOPT_FILE=`basename $NLOPT_URL`
-
-  wget $NLOPT_URL
-
-  unzip -q $NLOPT_FILE
-
-  rm $NLOPT_FILE
-
   VTK_URL="https://gitlab.kitware.com/vtk/vtk/-/archive/v9.6.2/vtk-v9.6.2.zip"
 
   wget $VTK_URL
@@ -139,8 +129,6 @@ EIGEN_BUILD_DIR="$DEPS_DIR/eigen_build"
 
 ZLIB_DIR="$DEPS_DIR/`ls | grep "zlib-*"`"
 
-NLOPT_DIR="$DEPS_DIR/`ls | grep "nlopt-*"`"
-
 VTK_DIR="$DEPS_DIR/`ls | grep "vtk-*"`"
 
 ITK_DIR="$DEPS_DIR/`ls | grep "InsightToolkit-*"`"
@@ -164,26 +152,6 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
     -DEIGEN_BUILD_DEMOS:BOOL=OFF \
     -DCMAKE_EXPORT_PACKAGE_REGISTRY:BOOL=OFF
   cd $DEPS_DIR
-
-  echo "Building nlopt..."
-
-  cd $NLOPT_DIR
-  mkdir build
-  cd build
-  cmake -G Ninja .. \
-    -DCMAKE_CXX_STANDARD:STRING="17" \
-    -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
-    -DBUILD_SHARED_LIBS:BOOL=OFF \
-    -DNLOPT_CXX:BOOL=OFF \
-    -DNLOPT_PYTHON:BOOL=OFF \
-    -DNLOPT_OCTAVE:BOOL=OFF \
-    -DNLOPT_MATLAB:BOOL=OFF \
-    -DNLOPT_GUILE:BOOL=OFF \
-    -DNLOPT_SWIG:BOOL=OFF \
-    -DNLOPT_LINK_PYTHON:BOOL=OFF \
-    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-  ninja
-  cd ../../
 
   echo "building ZLIB..."
 
@@ -307,7 +275,6 @@ if [ "$NEED_TO_START_XREG" = true ]; then
     -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
     -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON \
     -DBoost_INCLUDE_DIR:PATH="$BOOST_DIR" \
-    -DNLopt_DIR:PATH="$NLOPT_DIR/build" \
     -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
     -DTBB_DIR:PATH="$TBB_DIR" \
     -DTBB_INCLUDE_DIRS:PATH=$TBB_INC_DIR \

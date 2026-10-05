@@ -127,16 +127,6 @@ if [ "$NEED_TO_DOWNLOAD_THIRD_PARTY" = true ]; then
 
   rm $ZLIB_FILE
 
-  NLOPT_URL="https://github.com/stevengj/nlopt/archive/v2.5.0.zip"
-
-  NLOPT_FILE=`basename $NLOPT_URL`
-
-  wget $NLOPT_URL
-
-  unzip -q $NLOPT_FILE
-
-  rm $NLOPT_FILE
-
   VTK_URL="https://gitlab.kitware.com/vtk/vtk/-/archive/v9.6.2/vtk-v9.6.2.zip"
 
   wget $VTK_URL
@@ -185,8 +175,6 @@ EIGEN_BUILD_DIR="$DEPS_DIR/eigen_build"
 
 ZLIB_DIR="$DEPS_DIR/`ls | grep "zlib-*"`"
 
-NLOPT_DIR="$DEPS_DIR/`ls | grep "nlopt-*"`"
-
 VTK_DIR="$DEPS_DIR/`ls | grep "vtk-*"`"
 
 ITK_DIR="$DEPS_DIR/`ls | grep "InsightToolkit-*"`"
@@ -222,34 +210,6 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
   cmake --build .
   cmake --install .
   cd $DEPS_DIR
-
-  echo "Building nlopt..."
-
-  cd $NLOPT_DIR
-  mkdir build
-  cd build
-  
-  cmake -G Ninja .. \
-    -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR \
-    -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
-    -DCMAKE_CXX_STANDARD:STRING="17" \
-    -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
-    -DNLOPT_CXX:BOOL=OFF \
-    -DNLOPT_PYTHON:BOOL=OFF \
-    -DNLOPT_OCTAVE:BOOL=OFF \
-    -DNLOPT_MATLAB:BOOL=OFF \
-    -DNLOPT_GUILE:BOOL=OFF \
-    -DNLOPT_SWIG:BOOL=OFF \
-    -DNLOPT_LINK_PYTHON:BOOL=OFF \
-    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
- 
-  # nlopt tries to override the install prefix originally passsed 
-  cmake -UCMAKE_INSTALL_PREFIX -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR .
-
-  cmake --build .
-  cmake --install .
-  
-  cd ../../
 
   echo "building ZLIB..."
 
