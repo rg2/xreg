@@ -30,3 +30,5 @@ add_library(xreg_opencl OBJECT ${XREG_CUR_LIB_HEADERS}
                                xregOpenCLMiscKernels.cpp
                                xregViennaCLManager.cpp)
 
+target_include_directories(xreg_opencl SYSTEM BEFORE PRIVATE ${VIENNACL_INC_DIR})
+

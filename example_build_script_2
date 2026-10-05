@@ -137,16 +137,6 @@ if [ "$NEED_TO_DOWNLOAD_THIRD_PARTY" = true ]; then
 
   rm $ZLIB_FILE
 
-  VIENNACL_URL="https://github.com/viennacl/viennacl-dev/archive/release-1.7.1.zip"
-
-  VIENNACL_FILE=`basename $VIENNACL_URL`
-
-  wget $VIENNACL_URL
-
-  unzip -q $VIENNACL_FILE
-
-  rm $VIENNACL_FILE
-
   NLOPT_URL="https://github.com/stevengj/nlopt/archive/v2.5.0.zip"
 
   NLOPT_FILE=`basename $NLOPT_URL`
@@ -203,8 +193,6 @@ EIGEN_DIR="$DEPS_DIR/`ls | grep "eigen-*"`"
 
 ZLIB_DIR="$DEPS_DIR/`ls | grep "zlib-*"`"
 
-VIENNACL_DIR="$DEPS_DIR/`ls | grep "viennacl-dev-release-*"`"
-
 NLOPT_DIR="$DEPS_DIR/`ls | grep "nlopt-*"`"
 
 VTK_DIR="$DEPS_DIR/`ls | grep "vtk-*"`"
@@ -224,8 +212,6 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
   mkdir -p $DEPS_INSTALL_DIR/include
   
   mv $BOOST_DIR/boost $DEPS_INSTALL_DIR/include
-
-  mv $VIENNACL_DIR/viennacl $DEPS_INSTALL_DIR/include
 
   echo "Building third-party libraries..."
  

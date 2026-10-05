@@ -59,6 +59,9 @@ mark_as_advanced(XREG_USE_SYSTEM_OPENCL)
 option(XREG_USE_SYSTEM_FMT "Use a system (find_package) install of fmt instead of the bundled version" OFF)
 mark_as_advanced(XREG_USE_SYSTEM_FMT)
 
+option(XREG_USE_SYSTEM_VIENNACL "Use a system install of ViennaCL instead of the bundled version" OFF)
+mark_as_advanced(XREG_USE_SYSTEM_VIENNACL)
+
 if (APPLE OR WIN32)
   set(XREG_USE_LEGACY_FIND_TBB_DEFAULT OFF)
 else ()
@@ -89,9 +92,15 @@ if (XREG_USE_SYSTEM_OPENCL)
   set (XREG_EXT_LIBS_TO_LINK OpenCL::OpenCL)
 endif ()
 
-find_path(VIENNACL_INC_DIR viennacl/matrix.hpp PATHS ${ViennaCL_DIR} ${ViennaCL_DIR}/..)
-if (${VIENNACL_INC_DIR} STREQUAL "VIENNACL_INC_DIR-NOTFOUND")
-  message(SEND_ERROR "ViennaCL not found!")
+# ViennaCL is header only and only used privately (in xreg_opencl and xreg_regi),
+# so it is not added to XREG_EXT_LIB_INC_DIRS and is not exported/installed
+if (XREG_USE_SYSTEM_VIENNACL)
+  find_path(VIENNACL_INC_DIR viennacl/matrix.hpp PATHS ${ViennaCL_DIR} ${ViennaCL_DIR}/..)
+  if (NOT VIENNACL_INC_DIR)
+    message(SEND_ERROR "ViennaCL not found!")
+  endif ()
+else ()
+  set(VIENNACL_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/viennacl-dev-release-1.7.1")
 endif ()
 
 find_package(TBB REQUIRED)
@@ -130,8 +139,7 @@ set(XREG_EXT_LIB_INC_DIRS ${Boost_INCLUDE_DIRS}
                           ${ITK_INCLUDE_DIRS}
                           ${XREG_ITK_HDF5_INC_DIR}
                           ${OpenCV_INCLUDE_DIRS}
-                          ${VTK_INCLUDE_DIRS}
-                          ${VIENNACL_INC_DIR})
+                          ${VTK_INCLUDE_DIRS})
 
 set(XREG_EXT_LIBS_TO_LINK ${XREG_EXT_LIBS_TO_LINK}
                           fmt::fmt
