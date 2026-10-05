@@ -55,12 +55,12 @@ Example scripts for building all dependencies and the xReg repository are provid
 The [docker](docker) directory demonstrates how Docker may be used to build the software.
 
 ### Dependencies
+* CMake 3.18 or newer
 * C++ 17 compatible compiler
   * Tested with various flavors of gcc and Apple clang, and Visual Studio 2022
 * External libraries (example compatible versions are listed):
   * [Intel Threading Building Blocks (TBB)](https://github.com/oneapi-src/oneTBB) (20170919oss, v2020.3)
   * [Boost](https://www.boost.org) (header only) (1.87.0)
-  * [NLOpt](https://github.com/stevengj/nlopt) (2.5.0)
   * [ITK](https://itk.org) (5.4.7)
   * [VTK](https://vtk.org) (9.6.2)
   * [OpenCV](https://opencv.org) (4.12.0)
@@ -76,6 +76,8 @@ The [docker](docker) directory demonstrates how Docker may be used to build the 
     * Set `XREG_USE_SYSTEM_EIGEN=ON` to use an external install instead (e.g. to match the Eigen used by ITK)
   * [fmt](https://github.com/fmtlib/fmt) (12.2.0)
     * Set `XREG_USE_SYSTEM_FMT=ON` to use an external install instead
+  * [NLopt](https://github.com/stevengj/nlopt) (2.11.0)
+    * Set `XREG_USE_SYSTEM_NLOPT=ON` to use an external install instead
   * [OpenCL Headers](https://github.com/KhronosGroup/OpenCL-Headers) (2020.06.16)
   * [OpenCL ICD Loader](https://github.com/KhronosGroup/OpenCL-ICD-Loader) (2020.06.16)
     * Not used by default on MacOS; set `XREG_USE_SYSTEM_OPENCL=ON` to use a system install of OpenCL instead

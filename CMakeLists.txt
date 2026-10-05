@@ -65,6 +65,9 @@ mark_as_advanced(XREG_USE_SYSTEM_VIENNACL)
 option(XREG_USE_SYSTEM_EIGEN "Use a system (find_package) install of Eigen instead of the bundled version" OFF)
 mark_as_advanced(XREG_USE_SYSTEM_EIGEN)
 
+option(XREG_USE_SYSTEM_NLOPT "Use a system (find_package) install of NLopt instead of the bundled version" OFF)
+mark_as_advanced(XREG_USE_SYSTEM_NLOPT)
+
 if (APPLE OR WIN32)
   set(XREG_USE_LEGACY_FIND_TBB_DEFAULT OFF)
 else ()
@@ -134,7 +137,14 @@ find_package(VTK REQUIRED)
 
 find_package(OpenCV REQUIRED)
 
-find_package(NLopt REQUIRED)
+# NOTE: the doc and test directories (and other repo/CI files) were removed from the
+#       upstream archive of the bundled NLopt.
+if (XREG_USE_SYSTEM_NLOPT)
+  find_package(NLopt REQUIRED)
+  set(XREG_NLOPT_LIB ${NLOPT_LIBRARIES})
+else ()
+  set(XREG_NLOPT_LIB nlopt)
+endif ()
 
 add_subdirectory(third_party)
 
@@ -175,7 +185,7 @@ set(XREG_EXT_LIBS_TO_LINK ${XREG_EXT_LIBS_TO_LINK}
                           ${OpenCV_LIBS}
                           ${XREG_TBB_LIB}
                           ${VTK_LIBRARIES}
-                          ${NLOPT_LIBRARIES})
+                          ${XREG_NLOPT_LIB})
 
 if (XREG_INCLUDE_GIT_HASH_IN_VER_STR)
   include(GetGitRevisionDescription)
@@ -228,6 +238,15 @@ if (XREG_TOP_LEVEL_PROJ)
             PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/fmt)
   endif ()
 
+  if (NOT XREG_USE_SYSTEM_NLOPT)
+    # bundled NLopt must be in the export set since xreg links to it;
+    # its headers are installed to include by NLopt's own install rules
+    install(TARGETS nlopt EXPORT xreg-targets
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  endif ()
+
   install(TARGETS ${XREG_TARGETS_TO_EXPORT} EXPORT xreg-targets
           RUNTIME       DESTINATION ${CMAKE_INSTALL_BINDIR}
           LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -247,6 +266,9 @@ if (XREG_TOP_LEVEL_PROJ)
   set(XREG_TARGETS_FOR_BUILD_TREE_EXPORT ${XREG_TARGETS_TO_EXPORT})
   if (NOT XREG_USE_SYSTEM_FMT)
     list(APPEND XREG_TARGETS_FOR_BUILD_TREE_EXPORT fmt)
+  endif ()
+  if (NOT XREG_USE_SYSTEM_NLOPT)
+    list(APPEND XREG_TARGETS_FOR_BUILD_TREE_EXPORT nlopt)
   endif ()
 
   export(TARGETS ${XREG_TARGETS_FOR_BUILD_TREE_EXPORT} NAMESPACE xreg:: FILE ${PROJECT_BINARY_DIR}/xreg-targets.cmake)

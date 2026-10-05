@@ -56,22 +56,6 @@ RUN mkdir fmt_build && cd fmt_build && \
     cmake --build . && cmake --build . --target install && \
     cd / && rm -rf fmt_build
 
-# build nlopt
-RUN mkdir nlopt_build && cd nlopt_build && \
-    wget https://github.com/stevengj/nlopt/archive/v2.5.0.tar.gz && \
-    tar xf v2.5.0.tar.gz && cd nlopt-2.5.0 && \
-    mkdir build && cd build && \
-    cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
-                   -DCMAKE_CXX_STANDARD:STRING="11" \
-                   -DNLOPT_CXX:BOOL=OFF -DNLOPT_PYTHON:BOOL=OFF \
-                   -DNLOPT_OCTAVE:BOOL=OFF -DNLOPT_MATLAB:BOOL=OFF \
-                   -DNLOPT_GUILE:BOOL=OFF -DNLOPT_SWIG:BOOL=OFF \
-                   -DNLOPT_LINK_PYTHON:BOOL=OFF \
-                   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-         .. && \
-    cmake --build . && cmake --build . --target install && \
-    cd / && rm -rf nlopt_build
-
 # build ITK
 RUN mkdir itk_build && cd itk_build && \
     wget https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.2.1/InsightToolkit-5.2.1.tar.gz && \

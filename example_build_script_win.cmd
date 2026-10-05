@@ -141,14 +141,6 @@ curl -L -O -J https://github.com/fmtlib/fmt/archive/5.3.0.zip || EXIT /b
 ECHO Extracting fmt
 tar -xf fmt-5.3.0.zip || EXIT /b
 
-ECHO Downloading nlopt
-curl -L -O -J https://github.com/stevengj/nlopt/archive/v2.5.0.zip || EXIT /b
-
-REM This command will complete but return with errors, so we are not checking the return code.
-REM In this case a PNG file could not be extracted.
-ECHO Extracting nlopt
-tar -xf nlopt-2.5.0.zip
-
 ECHO Downloading VTK
 curl -L -O -J https://gitlab.kitware.com/vtk/vtk/-/archive/v9.6.2/vtk-v9.6.2.zip || EXIT /b
 
@@ -214,44 +206,6 @@ ECHO fmt building
 cmake --build . --config %BUILD_CONFIG% || EXIT /b
 
 ECHO Installing fmt
-cmake --install . || EXIT /b
-
-cd ..\.. || EXIT /b
-
-ECHO Buidling nlopt, setting up...
-cd nlopt-2.5.0 || EXIT /b
-
-mkdir build || EXIT /b
-
-cd build || EXIT /b
-
-REM For some reason this command fails with the following message:
-REM "The filename, directory name, or volume label syntax is incorrect."
-REM However, the CMake configuration succeeds and the project may still be build.
-
-ECHO nlopt CMake configuring (1/2)
-cmake %CMAKE_GENERATOR_ARG% .. ^
-    -DCMAKE_INSTALL_PREFIX:PATH=%INSTALL_ROOT_CMAKE% ^
-    -DCMAKE_CXX_STANDARD:STRING="11" ^
-    -DCMAKE_BUILD_TYPE:STRING=%BUILD_CONFIG% ^
-    -DBUILD_SHARED_LIBS:BOOL=%BUILD_SHARED% ^
-    -DNLOPT_CXX:BOOL=OFF ^
-    -DNLOPT_PYTHON:BOOL=OFF ^
-    -DNLOPT_OCTAVE:BOOL=OFF ^
-    -DNLOPT_MATLAB:BOOL=OFF ^
-    -DNLOPT_GUILE:BOOL=OFF ^
-    -DNLOPT_SWIG:BOOL=OFF ^
-    -DNLOPT_LINK_PYTHON:BOOL=OFF
-
-REM The nlopt initial configure processs overrides the value passed for CMAKE_INSTALL_PREFIX.
-REM Let's delete the existing cache variable and set it again.
-ECHO nlopt CMake configuring (2/2)
-cmake -UCMAKE_INSTALL_PREFIX -DCMAKE_INSTALL_PREFIX:PATH=%INSTALL_ROOT_CMAKE% . || EXIT /b
-
-ECHO nlopt building
-cmake --build . --config %BUILD_CONFIG% || EXIT /b
-
-ECHO Install nlopt
 cmake --install . || EXIT /b
 
 cd ..\.. || EXIT /b
