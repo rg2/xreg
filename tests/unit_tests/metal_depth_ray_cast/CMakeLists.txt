@@ -20,9 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-set(EXE_NAME "test-${XREG_EXE_PREFIX}-metal-line-int-ray-cast")
+set(EXE_NAME "test-${XREG_EXE_PREFIX}-metal-depth-ray-cast")
 
-add_executable(${EXE_NAME} test_xreg_metal_line_int_ray_cast.cpp)
+add_executable(${EXE_NAME} test_xreg_metal_depth_ray_cast.cpp)
 
 target_include_directories(${EXE_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../common")
 

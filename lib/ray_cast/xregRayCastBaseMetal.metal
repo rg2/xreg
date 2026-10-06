@@ -38,6 +38,42 @@
 namespace xreg
 {
 
+/// \brief The detector pixel and projection computed by a ray casting thread.
+///
+/// Ray casting kernels are executed on a grid of
+/// (number of detector columns) x (number of detector rows) x (number of projections)
+/// threads, which may be larger than the number of rays.
+struct RayCastPixel
+{
+  RayCastPixel(constant RayCastMetalArgs& args, const uint3 thread_idx)
+    : valid((thread_idx.x < args.num_det_cols) && (thread_idx.y < args.num_det_rows) &&
+            (thread_idx.z < args.num_projs)),
+      det_idx((thread_idx.y * args.num_det_cols) + thread_idx.x),
+      proj_idx(thread_idx.z),
+      pixel_idx((thread_idx.z * args.num_det_pts) + det_idx)
+  { }
+
+  /// \brief false when the thread is outside of the projections and should not
+  ///        compute anything.
+  const bool valid;
+
+  /// \brief Index of the detector pixel within a projection (row-major).
+  const uint det_idx;
+
+  /// \brief Index of the projection.
+  const uint proj_idx;
+
+  /// \brief Index of the pixel in the buffer of all projections.
+  const uint pixel_idx;
+};
+
+/// \brief The extent of a ray used for intersecting with the volume.
+enum class RayExtent
+{
+  kSEGMENT,  ///< from the focal point to the detector point
+  kRAY       ///< from the focal point, through the detector point, and beyond
+};
+
 /// \brief The portion of a ray, from the focal point to a detector point, that
 ///        intersects the volume, with respect to continuous volume indices.
 struct RaySegment
@@ -49,7 +85,8 @@ struct RaySegment
   float3 pinhole_to_det_idx;
 
   /// \brief Parameters along pinhole_to_det_idx of the volume entry and exit,
-  ///        (0, 0) when the ray does not intersect the volume.
+  ///        (0, 0) when the ray does not intersect the volume. These are in
+  ///        [0, 1] for RayExtent::kSEGMENT and [0, inf) for RayExtent::kRAY.
   float2 t;
 
   /// \brief The first sample location (the volume entry point).
@@ -72,9 +109,12 @@ inline RaySegment ComputeRaySegment(constant RayCastMetalArgs& args,
                                     const device float3* focal_pts,
                                     const device metal::float4x4* cam_to_itk_phys_xforms,
                                     const device uint* cam_model_for_proj,
-                                    const uint det_idx,
-                                    const uint proj_idx)
+                                    const RayCastPixel pixel,
+                                    const RayExtent extent = RayExtent::kSEGMENT)
 {
+  const uint det_idx  = pixel.det_idx;
+  const uint proj_idx = pixel.proj_idx;
+
   const uint cam_idx = cam_model_for_proj[proj_idx];
 
   const float3 focal_pt_wrt_cam   = focal_pts[cam_idx];
@@ -88,8 +128,11 @@ inline RaySegment ComputeRaySegment(constant RayCastMetalArgs& args,
   seg.pinhole_idx        = XformPt(xform_cam_to_itk_idx, focal_pt_wrt_cam);
   seg.pinhole_to_det_idx = XformPt(xform_cam_to_itk_idx, cur_det_pt_wrt_cam) - seg.pinhole_idx;
 
-  seg.t = LineSegmentRectIntersect(args.img_aabb_min, args.img_aabb_max,
-                                   seg.pinhole_idx, seg.pinhole_to_det_idx);
+  seg.t = (extent == RayExtent::kSEGMENT) ?
+              LineSegmentRectIntersect(args.img_aabb_min, args.img_aabb_max,
+                                       seg.pinhole_idx, seg.pinhole_to_det_idx) :
+              RayRectIntersect(args.img_aabb_min, args.img_aabb_max,
+                               seg.pinhole_idx, seg.pinhole_to_det_idx);
 
   seg.start_idx = seg.pinhole_idx + (seg.t.x * seg.pinhole_to_det_idx);
 

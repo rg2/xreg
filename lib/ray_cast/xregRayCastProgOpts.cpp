@@ -35,6 +35,7 @@
 
 #ifdef XREG_HAS_METAL
 #include "xregRayCastLineIntMetal.h"
+#include "xregRayCastDepthMetal.h"
 #endif
 
 namespace  // un-named
@@ -93,6 +94,10 @@ xreg::LineIntRayCasterFromProgOpts(ProgOpts& po)
 std::shared_ptr<xreg::RayCaster>
 xreg::DepthRayCasterFromProgOpts(ProgOpts& po)
 {
+#ifdef XREG_HAS_METAL
+  return RayCasterFromProgOptsHelper<RayCasterDepthCPU,RayCasterDepthOCL,RayCasterDepthMetal>(po);
+#else
   return RayCasterFromProgOptsHelper<RayCasterDepthCPU,RayCasterDepthOCL>(po);
+#endif
 }
 

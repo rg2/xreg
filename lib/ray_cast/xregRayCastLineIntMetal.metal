@@ -68,11 +68,9 @@ struct LineIntMaxOp
 /// \brief Line integral ray casting kernel, with the operation applied to each
 ///        sample along the ray (e.g. sum or max) as a template parameter.
 ///
-/// Each thread computes one pixel of one projection, the grid is
-/// (number of detector columns) x (number of detector rows) x (number of projections).
-/// The operation is also
-/// used to combine the ray cast value with the existing pixel value, which is
-/// the background value or a previous result.
+/// Each thread computes one pixel of one projection (see RayCastPixel). The
+/// operation is also used to combine the ray cast value with the existing pixel
+/// value, which is the background value or a previous result.
 template <class tOp>
 kernel void LineIntKernel(constant RayCastMetalArgs& args                 [[buffer(kRAY_CAST_METAL_ARGS)]],
                           const device float3* det_pts                    [[buffer(kRAY_CAST_METAL_DET_PTS)]],
@@ -83,16 +81,12 @@ kernel void LineIntKernel(constant RayCastMetalArgs& args                 [[buff
                           LinearVolumeSampler::Texture vol_tex            [[texture(kRAY_CAST_METAL_VOL_TEX)]],
                           const uint3 thread_idx                          [[thread_position_in_grid]])
 {
-  const uint det_col  = thread_idx.x;
-  const uint det_row  = thread_idx.y;
-  const uint proj_idx = thread_idx.z;
+  const RayCastPixel pixel(args, thread_idx);
 
-  if ((det_col < args.num_det_cols) && (det_row < args.num_det_rows) && (proj_idx < args.num_projs))
+  if (pixel.valid)
   {
-    const uint det_idx = (det_row * args.num_det_cols) + det_col;
-
     const RaySegment seg = ComputeRaySegment(args, det_pts, focal_pts, cam_to_itk_phys,
-                                             cam_model_for_proj, det_idx, proj_idx);
+                                             cam_model_for_proj, pixel);
 
     const LinearVolumeSampler vol(vol_tex);
 
@@ -107,9 +101,7 @@ kernel void LineIntKernel(constant RayCastMetalArgs& args                 [[buff
       val = op(val, vol(cur_idx));
     }
 
-    const uint pixel_idx = (proj_idx * args.num_det_pts) + det_idx;
-
-    proj_pixels[pixel_idx] = op(val, proj_pixels[pixel_idx]);
+    proj_pixels[pixel.pixel_idx] = op(val, proj_pixels[pixel.pixel_idx]);
   }
 }
 
