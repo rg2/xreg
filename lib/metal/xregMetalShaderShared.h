@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021 Robert Grupp
+ * Copyright (c) 2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,43 +22,32 @@
  * SOFTWARE.
  */
 
-#ifndef XREGAPPLEAVFOUNDATION_H_
-#define XREGAPPLEAVFOUNDATION_H_
+#ifndef XREGMETALSHADERSHARED_H_
+#define XREGMETALSHADERSHARED_H_
 
-#include "xregWriteVideo.h"
+// Definitions shared by host C++ code and the Metal shaders in lib/metal.
+// This file is valid C++ and Metal Shading Language, it is also embedded in
+// the shader source compiled at runtime.
 
 namespace xreg
 {
 
-class WriteImageFramesToVideoAppleAVF : public WriteImageFramesToVideo
+/// \brief Indices of the function constants used by the shader helpers.
+///
+/// Every function constant used in an xreg Metal library must have a unique
+/// index, so all indices are listed here.
+enum MetalFnConstIdx
 {
-public:
-  void open() override;
+  /// bool: true -> use hardware linear filtering when sampling volumes, false -> software trilinear
+  kMETAL_FN_CONST_HW_LINEAR_INTERP = 0
+};
 
-  void close() override;
-
-  void write(const cv::Mat& frame) override;
-  
-  ~WriteImageFramesToVideoAppleAVF() override;
-
-private:
-  // releases the Objective-C objects referenced by the members below
-  void release_objc_refs();
-
-  void* av_asset_writer_ = nullptr;
-  
-  void* av_asset_writer_input_ = nullptr;
-  
-  void* av_assest_writer_pix_buf_adaptor_ = nullptr;
-
-  bool input_setup_ = false;
-  
-  int num_rows_ = 0;
-  int num_cols_ = 0;
-
-  int frame_type_ = 0;
-  
-  long frame_count_ = 0;
+/// \brief Buffer argument indices for the xregFillFloat kernel.
+enum MetalFillFloatBufIdx
+{
+  kMETAL_FILL_FLOAT_BUF = 0,
+  kMETAL_FILL_FLOAT_VAL,
+  kMETAL_FILL_FLOAT_LEN
 };
 
 }  // xreg

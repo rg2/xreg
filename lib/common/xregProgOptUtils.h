@@ -39,6 +39,11 @@
 #include <boost/compute/command_queue.hpp>
 
 #include "xregOpenCLSys.h"
+
+#ifdef XREG_HAS_METAL
+#include "xregMetalSys.h"
+#endif
+
 #include "xregExceptionUtils.h"
 #include "xregSizedTypeUtils.h"
 
@@ -485,6 +490,20 @@ public:
 
   std::tuple<boost::compute::context,boost::compute::command_queue> selected_ocl_ctx_queue();
 
+#ifdef XREG_HAS_METAL
+  void set_print_help_metal_str(const bool print_metal);
+
+  void add_metal_select_flag();
+
+  /// \brief The Metal device specified by the metal-id flag, or the system
+  ///        default device when no ID was specified.
+  MetalDevice selected_metal();
+
+  /// \brief A command queue for the selected Metal device, the same queue is
+  ///        returned on each call.
+  MetalCmdQueue selected_metal_queue();
+#endif
+
   /// \brief Checks to see if a variable/argument with a specific destination
   ///        string has been added.
   bool dest_exists(const std::string& dest_str) const;
@@ -528,6 +547,10 @@ private:
 
   bool print_help_ocl_str_ = false;
 
+#ifdef XREG_HAS_METAL
+  bool print_help_metal_str_ = false;
+#endif
+
   size_type min_num_pos_args_ = 0;
 
   StringList pos_args_;
@@ -558,6 +581,14 @@ private:
 
   boost::compute::context selected_ocl_ctx_;
   boost::compute::command_queue selected_ocl_queue_;
+
+#ifdef XREG_HAS_METAL
+  MetalIDStrDevMap metal_id_str_to_dev_map_;
+
+  // default instances are invalid and are set when first selected
+  MetalDevice   selected_metal_dev_;
+  MetalCmdQueue selected_metal_queue_;
+#endif
 
   bool tbb_max_num_threads_opt_added_ = false;
 };

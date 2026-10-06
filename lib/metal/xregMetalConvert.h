@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021 Robert Grupp
+ * Copyright (c) 2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,44 +22,44 @@
  * SOFTWARE.
  */
 
-#ifndef XREGAPPLEAVFOUNDATION_H_
-#define XREGAPPLEAVFOUNDATION_H_
+#ifndef XREGMETALCONVERT_H_
+#define XREGMETALCONVERT_H_
 
-#include "xregWriteVideo.h"
+// Conversions from xreg (Eigen) types to the simd types used by Metal, the
+// counterpart of xregOpenCLConvert.
+//
+// The simd types have the same size and alignment as the corresponding Metal
+// Shading Language types (e.g. simd_float3 and float3 are both 16 bytes), so
+// they may be used in structures and buffers shared with shaders.
+
+#include <simd/simd.h>
+
+#include "xregCommon.h"
 
 namespace xreg
 {
 
-class WriteImageFramesToVideoAppleAVF : public WriteImageFramesToVideo
+inline simd_float3 ConvertToMetal(const Pt3& p)
 {
-public:
-  void open() override;
+  return simd_make_float3(p[0], p[1], p[2]);
+}
 
-  void close() override;
+/// \brief Convert a frame transform to a column-major 4x4 matrix.
+///
+/// This acts on homogeneous column vectors, the same as FrameTransform.
+inline simd_float4x4 ConvertToMetal(const FrameTransform& xform)
+{
+  const auto& m = xform.matrix();
 
-  void write(const cv::Mat& frame) override;
-  
-  ~WriteImageFramesToVideoAppleAVF() override;
+  simd_float4x4 dst;
 
-private:
-  // releases the Objective-C objects referenced by the members below
-  void release_objc_refs();
+  for (int c = 0; c < 4; ++c)
+  {
+    dst.columns[c] = simd_make_float4(m(0,c), m(1,c), m(2,c), m(3,c));
+  }
 
-  void* av_asset_writer_ = nullptr;
-  
-  void* av_asset_writer_input_ = nullptr;
-  
-  void* av_assest_writer_pix_buf_adaptor_ = nullptr;
-
-  bool input_setup_ = false;
-  
-  int num_rows_ = 0;
-  int num_cols_ = 0;
-
-  int frame_type_ = 0;
-  
-  long frame_count_ = 0;
-};
+  return dst;
+}
 
 }  // xreg
 

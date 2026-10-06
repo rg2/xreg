@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021 Robert Grupp
+ * Copyright (c) 2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,44 +22,29 @@
  * SOFTWARE.
  */
 
-#ifndef XREGAPPLEAVFOUNDATION_H_
-#define XREGAPPLEAVFOUNDATION_H_
+#ifndef XREGMETALSHADERSRC_H_
+#define XREGMETALSHADERSRC_H_
 
-#include "xregWriteVideo.h"
+#include <string>
 
 namespace xreg
 {
 
-class WriteImageFramesToVideoAppleAVF : public WriteImageFramesToVideo
-{
-public:
-  void open() override;
+// Sources of the Metal shader helpers in lib/metal, these are embedded at
+// build time from the corresponding files (see xreg_embed_metal_src).
 
-  void close() override;
+extern const char* const kMETAL_SHADER_SHARED_SRC;  ///< xregMetalShaderShared.h
+extern const char* const kMETAL_MATH_SRC;           ///< xregMetalMath.metal
+extern const char* const kMETAL_SPATIAL_SRC;        ///< xregMetalSpatial.metal
+extern const char* const kMETAL_INTERP_SRC;         ///< xregMetalInterp.metal
+extern const char* const kMETAL_MISC_KERNELS_SRC;   ///< xregMetalMiscKernels.metal
 
-  void write(const cv::Mat& frame) override;
-  
-  ~WriteImageFramesToVideoAppleAVF() override;
-
-private:
-  // releases the Objective-C objects referenced by the members below
-  void release_objc_refs();
-
-  void* av_asset_writer_ = nullptr;
-  
-  void* av_asset_writer_input_ = nullptr;
-  
-  void* av_assest_writer_pix_buf_adaptor_ = nullptr;
-
-  bool input_setup_ = false;
-  
-  int num_rows_ = 0;
-  int num_cols_ = 0;
-
-  int frame_type_ = 0;
-  
-  long frame_count_ = 0;
-};
+/// \brief All of the Metal shader helper sources, concatenated in dependency
+///        order.
+///
+/// Shader sources that depend on the helpers should be appended to this
+/// before compiling with MetalLibrary.
+std::string MetalHelperShadersSrc();
 
 }  // xreg
 

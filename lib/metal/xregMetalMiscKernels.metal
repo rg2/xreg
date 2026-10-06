@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021 Robert Grupp
+ * Copyright (c) 2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,46 +22,31 @@
  * SOFTWARE.
  */
 
-#ifndef XREGAPPLEAVFOUNDATION_H_
-#define XREGAPPLEAVFOUNDATION_H_
+// Miscellaneous Metal kernels, the counterpart of xregOpenCLMiscKernels.
 
-#include "xregWriteVideo.h"
+#ifndef XREG_METAL_MISC_KERNELS_METAL_
+#define XREG_METAL_MISC_KERNELS_METAL_
 
-namespace xreg
+#ifndef XREG_METAL_RUNTIME_SRC
+#include "xregMetalShaderShared.h"
+#endif
+
+#include <metal_stdlib>
+
+/// \brief Sets every element of a buffer to a value.
+///
+/// A blit encoder may only fill a buffer with a repeated byte, which is not
+/// sufficient for arbitrary floating point values.
+kernel void xregFillFloat(device float* buf    [[buffer(xreg::kMETAL_FILL_FLOAT_BUF)]],
+                          constant float& val  [[buffer(xreg::kMETAL_FILL_FLOAT_VAL)]],
+                          constant uint& len   [[buffer(xreg::kMETAL_FILL_FLOAT_LEN)]],
+                          const uint idx       [[thread_position_in_grid]])
 {
-
-class WriteImageFramesToVideoAppleAVF : public WriteImageFramesToVideo
-{
-public:
-  void open() override;
-
-  void close() override;
-
-  void write(const cv::Mat& frame) override;
-  
-  ~WriteImageFramesToVideoAppleAVF() override;
-
-private:
-  // releases the Objective-C objects referenced by the members below
-  void release_objc_refs();
-
-  void* av_asset_writer_ = nullptr;
-  
-  void* av_asset_writer_input_ = nullptr;
-  
-  void* av_assest_writer_pix_buf_adaptor_ = nullptr;
-
-  bool input_setup_ = false;
-  
-  int num_rows_ = 0;
-  int num_cols_ = 0;
-
-  int frame_type_ = 0;
-  
-  long frame_count_ = 0;
-};
-
-}  // xreg
+  if (idx < len)
+  {
+    buf[idx] = val;
+  }
+}
 
 #endif
 

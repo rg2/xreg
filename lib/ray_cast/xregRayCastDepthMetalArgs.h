@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021 Robert Grupp
+ * Copyright (c) 2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,44 +22,36 @@
  * SOFTWARE.
  */
 
-#ifndef XREGAPPLEAVFOUNDATION_H_
-#define XREGAPPLEAVFOUNDATION_H_
+#ifndef XREGRAYCASTDEPTHMETALARGS_H_
+#define XREGRAYCASTDEPTHMETALARGS_H_
 
-#include "xregWriteVideo.h"
+// Arguments of the Metal depth ray casting kernel, shared by the host and the
+// kernel. This file is valid C++ and Metal Shading Language, it is also embedded
+// in the shader source compiled at runtime.
+
+#ifndef XREG_METAL_RUNTIME_SRC
+#include "xregRayCastMetalArgs.h"
+#endif
 
 namespace xreg
 {
 
-class WriteImageFramesToVideoAppleAVF : public WriteImageFramesToVideo
+/// \brief Depth kernel specific arguments, passed at kRAY_CAST_METAL_EXTRA_ARGS.
+struct RayCastDepthMetalArgs
 {
-public:
-  void open() override;
+  /// \brief Transformation from continuous volume indices to ITK physical points.
+  ray_cast_metal_types::Float4x4 itk_idx_to_itk_phys_pt_xform;
 
-  void close() override;
+  /// \brief A surface is located at the first sample along a ray greater than or
+  ///        equal to this value.
+  float sur_coll_thresh;
 
-  void write(const cv::Mat& frame) override;
-  
-  ~WriteImageFramesToVideoAppleAVF() override;
-
-private:
-  // releases the Objective-C objects referenced by the members below
-  void release_objc_refs();
-
-  void* av_asset_writer_ = nullptr;
-  
-  void* av_asset_writer_input_ = nullptr;
-  
-  void* av_assest_writer_pix_buf_adaptor_ = nullptr;
-
-  bool input_setup_ = false;
-  
-  int num_rows_ = 0;
-  int num_cols_ = 0;
-
-  int frame_type_ = 0;
-  
-  long frame_count_ = 0;
+  /// \brief The number of binary search iterations used to refine the location
+  ///        of a surface between the last two samples along a ray.
+  ray_cast_metal_types::UInt num_backtracking_steps;
 };
+
+static_assert(sizeof(RayCastDepthMetalArgs) == 80, "unexpected RayCastDepthMetalArgs layout");
 
 }  // xreg
 

@@ -22,7 +22,23 @@
 
 file(GLOB_RECURSE XREG_CUR_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 
+set(XREG_RAY_CAST_METAL_SRCS)
+
+if (XREG_USE_METAL)
+  # Metal shader sources, embedded as strings and compiled at runtime
+  xreg_embed_metal_src(XREG_RAY_CAST_METAL_SRCS kRAY_CAST_METAL_ARGS_SRC     xregRayCastMetalArgs.h)
+  xreg_embed_metal_src(XREG_RAY_CAST_METAL_SRCS kRAY_CAST_BASE_METAL_SRC     xregRayCastBaseMetal.metal)
+  xreg_embed_metal_src(XREG_RAY_CAST_METAL_SRCS kRAY_CAST_LINE_INT_METAL_SRC xregRayCastLineIntMetal.metal)
+  xreg_embed_metal_src(XREG_RAY_CAST_METAL_SRCS kRAY_CAST_DEPTH_METAL_ARGS_SRC xregRayCastDepthMetalArgs.h)
+  xreg_embed_metal_src(XREG_RAY_CAST_METAL_SRCS kRAY_CAST_DEPTH_METAL_SRC      xregRayCastDepthMetal.metal)
+
+  list(APPEND XREG_RAY_CAST_METAL_SRCS xregRayCastBaseMetal.mm
+                                       xregRayCastLineIntMetal.cpp
+                                       xregRayCastDepthMetal.cpp)
+endif ()
+
 add_library(xreg_ray_cast OBJECT ${XREG_CUR_LIB_HEADERS}
+                                 ${XREG_RAY_CAST_METAL_SRCS}
                                  xregRayCastSyncBuf.cpp
                                  xregRayCastInterface.cpp
                                  xregRayCastBaseCPU.cpp

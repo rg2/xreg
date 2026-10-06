@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-cmake_minimum_required(VERSION 3.13.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16.0 FATAL_ERROR)
 
 #if (APPLE)
 #  # Target MacOS 10.14, Mojave
@@ -44,6 +44,8 @@ endif ()
 
 option(XREG_BUILD_APPS "Build xreg applications in addition to the library" ${XREG_TOP_LEVEL_PROJ})
 
+option(XREG_BUILD_TESTS "Build xreg unit tests" OFF)
+
 option(XREG_INCLUDE_GIT_HASH_IN_VER_STR "Include the git hash in the version string that is embedded into the library" OFF)
 mark_as_advanced(XREG_INCLUDE_GIT_HASH_IN_VER_STR)
 
@@ -55,6 +57,17 @@ endif ()
 
 option(XREG_USE_SYSTEM_OPENCL "Use a system install of OpenCL instead of the bundled loader" ${XREG_USE_SYSTEM_OPENCL_DEFAULT})
 mark_as_advanced(XREG_USE_SYSTEM_OPENCL)
+
+option(XREG_USE_METAL "Build the Metal GPU backend (MacOS only)" ${APPLE})
+
+if (XREG_USE_METAL AND NOT APPLE)
+  message(FATAL_ERROR "XREG_USE_METAL is only supported on MacOS")
+endif ()
+
+if (APPLE)
+  # Objective-C++ (.mm) sources are used on MacOS, e.g. for AVFoundation and Metal
+  enable_language(OBJCXX)
+endif ()
 
 option(XREG_USE_SYSTEM_FMT "Use a system (find_package) install of fmt instead of the bundled version" OFF)
 mark_as_advanced(XREG_USE_SYSTEM_FMT)
@@ -99,6 +112,17 @@ set (XREG_INC_INSTALL_DIR "${CMAKE_INSTALL_INCLUDEDIR}/xreg")
 if (XREG_USE_SYSTEM_OPENCL)
   find_package(OpenCL REQUIRED)
   set (XREG_EXT_LIBS_TO_LINK OpenCL::OpenCL)
+endif ()
+
+if (APPLE)
+  set (XREG_EXT_LIBS_TO_LINK ${XREG_EXT_LIBS_TO_LINK} "-framework Foundation"
+                                                      "-framework AVFoundation"
+                                                      "-framework CoreMedia"
+                                                      "-framework CoreVideo")
+endif ()
+
+if (XREG_USE_METAL)
+  set (XREG_EXT_LIBS_TO_LINK ${XREG_EXT_LIBS_TO_LINK} "-framework Metal")
 endif ()
 
 # ViennaCL is header only and only used privately (in xreg_opencl and xreg_regi),
@@ -213,6 +237,11 @@ set(XREG_EXE_PREFIX "xreg-")
 
 if (XREG_BUILD_APPS)
   add_subdirectory(apps)
+endif ()
+
+if (XREG_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
 endif ()
 
 # only install targets and config when building the library
