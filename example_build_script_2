@@ -90,23 +90,6 @@ OS_STR=`uname -s`
 if [ "$NEED_TO_DOWNLOAD_THIRD_PARTY" = true ]; then
   echo "Downloading third party libraries..."
   
-  # Choose the TBB package for your operating system:
-  if [ "$OS_STR" == "Darwin" ]; then
-    TBB_URL="https://github.com/intel/tbb/releases/download/2018_U1/tbb2018_20170919oss_mac.tgz"
-  elif [ "$OS_STR" == "Linux" ]; then
-    TBB_URL="https://github.com/intel/tbb/releases/download/2018_U1/tbb2018_20170919oss_lin.tgz"
-  else
-    TBB_URL="https://github.com/intel/tbb/releases/download/2018_U1/tbb2018_20170919oss_win.zip"
-  fi
-
-  TBB_FILE=`basename $TBB_URL`
-
-  wget $TBB_URL
-
-  tar xf $TBB_FILE
-
-  rm $TBB_FILE
-
   BOOST_URL="https://archives.boost.io/release/1.87.0/source/boost_1_87_0.zip"
 
   BOOST_FILE=`basename $BOOST_URL`
@@ -162,11 +145,6 @@ fi
 
 echo "Setting third party downloaded directories..."
 
-TBB_EXTRACT_DIR="$DEPS_DIR/tbb2018_20170919oss"
-TBB_INSTALL_DIR="$DEPS_INSTALL_DIR/tbb"
-TBB_INC_DIR="$TBB_INSTALL_DIR/include"
-TBB_CMAKE_DIR="$TBB_INSTALL_DIR/cmake"
-
 BOOST_DIR="$DEPS_DIR/`ls | grep "boost_*"`"
 
 # Eigen is bundled with xReg
@@ -184,9 +162,6 @@ OPENCV_DIR="$DEPS_DIR/`ls | grep "opencv-*"`"
 echo "Finished setting third party downloaded directories..."
 
 if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
-
-  echo "Copying TBB to install prefix..."
-  mv $TBB_EXTRACT_DIR $TBB_INSTALL_DIR
 
   echo "Copying header only libraries..."
   mkdir -p $DEPS_INSTALL_DIR/include
@@ -246,7 +221,7 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
     VTK_NO_RENDER_FLAGS="-DVTK_GROUP_ENABLE_Rendering=NO"
   fi
 
-  TBB_ROOT="$TBB_INC_DIR/.." cmake -G Ninja .. \
+  cmake -G Ninja .. \
     -DCMAKE_INSTALL_PREFIX:PATH=$DEPS_INSTALL_DIR \
     -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
     -DCMAKE_CXX_STANDARD:STRING="17" \
@@ -354,7 +329,6 @@ if [ "$NEED_TO_BUILD_XREG" = true ]; then
     -DCMAKE_PREFIX_PATH:PATH=$DEPS_INSTALL_DIR \
     -DBUILD_SHARED_LIBS:BOOL=$BUILD_SHARED \
     -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
-    -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
     -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON \
     -DXREG_INCLUDE_GIT_HASH_IN_VER_STR:BOOL=ON $XREG_POS_INDEP_CODE_FLAG $XREG_CMAKE_INSTALL_FLAG
 
@@ -362,29 +336,6 @@ if [ "$NEED_TO_BUILD_XREG" = true ]; then
 
   if [ "$XREG_INSTALL_DIR" != "" ]; then
     cmake --install .
-
-    # xreg's install target does not copy TBB, since it is found via
-    # find_package(TBB) as an external/imported target rather than a
-    # target built by this project. Copy the runtime library over manually
-    # so that it is discoverable at ${XREG_INSTALL_DIR}/lib.
-    echo "Copying TBB runtime library to install prefix..."
-
-    if [ "$BUILD_CONFIG" == "Debug" ]; then
-      TBB_LIB_NAME_PATTERN="libtbb_debug.*"
-    else
-      TBB_LIB_NAME_PATTERN="libtbb.*"
-    fi
-
-    # On Linux the package ships both lib/intel64/ and lib/ia32/ variants
-    # with identical filenames, so restrict the search to intel64 to avoid
-    # copying whichever architecture "find" happens to visit last. macOS
-    # has no such split and keeps the libraries directly under lib/.
-    TBB_LIB_SEARCH_DIR="$TBB_INSTALL_DIR/lib"
-    if [ -d "$TBB_INSTALL_DIR/lib/intel64" ]; then
-      TBB_LIB_SEARCH_DIR="$TBB_INSTALL_DIR/lib/intel64"
-    fi
-
-    find "$TBB_LIB_SEARCH_DIR" -name "$TBB_LIB_NAME_PATTERN" -exec cp -a {} "$XREG_INSTALL_DIR/lib/" \;
   fi
 fi
 

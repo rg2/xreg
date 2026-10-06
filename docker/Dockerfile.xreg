@@ -17,6 +17,7 @@ COPY . .
 RUN mkdir build && cd build && \
     cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=ON \
                    -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON \
+                   -DXREG_USE_SYSTEM_TBB:BOOL=ON \
                    -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
           .. && \
     cmake --build . --parallel 2 && cmake --build . --target install && \

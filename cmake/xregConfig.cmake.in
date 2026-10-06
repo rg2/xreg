@@ -13,11 +13,22 @@ if (XREG_USE_SYSTEM_NLOPT)
   find_dependency(NLopt)
 endif ()
 
+set(XREG_USE_SYSTEM_TBB @XREG_USE_SYSTEM_TBB@)
+set(XREG_USE_LEGACY_FIND_TBB @XREG_USE_LEGACY_FIND_TBB@)
+set(XREG_BUILD_SHARED_LIBS @BUILD_SHARED_LIBS@)
+if (XREG_USE_SYSTEM_TBB)
+  if (NOT XREG_USE_LEGACY_FIND_TBB)
+    find_dependency(TBB)
+  endif ()
+elseif (NOT XREG_BUILD_SHARED_LIBS)
+  # the bundled static TBB links to the threads library
+  find_dependency(Threads)
+endif ()
+
 include(${CMAKE_CURRENT_LIST_DIR}/xreg-targets.cmake)
 
 set(XREG_USE_SYSTEM_OPENCL @XREG_USE_SYSTEM_OPENCL@)
 set(XREG_USE_SYSTEM_EIGEN @XREG_USE_SYSTEM_EIGEN@)
-set(XREG_USE_LEGACY_FIND_TBB @XREG_USE_LEGACY_FIND_TBB@)
 
 check_required_components(xreg)
 

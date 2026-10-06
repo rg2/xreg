@@ -68,17 +68,20 @@ mark_as_advanced(XREG_USE_SYSTEM_EIGEN)
 option(XREG_USE_SYSTEM_NLOPT "Use a system (find_package) install of NLopt instead of the bundled version" OFF)
 mark_as_advanced(XREG_USE_SYSTEM_NLOPT)
 
+option(XREG_USE_SYSTEM_TBB "Use a system (find_package) install of TBB instead of the bundled version" OFF)
+mark_as_advanced(XREG_USE_SYSTEM_TBB)
+
 if (APPLE OR WIN32)
   set(XREG_USE_LEGACY_FIND_TBB_DEFAULT OFF)
 else ()
   set(XREG_USE_LEGACY_FIND_TBB_DEFAULT ON)
 endif ()
 
-option(XREG_USE_LEGACY_FIND_TBB "Use a legacy FindTBB.cmake which works better for tbb installed on Ubuntu through the system package manager - it does not work on Windows w/ VS 2019" ${XREG_USE_LEGACY_FIND_TBB_DEFAULT})
+option(XREG_USE_LEGACY_FIND_TBB "Use a legacy FindTBB.cmake which works better for tbb installed on Ubuntu through the system package manager - it does not work on Windows w/ VS 2019 (only used when XREG_USE_SYSTEM_TBB=ON)" ${XREG_USE_LEGACY_FIND_TBB_DEFAULT})
 mark_as_advanced(XREG_USE_LEGACY_FIND_TBB)
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake" ${CMAKE_MODULE_PATH})
-if (XREG_USE_LEGACY_FIND_TBB)
+if (XREG_USE_SYSTEM_TBB AND XREG_USE_LEGACY_FIND_TBB)
   set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/tbb" ${CMAKE_MODULE_PATH})
   set(XREG_TBB_LIB tbb)
 else ()
@@ -109,7 +112,12 @@ else ()
   set(VIENNACL_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/viennacl-dev-release-1.7.1")
 endif ()
 
-find_package(TBB REQUIRED)
+# NOTE: the test, examples, doc, rfcs, python, and thread_composability_manager directories
+#       (and the Bazel and other repo/CI files) were removed from the upstream archive of
+#       the bundled oneTBB.
+if (XREG_USE_SYSTEM_TBB)
+  find_package(TBB REQUIRED)
+endif ()
 
 find_package(Boost REQUIRED)
 
@@ -247,6 +255,15 @@ if (XREG_TOP_LEVEL_PROJ)
             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
   endif ()
 
+  if (NOT XREG_USE_SYSTEM_TBB)
+    # bundled TBB must be in the export set since xreg links to it;
+    # its headers are installed to include by TBB's own install rules
+    install(TARGETS tbb EXPORT xreg-targets
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  endif ()
+
   install(TARGETS ${XREG_TARGETS_TO_EXPORT} EXPORT xreg-targets
           RUNTIME       DESTINATION ${CMAKE_INSTALL_BINDIR}
           LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -269,6 +286,9 @@ if (XREG_TOP_LEVEL_PROJ)
   endif ()
   if (NOT XREG_USE_SYSTEM_NLOPT)
     list(APPEND XREG_TARGETS_FOR_BUILD_TREE_EXPORT nlopt)
+  endif ()
+  if (NOT XREG_USE_SYSTEM_TBB)
+    list(APPEND XREG_TARGETS_FOR_BUILD_TREE_EXPORT tbb)
   endif ()
 
   export(TARGETS ${XREG_TARGETS_FOR_BUILD_TREE_EXPORT} NAMESPACE xreg:: FILE ${PROJECT_BINARY_DIR}/xreg-targets.cmake)

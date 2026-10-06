@@ -123,12 +123,6 @@ curl -L -O -J https://github.com/GyanD/codexffmpeg/releases/download/4.3.1-2020-
 ECHO Extracing ffmpeg
 tar -xf ffmpeg-4.3.1-2020-11-19-full_build.zip || EXIT /b
 
-ECHO Downloading TBB
-curl -L -O -J https://github.com/oneapi-src/oneTBB/releases/download/v2020.3/tbb-2020.3-win.zip || EXIT /b
-
-ECHO Extracting TBB
-tar -xf tbb-2020.3-win.zip || EXIT /b
-
 ECHO Downloading boost
 curl -L -O -J https://archives.boost.io/release/1.87.0/source/boost_1_87_0.zip || EXIT /b
 
@@ -165,12 +159,6 @@ if %NEED_TO_BUILD_THIRD_PARTY% == true (
 
 ECHO Installing ffpeg
 MOVE ffmpeg-4.3.1-2020-11-19-full_build\bin\ffmpeg.exe %INSTALL_ROOT%\bin || EXIT /b
-
-ECHO Installing TBB (1/2)
-MOVE tbb %INSTALL_ROOT%\tbb || EXIT /b
-
-ECHO Installing TBB (2/2)
-COPY %INSTALL_ROOT%\tbb\bin\intel64\vc14\tbb.dll %INSTALL_ROOT%\bin || EXIT /b
 
 ECHO Installing boost
 MOVE boost_1_87_0\boost %INSTALL_ROOT%\include\boost || EXIT /b

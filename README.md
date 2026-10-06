@@ -59,7 +59,6 @@ The [docker](docker) directory demonstrates how Docker may be used to build the 
 * C++ 17 compatible compiler
   * Tested with various flavors of gcc and Apple clang, and Visual Studio 2022
 * External libraries (example compatible versions are listed):
-  * [Intel Threading Building Blocks (TBB)](https://github.com/oneapi-src/oneTBB) (20170919oss, v2020.3)
   * [Boost](https://www.boost.org) (header only) (1.87.0)
   * [ITK](https://itk.org) (5.4.7)
   * [VTK](https://vtk.org) (9.6.2)
@@ -78,6 +77,9 @@ The [docker](docker) directory demonstrates how Docker may be used to build the 
     * Set `XREG_USE_SYSTEM_FMT=ON` to use an external install instead
   * [NLopt](https://github.com/stevengj/nlopt) (2.11.0)
     * Set `XREG_USE_SYSTEM_NLOPT=ON` to use an external install instead
+  * [oneTBB](https://github.com/uxlfoundation/oneTBB) (2023.1.0)
+    * Built as a shared or static library to match `BUILD_SHARED_LIBS`
+    * Set `XREG_USE_SYSTEM_TBB=ON` to use an external install instead (e.g. to match the TBB used by VTK or OpenCV)
   * [OpenCL Headers](https://github.com/KhronosGroup/OpenCL-Headers) (2020.06.16)
   * [OpenCL ICD Loader](https://github.com/KhronosGroup/OpenCL-ICD-Loader) (2020.06.16)
     * Not used by default on MacOS; set `XREG_USE_SYSTEM_OPENCL=ON` to use a system install of OpenCL instead

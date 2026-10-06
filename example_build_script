@@ -46,25 +46,6 @@ fi
 if [ "$NEED_TO_DOWNLOAD" = true ]; then
   echo "Downloading third party libraries..."
   
-  # Choose the TBB package for your operating system:
-  OS_STR=`uname -s`
-
-  if [ "$OS_STR" == "Darwin" ]; then
-    TBB_URL="https://github.com/intel/tbb/releases/download/2018_U1/tbb2018_20170919oss_mac.tgz"
-  elif [ "$OS_STR" == "Linux" ]; then
-    TBB_URL="https://github.com/intel/tbb/releases/download/2018_U1/tbb2018_20170919oss_lin.tgz"
-  else
-    TBB_URL="https://github.com/intel/tbb/releases/download/2018_U1/tbb2018_20170919oss_win.zip"
-  fi
-
-  TBB_FILE=`basename $TBB_URL`
-
-  wget $TBB_URL
-
-  tar xf $TBB_FILE
-
-  rm $TBB_FILE
-
   BOOST_URL="https://archives.boost.io/release/1.87.0/source/boost_1_87_0.zip"
 
   BOOST_FILE=`basename $BOOST_URL`
@@ -117,9 +98,6 @@ if [ "$NEED_TO_DOWNLOAD" = true ]; then
 
   echo "Finished downloading third party libraries..."
 fi
-
-TBB_INC_DIR="$DEPS_DIR/tbb2018_20170919oss/include"
-TBB_DIR="$DEPS_DIR/tbb2018_20170919oss/cmake"
 
 BOOST_DIR="$DEPS_DIR/`ls | grep "boost_*"`"
 
@@ -179,7 +157,7 @@ if [ "$NEED_TO_BUILD_THIRD_PARTY" = true ] ; then
     VTK_NO_RENDER_FLAGS="-DVTK_GROUP_ENABLE_Rendering=NO"
   fi
 
-  TBB_ROOT="$TBB_INC_DIR/.." cmake -G Ninja .. \
+  cmake -G Ninja .. \
     -DCMAKE_CXX_STANDARD:STRING="17" \
     -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
     -DBUILD_SHARED_LIBS:BOOL=OFF \
@@ -275,9 +253,6 @@ if [ "$NEED_TO_START_XREG" = true ]; then
     -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONFIG \
     -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON \
     -DBoost_INCLUDE_DIR:PATH="$BOOST_DIR" \
-    -DXREG_USE_LEGACY_FIND_TBB:BOOL=OFF \
-    -DTBB_DIR:PATH="$TBB_DIR" \
-    -DTBB_INCLUDE_DIRS:PATH=$TBB_INC_DIR \
     -DVTK_DIR:PATH="$VTK_DIR/build" \
     -DITK_DIR:PATH="$ITK_DIR/build" \
     -DOpenCV_DIR:PATH="$OPENCV_DIR/build" \
