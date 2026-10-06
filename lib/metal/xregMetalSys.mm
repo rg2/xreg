@@ -99,7 +99,46 @@ void CheckBufRange(const xreg::MetalBuffer& buf, const xreg::size_type off,
   }
 }
 
+std::vector<std::string> MetalDevIDStrsFromMap(const xreg::MetalIDStrDevMap& id_dev_map)
+{
+  std::vector<std::string> id_strs;
+  id_strs.reserve(id_dev_map.size());
+
+  for (const auto& id_dev_kv : id_dev_map)
+  {
+    id_strs.push_back(id_dev_kv.first);
+  }
+
+  return id_strs;
+}
+
 }  // un-named
+
+std::string xreg::MetalGPUFamilyStr(const MetalGPUFamily fam)
+{
+  switch (fam)
+  {
+  case MetalGPUFamily::kMAC2:
+    return "Mac 2";
+  case MetalGPUFamily::kMETAL3:
+    return "Metal 3";
+  case MetalGPUFamily::kMETAL4:
+    return "Metal 4";
+  default:
+    return "Unknown";
+  }
+}
+
+std::string xreg::MetalFrameworkVersion()
+{
+  @autoreleasepool
+  {
+    NSString* ver = [NSBundle bundleWithIdentifier:@"com.apple.Metal"]
+                      .infoDictionary[@"CFBundleShortVersionString"];
+
+    return ver ? std::string(ver.UTF8String) : std::string();
+  }
+}
 
 xreg::MetalDevice xreg::MetalDevice::Default()
 {
@@ -204,6 +243,41 @@ xreg::MetalDeviceLocation xreg::MetalDevice::location() const
   return loc;
 }
 
+xreg::MetalGPUFamily xreg::MetalDevice::highest_gpu_family() const
+{
+  MetalGPUFamily fam = MetalGPUFamily::kUNKNOWN;
+
+  if (valid())
+  {
+    id<MTLDevice> dev = impl_->dev;
+
+#if defined(__MAC_26_0)
+    if (@available(macOS 26.0, *))
+    {
+      if ([dev supportsFamily:MTLGPUFamilyMetal4])
+      {
+        return MetalGPUFamily::kMETAL4;
+      }
+    }
+#endif
+
+    if (@available(macOS 13.0, *))
+    {
+      if ([dev supportsFamily:MTLGPUFamilyMetal3])
+      {
+        return MetalGPUFamily::kMETAL3;
+      }
+    }
+
+    if ([dev supportsFamily:MTLGPUFamilyMac2])
+    {
+      fam = MetalGPUFamily::kMAC2;
+    }
+  }
+
+  return fam;
+}
+
 xreg::size_type xreg::MetalDevice::recommended_max_working_set_size() const
 {
   return valid() ? impl_->dev.recommendedMaxWorkingSetSize : 0;
@@ -252,17 +326,52 @@ xreg::MetalIDStrDevMap xreg::BuildMetalDevIDStrsToDevMap()
 
 std::vector<std::string> xreg::MetalDevIDStrs()
 {
-  const auto id_dev_map = BuildMetalDevIDStrsToDevMap();
+  return MetalDevIDStrsFromMap(BuildMetalDevIDStrsToDevMap());
+}
 
-  std::vector<std::string> id_strs;
-  id_strs.reserve(id_dev_map.size());
+xreg::MetalIDStrDevMap::const_iterator
+xreg::FindMetalDevByIDSubstr(const MetalIDStrDevMap& id_str_to_devs, const std::string& id_substr)
+{
+  const std::string id_substr_lower = ToLowerCase(id_substr);
 
-  for (const auto& id_dev_kv : id_dev_map)
+  std::vector<MetalIDStrDevMap::const_iterator> matches;
+
+  for (auto it = id_str_to_devs.begin(); it != id_str_to_devs.end(); ++it)
   {
-    id_strs.push_back(id_dev_kv.first);
+    const std::string cur_id_lower = ToLowerCase(it->first);
+
+    if (cur_id_lower == id_substr_lower)
+    {
+      // an exact match takes precedence
+      return it;
+    }
+    else if (cur_id_lower.find(id_substr_lower) != std::string::npos)
+    {
+      matches.push_back(it);
+    }
   }
 
-  return id_strs;
+  if (matches.empty())
+  {
+    const auto all_ids = MetalDevIDStrsFromMap(id_str_to_devs);
+
+    xregThrow("no Metal device ID matches \"%s\"; available IDs: %s", id_substr.c_str(),
+              all_ids.empty() ? "<none>" : JoinTokens(all_ids.begin(), all_ids.end(), ", ").c_str());
+  }
+  else if (matches.size() > 1)
+  {
+    std::vector<std::string> match_ids;
+
+    for (const auto& it : matches)
+    {
+      match_ids.push_back(it->first);
+    }
+
+    xregThrow("Metal device ID \"%s\" is ambiguous, it matches: %s", id_substr.c_str(),
+              JoinTokens(match_ids.begin(), match_ids.end(), ", ").c_str());
+  }
+
+  return matches.front();
 }
 
 xreg::MetalCmdQueue::MetalCmdQueue(const MetalDevice& dev)

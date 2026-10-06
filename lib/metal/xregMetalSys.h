@@ -51,6 +51,26 @@ enum class MetalDeviceLocation
   kUNSPECIFIED
 };
 
+/// \brief Metal GPU feature families, ordered from least to most capable.
+///
+/// Only the families relevant to MacOS are listed. kUNKNOWN indicates that a
+/// device does not support any of the listed families.
+enum class MetalGPUFamily
+{
+  kUNKNOWN,
+  kMAC2,
+  kMETAL3,
+  kMETAL4
+};
+
+/// \brief Human readable name of a GPU family, e.g. "Metal 3"
+std::string MetalGPUFamilyStr(const MetalGPUFamily fam);
+
+/// \brief Version of the Metal framework installed on the system, e.g. "373.7"
+///
+/// Returns an empty string when the version is not available.
+std::string MetalFrameworkVersion();
+
 /// \brief Handle to a Metal GPU device.
 ///
 /// Copies of this object refer to the same underlying device.
@@ -96,6 +116,9 @@ public:
 
   MetalDeviceLocation location() const;
 
+  /// \brief The most capable GPU family supported by this device.
+  MetalGPUFamily highest_gpu_family() const;
+
   /// \brief Approximate number of bytes that may be used by the device without
   ///        degrading performance.
   size_type recommended_max_working_set_size() const;
@@ -128,6 +151,14 @@ MetalIDStrDevMap BuildMetalDevIDStrsToDevMap();
 ///
 /// \see BuildMetalDevIDStrsToDevMap
 std::vector<std::string> MetalDevIDStrs();
+
+/// \brief Find the device whose ID string matches, ignoring case, a full ID
+///        string or a substring of exactly one ID string.
+///
+/// An exact match of a full ID string takes precedence over substring matches.
+/// Throws when no ID matches or when the substring matches more than one ID.
+MetalIDStrDevMap::const_iterator
+FindMetalDevByIDSubstr(const MetalIDStrDevMap& id_str_to_devs, const std::string& id_substr);
 
 /// \brief Handle to a Metal command queue.
 ///

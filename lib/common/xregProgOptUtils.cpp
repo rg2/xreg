@@ -293,6 +293,17 @@ ValidBackendNameAndDescs()
     backend_names_and_descs.push_back(
                 std::make_tuple(std::string("cpu"),
                                 std::string("Standard CPU processing, potentially using TBB.")));
+
+#ifdef XREG_HAS_METAL
+    // NOTE: this is listed after cpu so that it is not the default backend, since
+    //       Metal implementations of ray casters, etc. are not yet available.
+    if (!xreg::MetalAllDevices().empty())
+    {
+      backend_names_and_descs.push_back(
+                std::make_tuple(std::string("metal"),
+                                std::string("Apple Metal GPU processing.")));
+    }
+#endif
     
     need_to_init = false;
   }
@@ -904,6 +915,10 @@ xreg::ProgOpts::ProgOpts()
   version_num_str_ = ProjVerStrAndGitSHA1IfAvail();
 
   opencl_id_str_to_dev_map_ = BuildDevIDStrsToDevMap();
+
+#ifdef XREG_HAS_METAL
+  metal_id_str_to_dev_map_ = BuildMetalDevIDStrsToDevMap();
+#endif
 }
 
 void xreg::ProgOpts::print_help(std::ostream& out) const
@@ -1037,6 +1052,24 @@ void xreg::ProgOpts::print_help(std::ostream& out) const
     }
   }
 
+#ifdef XREG_HAS_METAL
+  if (print_help_metal_str_)
+  {
+    const size_type num_dev = metal_id_str_to_dev_map_.size();
+
+    out << '\n' << num_dev << " Available Metal Devices (#: ID, Name):\n";
+
+    size_type dev_idx = 0;
+    for (const auto& id_dev_map : metal_id_str_to_dev_map_)
+    {
+      out << "  " << (dev_idx + 1) << ". " << id_dev_map.first << ", "
+          << id_dev_map.second.name() << std::endl;
+      
+      ++dev_idx;
+    }
+  }
+#endif
+
   if (print_help_backend_str_)
   {
     const auto& valid_backends = ValidBackendNameAndDescs();
@@ -1092,6 +1125,25 @@ void xreg::ProgOpts::print_help(std::ostream& out) const
       out << "OpenCL Platform: " << plat.vendor() << " " << plat.version() << std::endl;
     }
   }
+
+#ifdef XREG_HAS_METAL
+  {
+    const std::string metal_ver = MetalFrameworkVersion();
+
+    if (!metal_ver.empty())
+    {
+      out << "Metal Framework: " << metal_ver << std::endl;
+    }
+
+    for (const auto& id_dev_map : metal_id_str_to_dev_map_)
+    {
+      const MetalDevice& dev = id_dev_map.second;
+
+      out << "   Metal Device: " << dev.name() << " ("
+          << MetalGPUFamilyStr(dev.highest_gpu_family()) << ")" << std::endl;
+    }
+  }
+#endif
 
   if (!compile_date_.empty())
   {
@@ -1655,6 +1707,10 @@ void xreg::ProgOpts::add_backend_flags()
 {
   add_ocl_select_flag();
 
+#ifdef XREG_HAS_METAL
+  add_metal_select_flag();
+#endif
+
   const auto& valid_backends = ValidBackendNameAndDescs();
 
   std::stringstream ss;
@@ -1744,6 +1800,75 @@ xreg::ProgOpts::selected_ocl_ctx_queue()
 
   return std::make_tuple(selected_ocl_ctx_, selected_ocl_queue_);
 }
+
+#ifdef XREG_HAS_METAL
+
+void xreg::ProgOpts::set_print_help_metal_str(const bool print_metal)
+{
+  print_help_metal_str_ = print_metal;
+}
+
+void xreg::ProgOpts::add_metal_select_flag()
+{
+  set_print_help_metal_str(true);
+
+  add("metal-id", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "metal-id",
+      "Specify the Metal device to use with a device identifier string - the available device ID strings "
+      "may be obtained with the help print-out. The full ID string is not required, any case insensitive "
+      "substring that matches exactly one device ID may be used (e.g. \"amd\" or \"intel\"). "
+      "The default behavior is to use the system default Metal device.")
+    << "";
+}
+
+xreg::MetalDevice xreg::ProgOpts::selected_metal()
+{
+  if (!selected_metal_dev_.valid())
+  {
+    const std::string metal_id = get("metal-id").as_string();
+    
+    if (!metal_id.empty())
+    {
+      try
+      {
+        selected_metal_dev_ = FindMetalDevByIDSubstr(metal_id_str_to_dev_map_, metal_id)->second;
+      }
+      catch (const std::exception& e)
+      {
+        xregThrow("Invalid Metal Device ID String: %s", e.what());
+      }
+    }
+    else
+    {
+      try
+      {
+        selected_metal_dev_ = MetalDevice::Default();
+      }
+      catch (std::exception& e)
+      {
+        std::cerr << "Failed to create default Metal device; "
+                     "exception message: " << e.what()
+                  << "\n\nIf you do not have any Metal devices, "
+                     "try using a CPU only flag."
+                  << std::endl;
+        throw;
+      }
+    }
+  }
+
+  return selected_metal_dev_;
+}
+
+xreg::MetalCmdQueue xreg::ProgOpts::selected_metal_queue()
+{
+  if (!selected_metal_queue_.valid())
+  {
+    selected_metal_queue_ = MetalCmdQueue(selected_metal());
+  }
+
+  return selected_metal_queue_;
+}
+
+#endif
 
 bool xreg::ProgOpts::dest_exists(const std::string& dest_str) const
 {

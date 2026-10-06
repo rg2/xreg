@@ -31,6 +31,12 @@ int main(int argc, char* argv[])
 {
   using namespace xreg;
 
+  const std::string framework_ver = MetalFrameworkVersion();
+
+  std::cout << "Metal framework version: " << framework_ver << std::endl;
+
+  xregASSERT(!framework_ver.empty());
+
   const auto all_devs = MetalAllDevices();
 
   std::cout << "Number of Metal devices: " << all_devs.size() << std::endl;
@@ -42,6 +48,7 @@ int main(int argc, char* argv[])
     std::cout << "  " << d.id_str() << '\n'
               << "      name:           " << d.name() << '\n'
               << "      location:       " << LocationStr(d.location()) << '\n'
+              << "      GPU family:     " << MetalGPUFamilyStr(d.highest_gpu_family()) << '\n'
               << "      unified memory: " << d.has_unified_memory() << '\n'
               << "      low power:      " << d.is_low_power() << '\n'
               << "      headless:       " << d.is_headless() << '\n'
@@ -51,6 +58,7 @@ int main(int argc, char* argv[])
 
     xregASSERT(!d.id_str().empty());
     xregASSERT(d.max_buffer_length() > 0);
+    xregASSERT(d.highest_gpu_family() != MetalGPUFamily::kUNKNOWN);
   }
 
   xregASSERT(!all_devs.empty());
@@ -89,6 +97,7 @@ int main(int argc, char* argv[])
   xregASSERT(!invalid_dev.valid());
   xregASSERT(invalid_dev.id_str().empty());
   xregASSERT(invalid_dev.registry_id() == 0);
+  xregASSERT(invalid_dev.highest_gpu_family() == MetalGPUFamily::kUNKNOWN);
 
   std::cout << "PASSED" << std::endl;
 
