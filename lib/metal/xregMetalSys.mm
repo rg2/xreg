@@ -29,11 +29,13 @@
 #include "xregMetalSys.h"
 
 #include <cstring>
+#include <sstream>
 
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
 
 #include "xregExceptionUtils.h"
+#include "xregStringUtils.h"
 
 struct xreg::MetalDevice::Impl
 {
@@ -110,12 +112,17 @@ xreg::MetalDevice xreg::MetalDevice::Default()
       xregThrow("no Metal device available!");
     }
 
-    MetalDevice d;
-    d.impl_ = std::make_shared<Impl>();
-    d.impl_->dev = dev;
-
-    return d;
+    return FromNativeHandle((__bridge void*) dev);
   }
+}
+
+xreg::MetalDevice xreg::MetalDevice::FromNativeHandle(void* mtl_dev)
+{
+  MetalDevice d;
+  d.impl_ = std::make_shared<Impl>();
+  d.impl_->dev = (__bridge id<MTLDevice>) mtl_dev;
+
+  return d;
 }
 
 bool xreg::MetalDevice::valid() const
@@ -131,14 +138,131 @@ std::string xreg::MetalDevice::name() const
   }
 }
 
+std::string xreg::MetalDevice::id_str() const
+{
+  std::string s;
+
+  if (valid())
+  {
+    std::ostringstream oss;
+    oss << StringRemoveAll(name()) << '-' << std::hex << registry_id();
+
+    s = oss.str();
+  }
+
+  return s;
+}
+
+std::uint64_t xreg::MetalDevice::registry_id() const
+{
+  return valid() ? impl_->dev.registryID : 0;
+}
+
 bool xreg::MetalDevice::has_unified_memory() const
 {
   return valid() && impl_->dev.hasUnifiedMemory;
 }
 
+bool xreg::MetalDevice::is_low_power() const
+{
+  return valid() && impl_->dev.isLowPower;
+}
+
+bool xreg::MetalDevice::is_headless() const
+{
+  return valid() && impl_->dev.isHeadless;
+}
+
+bool xreg::MetalDevice::is_removable() const
+{
+  return valid() && impl_->dev.isRemovable;
+}
+
+xreg::MetalDeviceLocation xreg::MetalDevice::location() const
+{
+  MetalDeviceLocation loc = MetalDeviceLocation::kUNSPECIFIED;
+
+  if (valid())
+  {
+    switch (impl_->dev.location)
+    {
+    case MTLDeviceLocationBuiltIn:
+      loc = MetalDeviceLocation::kBUILT_IN;
+      break;
+    case MTLDeviceLocationSlot:
+      loc = MetalDeviceLocation::kSLOT;
+      break;
+    case MTLDeviceLocationExternal:
+      loc = MetalDeviceLocation::kEXTERNAL;
+      break;
+    default:
+      loc = MetalDeviceLocation::kUNSPECIFIED;
+      break;
+    }
+  }
+
+  return loc;
+}
+
+xreg::size_type xreg::MetalDevice::recommended_max_working_set_size() const
+{
+  return valid() ? impl_->dev.recommendedMaxWorkingSetSize : 0;
+}
+
+xreg::size_type xreg::MetalDevice::max_buffer_length() const
+{
+  return valid() ? impl_->dev.maxBufferLength : 0;
+}
+
 void* xreg::MetalDevice::native_handle() const
 {
   return valid() ? (__bridge void*) impl_->dev : nullptr;
+}
+
+std::vector<xreg::MetalDevice> xreg::MetalAllDevices()
+{
+  std::vector<MetalDevice> devs;
+
+  @autoreleasepool
+  {
+    NSArray<id<MTLDevice>>* mtl_devs = MTLCopyAllDevices();
+
+    devs.reserve(mtl_devs.count);
+
+    for (id<MTLDevice> d in mtl_devs)
+    {
+      devs.push_back(MetalDevice::FromNativeHandle((__bridge void*) d));
+    }
+  }
+
+  return devs;
+}
+
+xreg::MetalIDStrDevMap xreg::BuildMetalDevIDStrsToDevMap()
+{
+  MetalIDStrDevMap id_str_to_devs;
+
+  for (const auto& d : MetalAllDevices())
+  {
+    id_str_to_devs.emplace(d.id_str(), d);
+  }
+
+  return id_str_to_devs;
+}
+
+std::vector<std::string> xreg::MetalDevIDStrs()
+{
+  const auto id_dev_map = BuildMetalDevIDStrsToDevMap();
+
+  std::vector<std::string> id_strs;
+  id_strs.reserve(id_dev_map.size());
+
+  for (const auto& id_dev_kv : id_dev_map)
+  {
+    id_strs.push_back(id_dev_kv.first);
+  }
+
+  return id_strs;
 }
 
 xreg::MetalCmdQueue::MetalCmdQueue(const MetalDevice& dev)

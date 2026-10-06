@@ -30,14 +30,26 @@
 // may access the underlying Metal objects through native_handle(), e.g.:
 //   id<MTLBuffer> b = (__bridge id<MTLBuffer>) buf.native_handle();
 
+#include <cstdint>
+#include <map>
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 #include "xregCommon.h"
 
 namespace xreg
 {
+
+/// \brief Physical location of a Metal device.
+enum class MetalDeviceLocation
+{
+  kBUILT_IN,
+  kSLOT,
+  kEXTERNAL,
+  kUNSPECIFIED
+};
 
 /// \brief Handle to a Metal GPU device.
 ///
@@ -52,12 +64,44 @@ public:
   /// Throws if Metal is not available.
   static MetalDevice Default();
 
+  /// \brief Wraps an existing id<MTLDevice>, a reference is retained.
+  static MetalDevice FromNativeHandle(void* mtl_dev);
+
   bool valid() const;
 
   std::string name() const;
 
+  /// \brief Identifier for this device which is unique and consistent across
+  ///        processes.
+  ///
+  /// This is the device name with whitespace removed and the registry ID
+  /// appended, e.g. "AMDRadeonProXXXX-10000abcd".
+  std::string id_str() const;
+
+  /// \brief The registry ID of this device, which is consistent across processes.
+  std::uint64_t registry_id() const;
+
   /// \brief true when the CPU and GPU share memory (e.g. Apple Silicon)
   bool has_unified_memory() const;
+
+  /// \brief true for a low power device, e.g. the integrated GPU on a Mac with
+  ///        both integrated and discrete GPUs.
+  bool is_low_power() const;
+
+  /// \brief true when the device is not attached to a display
+  bool is_headless() const;
+
+  /// \brief true for a removable device, e.g. an eGPU
+  bool is_removable() const;
+
+  MetalDeviceLocation location() const;
+
+  /// \brief Approximate number of bytes that may be used by the device without
+  ///        degrading performance.
+  size_type recommended_max_working_set_size() const;
+
+  /// \brief The maximum size of a single buffer in bytes.
+  size_type max_buffer_length() const;
 
   /// \brief The underlying id<MTLDevice>, ownership is NOT transferred.
   void* native_handle() const;
@@ -67,6 +111,23 @@ private:
 
   std::shared_ptr<Impl> impl_;
 };
+
+using MetalIDStrDevMap = std::map<std::string,MetalDevice>;
+
+/// \brief All Metal devices on the system.
+///
+/// Returns an empty list when Metal is not available.
+std::vector<MetalDevice> MetalAllDevices();
+
+/// \brief Used to uniquely map devices between two processes.
+///
+/// Keys are MetalDevice::id_str().
+MetalIDStrDevMap BuildMetalDevIDStrsToDevMap();
+
+/// \brief Get a list of the unique IDs for each Metal device
+///
+/// \see BuildMetalDevIDStrsToDevMap
+std::vector<std::string> MetalDevIDStrs();
 
 /// \brief Handle to a Metal command queue.
 ///
