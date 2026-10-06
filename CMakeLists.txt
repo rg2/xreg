@@ -60,15 +60,16 @@ mark_as_advanced(XREG_USE_SYSTEM_OPENCL)
 
 option(XREG_USE_METAL "Build the Metal GPU backend (MacOS only)" ${APPLE})
 
-if (XREG_USE_METAL)
-  if (NOT APPLE)
-    message(FATAL_ERROR "XREG_USE_METAL is only supported on MacOS")
-  endif ()
+if (XREG_USE_METAL AND NOT APPLE)
+  message(FATAL_ERROR "XREG_USE_METAL is only supported on MacOS")
+endif ()
 
+if (APPLE)
+  # Objective-C++ (.mm) sources are used on MacOS, e.g. for AVFoundation and Metal
   enable_language(OBJCXX)
 endif ()
 
-option(XREG_USE_SYSTEM_FMT"Use a system (find_package) install of fmt instead of the bundled version" OFF)
+option(XREG_USE_SYSTEM_FMT "Use a system (find_package) install of fmt instead of the bundled version" OFF)
 mark_as_advanced(XREG_USE_SYSTEM_FMT)
 
 option(XREG_USE_SYSTEM_VIENNACL "Use a system install of ViennaCL instead of the bundled version" OFF)
@@ -113,8 +114,15 @@ if (XREG_USE_SYSTEM_OPENCL)
   set (XREG_EXT_LIBS_TO_LINK OpenCL::OpenCL)
 endif ()
 
+if (APPLE)
+  set (XREG_EXT_LIBS_TO_LINK ${XREG_EXT_LIBS_TO_LINK} "-framework Foundation"
+                                                      "-framework AVFoundation"
+                                                      "-framework CoreMedia"
+                                                      "-framework CoreVideo")
+endif ()
+
 if (XREG_USE_METAL)
-  set (XREG_EXT_LIBS_TO_LINK ${XREG_EXT_LIBS_TO_LINK} "-framework Metal" "-framework Foundation")
+  set (XREG_EXT_LIBS_TO_LINK ${XREG_EXT_LIBS_TO_LINK} "-framework Metal")
 endif ()
 
 # ViennaCL is header only and only used privately (in xreg_opencl and xreg_regi),

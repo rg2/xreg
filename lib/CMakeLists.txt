@@ -88,6 +88,9 @@ foreach (XREG_CUR_LIB_DIR ${XREG_LIB_SUB_DIRS})
     target_compile_definitions(xreg_${XREG_CUR_LIB_DIR} PUBLIC XREG_HAS_METAL)
   endif ()
 
+  # all Objective-C++ sources use automatic reference counting
+  target_compile_options(xreg_${XREG_CUR_LIB_DIR} PRIVATE $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc>)
+
   # add to the list of all of the object files created
   list(APPEND XREG_LIB_OBJS $<TARGET_OBJECTS:xreg_${XREG_CUR_LIB_DIR}>)
 endforeach()

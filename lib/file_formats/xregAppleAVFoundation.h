@@ -42,6 +42,9 @@ public:
   ~WriteImageFramesToVideoAppleAVF() override;
 
 private:
+  // releases the Objective-C objects referenced by the members below
+  void release_objc_refs();
+
   void* av_asset_writer_ = nullptr;
   
   void* av_asset_writer_input_ = nullptr;

@@ -20,10 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-file(GLOB_RECURSE XREG_CUR_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+set(EXE_NAME "test-${XREG_EXE_PREFIX}-apple-avf-video")
 
-# The sources here are Objective-C++, however the headers are pure C++ and may
-# be included by any other component.
-add_library(xreg_metal OBJECT ${XREG_CUR_LIB_HEADERS}
-                              xregMetalSys.mm)
+add_executable(${EXE_NAME} test_xreg_apple_avf_video.cpp)
 
+target_link_libraries(${EXE_NAME} PUBLIC ${XREG_EXE_LIBS_TO_LINK})
+
+add_test(NAME ${EXE_NAME} COMMAND ${EXE_NAME})
