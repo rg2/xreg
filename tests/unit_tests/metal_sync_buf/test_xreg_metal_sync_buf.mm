@@ -196,20 +196,24 @@ int main(int argc, char* argv[])
 {
   using namespace xreg;
 
-  const MetalDevice dev = MetalDevice::Default();
+  const auto all_devs = MetalAllDevices();
+  xregASSERT(!all_devs.empty());
 
-  std::cout << "Metal device: " << dev.name()
-            << (dev.has_unified_memory() ? " (unified memory)" : " (discrete memory)")
-            << std::endl;
+  for (const auto& dev : all_devs)
+  {
+    std::cout << "Metal device: " << dev.id_str()
+              << (dev.has_unified_memory() ? " (unified memory)" : " (discrete memory)")
+              << std::endl;
 
-  std::cout << "testing shared storage..." << std::endl;
-  TestStorageMode(dev, MetalStorageMode::kSHARED);
+    std::cout << "  testing shared storage..." << std::endl;
+    TestStorageMode(dev, MetalStorageMode::kSHARED);
 
-  std::cout << "testing managed storage..." << std::endl;
-  TestStorageMode(dev, MetalStorageMode::kMANAGED);
+    std::cout << "  testing managed storage..." << std::endl;
+    TestStorageMode(dev, MetalStorageMode::kMANAGED);
 
-  std::cout << "testing auto storage..." << std::endl;
-  TestStorageMode(dev, MetalStorageMode::kAUTO);
+    std::cout << "  testing auto storage..." << std::endl;
+    TestStorageMode(dev, MetalStorageMode::kAUTO);
+  }
 
   std::cout << "PASSED" << std::endl;
 
