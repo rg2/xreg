@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,10 @@
 
 #include "xregCommon.h"
 
+#ifdef XREG_HAS_METAL
+#include "xregMetalSys.h"
+#endif
+
 namespace xreg
 {
 
@@ -41,6 +45,11 @@ public:
   
   using OCLBuf   = boost::compute::vector<BufElem>;
   using OCLQueue = boost::compute::command_queue;
+
+#ifdef XREG_HAS_METAL
+  using MetalBuf   = MetalVector<BufElem>;
+  using MetalQueue = MetalCmdQueue;
+#endif
   
   struct HostBuf
   {
@@ -190,6 +199,98 @@ public:
 private:
   HostBuf host_buf_;
 };
+
+#ifdef XREG_HAS_METAL
+
+/// This should be created by an object working with data on the Metal device and a
+/// reference/pointer will be passed to an object that needs this data, but will
+/// process it on the host.
+class RayCastSyncHostBufFromMetal : public RayCastSyncHostBuf
+{
+public:
+  RayCastSyncHostBufFromMetal() = default;
+
+  RayCastSyncHostBufFromMetal(MetalBuf& metal_buf, MetalQueue& metal_queue);
+
+  void set_host(HostVec& h);
+
+  void set_host(BufElem* host_buf, const size_type len);
+
+  void set_metal(MetalBuf* metal_buf, MetalQueue& metal_queue);
+
+  void sync();
+
+  void alloc();
+
+  HostBuf& host_buf();
+
+private:
+  MetalBuf*  metal_buf_ = nullptr;
+  MetalQueue metal_queue_;
+
+  HostBuf host_buf_;
+  HostVec host_vec_;
+};
+
+/// \brief Base class for synchronizing data to be processed on a Metal device.
+class RayCastSyncMetalBuf : public RayCastSyncBuf
+{
+public:
+  RayCastSyncMetalBuf() = default;
+
+  explicit RayCastSyncMetalBuf(MetalBuf& metal_buf);
+
+  MetalBuf& metal_buf();
+
+  bool metal_buf_valid() const;
+
+  void set_metal(MetalBuf* metal_buf, const MetalQueue& metal_queue);
+
+  MetalQueue& queue();
+
+protected:
+  MetalBuf*  metal_buf_ = nullptr;
+  MetalQueue metal_queue_;
+};
+
+/// This should be created by an object working with data on the Metal device and a
+/// reference/pointer will be passed to an object that needs this data and will
+/// continue to process it on the Metal device.
+class RayCastSyncMetalBufFromMetal : public RayCastSyncMetalBuf
+{
+public:
+  RayCastSyncMetalBufFromMetal() = default;
+
+  explicit RayCastSyncMetalBufFromMetal(MetalBuf& metal_buf);
+
+  void sync();
+
+  void alloc();
+};
+
+/// This should be created by an object working with data on the host and a
+/// reference/pointer will be passed to an object that needs this data, but will
+/// process it on the Metal device.
+class RayCastSyncMetalBufFromHost : public RayCastSyncMetalBuf
+{
+public:
+  RayCastSyncMetalBufFromHost() = default;
+
+  explicit RayCastSyncMetalBufFromHost(HostVec& host_buf);
+
+  void set_host(HostVec& host_buf);
+
+  void set_host(BufElem* host_buf, const size_type len);
+
+  void sync();
+
+  void alloc();
+
+private:
+  HostBuf host_buf_;
+};
+
+#endif  // XREG_HAS_METAL
 
 }  // xreg
 

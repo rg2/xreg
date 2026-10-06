@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -192,3 +192,130 @@ void xreg::RayCastSyncOCLBufFromHost::alloc()
   this->ocl_buf_->resize(host_buf_.len);
 }
 
+
+#ifdef XREG_HAS_METAL
+
+xreg::RayCastSyncHostBufFromMetal::RayCastSyncHostBufFromMetal(MetalBuf& metal_buf,
+                                                               MetalQueue& metal_queue)
+  : metal_buf_(&metal_buf), metal_queue_(metal_queue)
+{ }
+
+void xreg::RayCastSyncHostBufFromMetal::set_host(HostVec& h)
+{
+  host_buf_.buf = h.data();
+  host_buf_.len = h.size();
+}
+
+void xreg::RayCastSyncHostBufFromMetal::set_host(BufElem* host_buf, const size_type len)
+{
+  host_buf_.buf = host_buf;
+  host_buf_.len = len;
+}
+
+void xreg::RayCastSyncHostBufFromMetal::set_metal(MetalBuf* metal_buf, MetalQueue& metal_queue)
+{
+  metal_buf_   = metal_buf;
+  metal_queue_ = metal_queue;
+}
+
+void xreg::RayCastSyncHostBufFromMetal::sync()
+{
+  // TODO: MAKE THREAD SAFE
+  if (this->modified_)
+  {
+    const size_type metal_buf_end = (this->range_end_ == this->kRANGE_AT_BUF_END) ?
+                                        metal_buf_->size() : this->range_end_;
+
+    CopyMetalToHost(*metal_buf_, this->range_start_, metal_buf_end,
+                    host_buf_.buf + this->range_start_,
+                    metal_queue_);
+    this->modified_ = false;
+  }
+}
+
+void xreg::RayCastSyncHostBufFromMetal::alloc()
+{
+  if (!host_buf_.buf)
+  {
+    host_vec_.resize(metal_buf_->size());
+    host_buf_.buf = host_vec_.data();
+    host_buf_.len = metal_buf_->size();
+  }
+}
+
+xreg::RayCastSyncHostBufFromMetal::HostBuf& xreg::RayCastSyncHostBufFromMetal::host_buf()
+{
+  return host_buf_;
+}
+
+xreg::RayCastSyncMetalBuf::RayCastSyncMetalBuf(MetalBuf& metal_buf)
+  : metal_buf_(&metal_buf)
+{ }
+
+xreg::RayCastSyncMetalBuf::MetalBuf& xreg::RayCastSyncMetalBuf::metal_buf()
+{
+  return *metal_buf_;
+}
+
+bool xreg::RayCastSyncMetalBuf::metal_buf_valid() const
+{
+  return metal_buf_;
+}
+
+void xreg::RayCastSyncMetalBuf::set_metal(MetalBuf* metal_buf, const MetalQueue& metal_queue)
+{
+  metal_buf_   = metal_buf;
+  metal_queue_ = metal_queue;
+}
+
+xreg::RayCastSyncMetalBuf::MetalQueue& xreg::RayCastSyncMetalBuf::queue()
+{
+  return metal_queue_;
+}
+
+xreg::RayCastSyncMetalBufFromMetal::RayCastSyncMetalBufFromMetal(MetalBuf& metal_buf)
+  : RayCastSyncMetalBuf(metal_buf)
+{ }
+
+void xreg::RayCastSyncMetalBufFromMetal::sync()
+{ }
+
+void xreg::RayCastSyncMetalBufFromMetal::alloc()
+{ }
+
+xreg::RayCastSyncMetalBufFromHost::RayCastSyncMetalBufFromHost(HostVec& host_buf)
+  : RayCastSyncMetalBuf(), host_buf_(host_buf.data(), host_buf.size())
+{ }
+
+void xreg::RayCastSyncMetalBufFromHost::set_host(HostVec& host_buf)
+{
+  host_buf_.buf = host_buf.data();
+  host_buf_.len = host_buf.size();
+}
+
+void xreg::RayCastSyncMetalBufFromHost::set_host(BufElem* host_buf, const size_type len)
+{
+  host_buf_.buf = host_buf;
+  host_buf_.len = len;
+}
+
+void xreg::RayCastSyncMetalBufFromHost::sync()
+{
+  if (this->modified_)
+  {
+    const size_type host_buf_end = (this->range_end_ == this->kRANGE_AT_BUF_END) ?
+                                      host_buf_.len : this->range_end_;
+
+    CopyHostToMetal(host_buf_.buf + this->range_start_, host_buf_.buf + host_buf_end,
+                    *this->metal_buf_, this->range_start_,
+                    this->metal_queue_);
+    this->modified_ = false;
+  }
+}
+
+void xreg::RayCastSyncMetalBufFromHost::alloc()
+{
+  this->metal_buf_->resize(host_buf_.len);
+}
+
+#endif  // XREG_HAS_METAL

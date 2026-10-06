@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-cmake_minimum_required(VERSION 3.13.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16.0 FATAL_ERROR)
 
 #if (APPLE)
 #  # Target MacOS 10.14, Mojave
@@ -56,7 +56,17 @@ endif ()
 option(XREG_USE_SYSTEM_OPENCL "Use a system install of OpenCL instead of the bundled loader" ${XREG_USE_SYSTEM_OPENCL_DEFAULT})
 mark_as_advanced(XREG_USE_SYSTEM_OPENCL)
 
-option(XREG_USE_SYSTEM_FMT "Use a system (find_package) install of fmt instead of the bundled version" OFF)
+option(XREG_USE_METAL "Build the Metal GPU backend (MacOS only)" ${APPLE})
+
+if (XREG_USE_METAL)
+  if (NOT APPLE)
+    message(FATAL_ERROR "XREG_USE_METAL is only supported on MacOS")
+  endif ()
+
+  enable_language(OBJCXX)
+endif ()
+
+option(XREG_USE_SYSTEM_FMT"Use a system (find_package) install of fmt instead of the bundled version" OFF)
 mark_as_advanced(XREG_USE_SYSTEM_FMT)
 
 option(XREG_USE_SYSTEM_VIENNACL "Use a system install of ViennaCL instead of the bundled version" OFF)
@@ -99,6 +109,10 @@ set (XREG_INC_INSTALL_DIR "${CMAKE_INSTALL_INCLUDEDIR}/xreg")
 if (XREG_USE_SYSTEM_OPENCL)
   find_package(OpenCL REQUIRED)
   set (XREG_EXT_LIBS_TO_LINK OpenCL::OpenCL)
+endif ()
+
+if (XREG_USE_METAL)
+  set (XREG_EXT_LIBS_TO_LINK ${XREG_EXT_LIBS_TO_LINK} "-framework Metal" "-framework Foundation")
 endif ()
 
 # ViennaCL is header only and only used privately (in xreg_opencl and xreg_regi),

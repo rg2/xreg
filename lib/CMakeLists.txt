@@ -47,6 +47,10 @@ set(XREG_LIB_SUB_DIRS common
                       opencl
                       version)
 
+if (XREG_USE_METAL)
+  list(APPEND XREG_LIB_SUB_DIRS metal)
+endif ()
+
 # build up the list of include directories for the xreg library
 set(XREG_LIB_INC_DIRS)
 foreach (XREG_CUR_LIB_DIR ${XREG_LIB_SUB_DIRS})
@@ -78,7 +82,11 @@ foreach (XREG_CUR_LIB_DIR ${XREG_LIB_SUB_DIRS})
   
   if (WIN32)
     target_compile_definitions(xreg_${XREG_CUR_LIB_DIR} PUBLIC BOOST_CHRONO_HEADER_ONLY)
-  endif ()  
+  endif ()
+
+  if (XREG_USE_METAL)
+    target_compile_definitions(xreg_${XREG_CUR_LIB_DIR} PUBLIC XREG_HAS_METAL)
+  endif ()
 
   # add to the list of all of the object files created
   list(APPEND XREG_LIB_OBJS $<TARGET_OBJECTS:xreg_${XREG_CUR_LIB_DIR}>)
@@ -95,7 +103,13 @@ target_compile_features(xreg PUBLIC cxx_std_17)
 
 if (WIN32)
     target_compile_definitions(xreg PUBLIC BOOST_CHRONO_HEADER_ONLY)
-endif () 
+endif ()
+
+# headers (e.g. xregRayCastSyncBuf.h) declare additional classes when Metal is
+# enabled, so this must be propagated to anything linking against xreg
+if (XREG_USE_METAL)
+  target_compile_definitions(xreg PUBLIC XREG_HAS_METAL)
+endif ()
 
 # IMPORTANT NOTE: Since we are providing a list of include directories,
 # the $<BUILD_INTERFACE:${XREG_LIB_INC_DIRS}> must be surrounded by quotes.
