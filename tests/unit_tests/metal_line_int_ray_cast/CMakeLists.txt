@@ -20,21 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-file(GLOB_RECURSE XREG_CUR_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+set(EXE_NAME "test-${XREG_EXE_PREFIX}-metal-line-int-ray-cast")
 
-# Metal shader sources, embedded as strings and compiled at runtime
-set(XREG_METAL_SHADER_SRCS)
-xreg_embed_metal_src(XREG_METAL_SHADER_SRCS kMETAL_SHADER_SHARED_SRC xregMetalShaderShared.h)
-xreg_embed_metal_src(XREG_METAL_SHADER_SRCS kMETAL_MATH_SRC          xregMetalMath.metal)
-xreg_embed_metal_src(XREG_METAL_SHADER_SRCS kMETAL_SPATIAL_SRC       xregMetalSpatial.metal)
-xreg_embed_metal_src(XREG_METAL_SHADER_SRCS kMETAL_INTERP_SRC        xregMetalInterp.metal)
-xreg_embed_metal_src(XREG_METAL_SHADER_SRCS kMETAL_MISC_KERNELS_SRC  xregMetalMiscKernels.metal)
+add_executable(${EXE_NAME} test_xreg_metal_line_int_ray_cast.cpp)
 
-# The sources here are Objective-C++, however the headers are pure C++ and may
-# be included by any other component.
-add_library(xreg_metal OBJECT ${XREG_CUR_LIB_HEADERS}
-                              ${XREG_METAL_SHADER_SRCS}
-                              xregMetalSys.mm
-                              xregMetalCompute.mm
-                              xregMetalTexture.mm)
+target_link_libraries(${EXE_NAME} PUBLIC ${XREG_EXE_LIBS_TO_LINK})
 
+add_test(NAME ${EXE_NAME} COMMAND ${EXE_NAME})

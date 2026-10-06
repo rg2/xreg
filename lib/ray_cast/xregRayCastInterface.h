@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,6 +35,7 @@ namespace xreg
 // Forward Declarations
 class RayCastSyncHostBuf;
 class RayCastSyncOCLBuf;
+class RayCastSyncMetalBuf;
 
 /// \brief Parent class for a perspective camera ray caster.
 ///
@@ -322,6 +323,12 @@ public:
   /// \brief Retrieve the 2D projection buffer synchronization object for
   ///        moving data to an OpenCL "device," e.g. a GPU.
   virtual RayCastSyncOCLBuf* to_ocl_buf();
+
+  /// \brief Retrieve the 2D projection buffer synchronization object for
+  ///        moving data to a Metal device, e.g. a GPU.
+  ///
+  /// Only available when xreg is built with Metal support.
+  virtual RayCastSyncMetalBuf* to_metal_buf();
 
   /// \brief Retrieve the 2D projection buffer synchronization object for
   ///        moving data to the "host."

@@ -24,6 +24,8 @@
 
 #include "xregRayCastProgOpts.h"
 
+#include <type_traits>
+
 #include "xregExceptionUtils.h"
 #include "xregProgOptUtils.h"
 #include "xregRayCastLineIntCPU.h"
@@ -31,12 +33,17 @@
 #include "xregRayCastDepthCPU.h"
 #include "xregRayCastDepthOCL.h"
 
+#ifdef XREG_HAS_METAL
+#include "xregRayCastLineIntMetal.h"
+#endif
+
 namespace  // un-named
 {
 
 using namespace xreg;
 
-template <class tRayCasterCPU, class tRayCasterOCL>
+// tRayCasterMetal may be void when there is no Metal implementation
+template <class tRayCasterCPU, class tRayCasterOCL, class tRayCasterMetal = void>
 std::shared_ptr<RayCaster>
 RayCasterFromProgOptsHelper(ProgOpts& po)
 {
@@ -53,9 +60,19 @@ RayCasterFromProgOptsHelper(ProgOpts& po)
     auto ocl_ctx_queue = po.selected_ocl_ctx_queue();
     rc = std::make_shared<tRayCasterOCL>(std::get<0>(ocl_ctx_queue), std::get<1>(ocl_ctx_queue));
   }
-  else
+#ifdef XREG_HAS_METAL
+  else if constexpr (!std::is_void<tRayCasterMetal>::value)
   {
-    xregThrow("Unsupported backend for Line Int. Ray Caster: %s", backend_str.c_str());
+    if (backend_str == "metal")
+    {
+      rc = std::make_shared<tRayCasterMetal>(po.selected_metal_queue());
+    }
+  }
+#endif
+
+  if (!rc)
+  {
+    xregThrow("Unsupported backend for Ray Caster: %s", backend_str.c_str());
   }
 
   return rc;
@@ -66,7 +83,11 @@ RayCasterFromProgOptsHelper(ProgOpts& po)
 std::shared_ptr<xreg::RayCaster>
 xreg::LineIntRayCasterFromProgOpts(ProgOpts& po)
 {
+#ifdef XREG_HAS_METAL
+  return RayCasterFromProgOptsHelper<RayCasterLineIntCPU,RayCasterLineIntOCL,RayCasterLineIntMetal>(po);
+#else
   return RayCasterFromProgOptsHelper<RayCasterLineIntCPU,RayCasterLineIntOCL>(po);
+#endif
 }
 
 std::shared_ptr<xreg::RayCaster>

@@ -288,6 +288,27 @@ xreg::size_type xreg::MetalDevice::max_buffer_length() const
   return valid() ? impl_->dev.maxBufferLength : 0;
 }
 
+bool xreg::MetalDevice::supports_32bit_float_filtering() const
+{
+  bool supported = false;
+
+  if (valid())
+  {
+    if (@available(macOS 11.0, *))
+    {
+      supported = impl_->dev.supports32BitFloatFiltering;
+    }
+    else
+    {
+      // prior to this query being available, only Intel and AMD GPUs were
+      // supported by MacOS, which support filtering of 32-bit floats
+      supported = true;
+    }
+  }
+
+  return supported;
+}
+
 void* xreg::MetalDevice::native_handle() const
 {
   return valid() ? (__bridge void*) impl_->dev : nullptr;

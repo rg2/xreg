@@ -126,6 +126,10 @@ public:
   /// \brief The maximum size of a single buffer in bytes.
   size_type max_buffer_length() const;
 
+  /// \brief true when the device supports linear filtering when sampling
+  ///        32-bit floating point textures.
+  bool supports_32bit_float_filtering() const;
+
   /// \brief The underlying id<MTLDevice>, ownership is NOT transferred.
   void* native_handle() const;
 

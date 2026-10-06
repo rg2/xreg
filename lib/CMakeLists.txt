@@ -49,6 +49,30 @@ set(XREG_LIB_SUB_DIRS common
 
 if (XREG_USE_METAL)
   list(APPEND XREG_LIB_SUB_DIRS metal)
+
+  # Embeds a Metal shader source file as a string (named xreg::${NAME}) in a
+  # generated C++ source file, which is appended to the list ${OUT_SRCS_VAR}.
+  # The shaders are compiled at runtime, so the Metal compiler toolchain is not
+  # required at build time.
+  function(xreg_embed_metal_src OUT_SRCS_VAR NAME METAL_FILE)
+    get_filename_component(XREG_METAL_FILE_ABS "${METAL_FILE}" ABSOLUTE)
+    get_filename_component(XREG_METAL_FILE_BASE "${METAL_FILE}" NAME_WE)
+    get_filename_component(XREG_METAL_FILE_NAME "${METAL_FILE}" NAME)
+
+    set(XREG_GEN_CPP "${CMAKE_CURRENT_BINARY_DIR}/${XREG_METAL_FILE_BASE}_src.cpp")
+
+    add_custom_command(OUTPUT "${XREG_GEN_CPP}"
+                       COMMAND ${CMAKE_COMMAND}
+                               -DXREG_METAL_SRC_IN=${XREG_METAL_FILE_ABS}
+                               -DXREG_METAL_SRC_OUT=${XREG_GEN_CPP}
+                               -DXREG_METAL_SRC_NAME=${NAME}
+                               -P "${xreg_SOURCE_DIR}/cmake/xregEmbedMetalSrc.cmake"
+                       DEPENDS "${XREG_METAL_FILE_ABS}" "${xreg_SOURCE_DIR}/cmake/xregEmbedMetalSrc.cmake"
+                       COMMENT "Embedding Metal shader source ${XREG_METAL_FILE_NAME}"
+                       VERBATIM)
+
+    set(${OUT_SRCS_VAR} ${${OUT_SRCS_VAR}} "${XREG_GEN_CPP}" "${XREG_METAL_FILE_ABS}" PARENT_SCOPE)
+  endfunction()
 endif ()
 
 # build up the list of include directories for the xreg library

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -227,6 +227,7 @@ xreg::FrameTransform
 xreg::RayCaster::xform_cam_wrt_carm_center_of_rot(const size_type cam_idx) const
 {
   FrameTransform xform = FrameTransform::Identity();
+  // TODO: this should be set based on the camera model coordinate frame type
   xform.matrix()(2,3) -= camera_models_[cam_idx].focal_len / 2;
 
   return xform;
@@ -297,6 +298,11 @@ void xreg::RayCaster::use_proj_store_accum_method()
 }
   
 xreg::RayCastSyncOCLBuf* xreg::RayCaster::to_ocl_buf()
+{
+  throw UnsupportedOperationException();
+}
+
+xreg::RayCastSyncMetalBuf* xreg::RayCaster::to_metal_buf()
 {
   throw UnsupportedOperationException();
 }
