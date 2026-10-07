@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -148,7 +148,6 @@ struct SimpleSurfaceRayCastFn
       const auto& cam = camera_models[cam_model_for_proj[proj_idx]];
       
       Pt2 tmp_aa_det_idx;
-      tmp_aa_det_idx[2] = cam.focal_len;
 
       PixelScalar2D aa_sum = 0;
 
@@ -350,9 +349,7 @@ void xreg::RayCasterSurRenderCPU::compute(const size_type vol_idx)
   xregASSERT(this->resources_allocated_);
   
   // Get the index bounding box (axis-aligned in the index space) of the volume
-  Pt3 img_aabb_min;
-  Pt3 img_aabb_max;
-  std::tie(img_aabb_min,img_aabb_min) = ITKImageIndexBoundsAsEigen(this->vols_[vol_idx].GetPointer());
+  auto [img_aabb_min,img_aabb_max] = ITKImageIndexBoundsAsEigen(this->vols_[vol_idx].GetPointer());
 
   // Compute the frame transform from ITK physical space to index space (sR + t)
   const FrameTransform itk_idx_to_itk_phys_pt_xform =
