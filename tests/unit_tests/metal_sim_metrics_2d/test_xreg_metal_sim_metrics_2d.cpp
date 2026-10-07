@@ -31,6 +31,7 @@
 #include "xregImgSimMetric2DProgOpts.h"
 #include "xregImgSimMetric2DSSDCPU.h"
 #include "xregImgSimMetric2DSSDMetal.h"
+#include "xregImgSimMetric2DSSDOCL.h"
 #include "xregRayCastLineIntMetal.h"
 #include "xregRayCastTestUtils.h"
 
@@ -279,11 +280,8 @@ void CheckFixedPoseMostSimilar(const ScalarList& sims)
 /// \brief Reference SSD values computed on the host in double precision.
 ///
 /// This is the mean of the squared differences over the pixels that are not
-/// masked out, which is how the OpenCL implementation is intended to compute
-/// SSD. ImgSimMetric2DSSDOCL is not used as a reference, since it does not
-/// compute SSD: the image length kernel argument is set from a buffer that has
-/// not been allocated yet (and is therefore zero), so the squared differences
-/// are never computed and the result is the mean of each moving image.
+/// masked out, the same as the OpenCL implementation, and is independent of
+/// the GPU implementations.
 ScalarList HostSSD(const SimScene& ss, const bool use_mask)
 {
   const Scalar* fixed_img = ss.fixed_img->GetBufferPointer();
@@ -438,8 +436,9 @@ std::vector<MetricCase> MakeCases(const SimScene& ss)
   using PatchGradOCL = ImgSimMetric2DPatchGradNCCOCL;
 
   return {
-    WithHostRef(MakeCase<ImgSimMetric2DSSDMetal, void, ImgSimMetric2DSSDCPU>("SSD", false), &HostSSD),
-    WithHostRef(MakeCase<ImgSimMetric2DSSDMetal, void>("SSD (mask)", true), &HostSSD),
+    WithHostRef(MakeCase<ImgSimMetric2DSSDMetal, ImgSimMetric2DSSDOCL, ImgSimMetric2DSSDCPU>("SSD", false),
+                &HostSSD),
+    WithHostRef(MakeCase<ImgSimMetric2DSSDMetal, ImgSimMetric2DSSDOCL>("SSD (mask)", true), &HostSSD),
     MakeCase<ImgSimMetric2DNCCMetal, ImgSimMetric2DNCCOCL, ImgSimMetric2DNCCCPU>("NCC", false),
     MakeCase<ImgSimMetric2DNCCMetal, ImgSimMetric2DNCCOCL, ImgSimMetric2DNCCCPU>("NCC (mask)", true),
     MakeCase<ImgSimMetric2DGradNCCMetal, ImgSimMetric2DGradNCCOCL>("Grad-NCC", false),
