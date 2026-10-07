@@ -283,6 +283,17 @@ ValidBackendNameAndDescs()
   
   if (need_to_init)
   {
+    // NOTE: the first backend listed is the default backend
+
+#ifdef XREG_HAS_METAL
+    if (!xreg::MetalAllDevices().empty())
+    {
+      backend_names_and_descs.push_back(
+                std::make_tuple(std::string("metal"),
+                                std::string("Apple Metal GPU processing.")));
+    }
+#endif
+
     if (!boost::compute::system::platforms().empty())
     {
       backend_names_and_descs.push_back(
@@ -293,17 +304,6 @@ ValidBackendNameAndDescs()
     backend_names_and_descs.push_back(
                 std::make_tuple(std::string("cpu"),
                                 std::string("Standard CPU processing, potentially using TBB.")));
-
-#ifdef XREG_HAS_METAL
-    // NOTE: this is listed after cpu so that it is not the default backend, since
-    //       Metal implementations of ray casters, etc. are not yet available.
-    if (!xreg::MetalAllDevices().empty())
-    {
-      backend_names_and_descs.push_back(
-                std::make_tuple(std::string("metal"),
-                                std::string("Apple Metal GPU processing.")));
-    }
-#endif
     
     need_to_init = false;
   }
