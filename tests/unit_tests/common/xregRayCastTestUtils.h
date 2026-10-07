@@ -10,6 +10,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -278,6 +279,68 @@ inline std::vector<boost::compute::device> OpenCLDevicesMatching(const MetalDevi
   for (const auto& ocl_dev : boost::compute::system::devices())
   {
     if (ocl_dev.name().find(dev.name()) == 0)
+    {
+      ocl_devs.push_back(ocl_dev);
+    }
+  }
+
+  return ocl_devs;
+}
+
+/// \brief true when an OpenCL device returns invalid volume samples in the
+///        xreg OpenCL ray casters.
+///
+/// The AMD OpenCL driver on macOS (e.g. for a Radeon Pro 5500M) returns zeros
+/// or garbage when sampling a 3D image whose kernel argument follows a struct
+/// passed by value of at least 32 bytes. Every xreg OpenCL ray caster passes
+/// its arguments struct (120 bytes) prior to the volume image, so all of the
+/// samples are invalid and these devices cannot be used as references.
+inline bool OpenCLRayCastersInvalid(const boost::compute::device& ocl_dev)
+{
+  return ocl_dev.vendor().find("AMD") != std::string::npos;
+}
+
+/// \brief The OpenCL device used for reference ray casts, if any.
+///
+/// This is the default device, unless its ray casts are invalid (see
+/// OpenCLRayCastersInvalid()), in which case another GPU, and lastly any other
+/// device, is used. The reference device may differ from the Metal device that
+/// is compared with it, the ray casting algorithms are the same on every device.
+inline std::optional<boost::compute::device> OpenCLRayCastRefDevice()
+{
+  const auto dflt = boost::compute::system::default_device();
+
+  if (!OpenCLRayCastersInvalid(dflt))
+  {
+    return dflt;
+  }
+
+  std::optional<boost::compute::device> ref;
+
+  for (const auto& ocl_dev : boost::compute::system::devices())
+  {
+    if (!OpenCLRayCastersInvalid(ocl_dev) &&
+        (!ref || ((ocl_dev.type() & CL_DEVICE_TYPE_GPU) && !(ref->type() & CL_DEVICE_TYPE_GPU))))
+    {
+      ref = ocl_dev;
+    }
+  }
+
+  return ref;
+}
+
+/// \brief The OpenCL devices corresponding to a Metal device whose ray casts
+///        are valid, e.g. for comparing timings.
+///
+/// \see OpenCLDevicesMatching
+/// \see OpenCLRayCastersInvalid
+inline std::vector<boost::compute::device> OpenCLRayCastDevicesMatching(const MetalDevice& dev)
+{
+  std::vector<boost::compute::device> ocl_devs;
+
+  for (const auto& ocl_dev : OpenCLDevicesMatching(dev))
+  {
+    if (!OpenCLRayCastersInvalid(ocl_dev))
     {
       ocl_devs.push_back(ocl_dev);
     }
