@@ -374,17 +374,14 @@ void TestOccContours(const MetalDevice& dev, const bool force_sw, const Scene& s
                    kCONTOUR_MAX_MISMATCH_FRAC, 0, 0);
   }
 
-  // Continuing after a collision is compared without backtracking, since the
-  // CPU implementation continues from the backtracked location, which does not
-  // advance along the ray inside an object (the binary search moves back to the
-  // previous sample, which is also greater than or equal to the threshold).
-  // Nearly every pixel with a surface has a contour, since the gradient inside
-  // a blob is perpendicular to the ray at some location along the ray.
+  // Nearly every pixel with a surface has a contour when continuing after a
+  // collision, since the gradient inside a blob is perpendicular to the ray at
+  // some location along the ray.
   {
     RayCasterOccludingContoursCPU cpu_rc;
-    CheckHitsClose("no backtracking, continue, vs. CPU",
-                   Compute(*make_metal(), s, 0, &SetContinueAfterCollision),
-                   Compute(cpu_rc, s, 0, &SetContinueAfterCollision),
+    CheckHitsClose(fmt::format("{} backtracking, continue, vs. CPU", kNUM_BACKTRACKING_STEPS),
+                   Compute(*make_metal(), s, kNUM_BACKTRACKING_STEPS, &SetContinueAfterCollision),
+                   Compute(cpu_rc, s, kNUM_BACKTRACKING_STEPS, &SetContinueAfterCollision),
                    kCONTOUR_CONTINUE_MAX_MISMATCH_FRAC, 0, 0);
   }
 
