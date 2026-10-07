@@ -31,6 +31,7 @@
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
 
+#include "xregAssert.h"
 #include "xregExceptionUtils.h"
 #include "xregMetalShaderSrc.h"
 
@@ -53,7 +54,7 @@ std::string xreg::MetalHelperShadersSrc()
   std::string src;
 
   for (const char* s : { kMETAL_SHADER_SHARED_SRC, kMETAL_MATH_SRC, kMETAL_SPATIAL_SRC,
-                         kMETAL_INTERP_SRC, kMETAL_MISC_KERNELS_SRC })
+                         kMETAL_INTERP_SRC, kMETAL_REDUCE_SRC, kMETAL_MISC_KERNELS_SRC })
   {
     src += s;
     src += '\n';
@@ -212,3 +213,101 @@ void* xreg::MetalComputePipeline::native_handle() const
   return valid() ? (__bridge void*) impl_->pipeline : nullptr;
 }
 
+
+struct xreg::MetalComputeEncoder::Impl
+{
+  id<MTLCommandBuffer> cmd_buf = nil;
+
+  id<MTLComputeCommandEncoder> enc = nil;
+
+  std::string pipeline_name;
+};
+
+xreg::MetalComputeEncoder::MetalComputeEncoder(MetalCmdQueue& queue)
+  : impl_(std::make_unique<Impl>())
+{
+  if (!queue.valid())
+  {
+    xregThrow("cannot encode Metal compute work with an invalid queue!");
+  }
+
+  // a dispatch type is not specified, so dispatches are serial (executed in order)
+  impl_->cmd_buf = [(__bridge id<MTLCommandQueue>) queue.native_handle() commandBuffer];
+  impl_->enc     = [impl_->cmd_buf computeCommandEncoder];
+}
+
+xreg::MetalComputeEncoder::~MetalComputeEncoder()
+{
+  if (impl_->enc)
+  {
+    // Metal requires encoding to end prior to releasing an encoder, the
+    // command buffer is never committed
+    [impl_->enc endEncoding];
+  }
+}
+
+void xreg::MetalComputeEncoder::set_pipeline(const MetalComputePipeline& pipeline)
+{
+  xregASSERT(impl_->enc);
+
+  if (!pipeline.valid())
+  {
+    xregThrow("cannot encode an invalid Metal compute pipeline!");
+  }
+
+  [impl_->enc setComputePipelineState:(__bridge id<MTLComputePipelineState>) pipeline.native_handle()];
+
+  impl_->pipeline_name = pipeline.kernel_name();
+}
+
+void xreg::MetalComputeEncoder::set_buffer(const MetalBuffer& buf, const size_type idx,
+                                           const size_type off_bytes)
+{
+  xregASSERT(impl_->enc);
+  xregASSERT((off_bytes == 0) || (off_bytes < buf.num_bytes()));
+
+  [impl_->enc setBuffer:(__bridge id<MTLBuffer>) buf.native_handle() offset:off_bytes atIndex:idx];
+}
+
+void xreg::MetalComputeEncoder::set_bytes(const void* src, const size_type num_bytes,
+                                          const size_type idx)
+{
+  xregASSERT(impl_->enc);
+
+  if (num_bytes > kMAX_SET_BYTES_LEN)
+  {
+    xregThrow("too many bytes to set for a Metal kernel argument: %lu (max: %lu)",
+              static_cast<unsigned long>(num_bytes), static_cast<unsigned long>(kMAX_SET_BYTES_LEN));
+  }
+
+  [impl_->enc setBytes:src length:num_bytes atIndex:idx];
+}
+
+void xreg::MetalComputeEncoder::dispatch_threads(const Size3& grid, const Size3& threadgroup)
+{
+  xregASSERT(impl_->enc);
+
+  if (grid[0] && grid[1] && grid[2])
+  {
+    [impl_->enc dispatchThreads:MTLSizeMake(grid[0], grid[1], grid[2])
+          threadsPerThreadgroup:MTLSizeMake(threadgroup[0], threadgroup[1], threadgroup[2])];
+  }
+}
+
+void xreg::MetalComputeEncoder::commit_and_wait()
+{
+  xregASSERT(impl_->enc);
+
+  [impl_->enc endEncoding];
+  impl_->enc = nil;
+
+  [impl_->cmd_buf commit];
+  [impl_->cmd_buf waitUntilCompleted];
+
+  if (impl_->cmd_buf.status == MTLCommandBufferStatusError)
+  {
+    xregThrow("Metal compute work failed (last pipeline: %s): %s", impl_->pipeline_name.c_str(),
+              impl_->cmd_buf.error ? impl_->cmd_buf.error.localizedDescription.UTF8String :
+                                     "unknown error");
+  }
+}

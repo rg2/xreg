@@ -28,6 +28,7 @@ xreg_embed_metal_src(XREG_METAL_SHADER_SRCS kMETAL_SHADER_SHARED_SRC xregMetalSh
 xreg_embed_metal_src(XREG_METAL_SHADER_SRCS kMETAL_MATH_SRC          xregMetalMath.metal)
 xreg_embed_metal_src(XREG_METAL_SHADER_SRCS kMETAL_SPATIAL_SRC       xregMetalSpatial.metal)
 xreg_embed_metal_src(XREG_METAL_SHADER_SRCS kMETAL_INTERP_SRC        xregMetalInterp.metal)
+xreg_embed_metal_src(XREG_METAL_SHADER_SRCS kMETAL_REDUCE_SRC        xregMetalReduce.metal)
 xreg_embed_metal_src(XREG_METAL_SHADER_SRCS kMETAL_MISC_KERNELS_SRC  xregMetalMiscKernels.metal)
 
 # The sources here are Objective-C++, however the headers are pure C++ and may
