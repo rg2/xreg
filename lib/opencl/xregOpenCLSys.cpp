@@ -26,6 +26,7 @@
 
 #include <boost/compute/system.hpp>
 
+#include "xregExceptionUtils.h"
 #include "xregStringUtils.h"
 
 std::map<std::string,boost::compute::device> xreg::BuildDevIDStrsToDevMap()
@@ -82,3 +83,37 @@ std::vector<std::string> xreg::DevIDStrs(const bool use_cpu)
   return id_strs;
 }
 
+xreg::OpenCLNameDevMap::const_iterator
+xreg::FindOpenCLDevByIDSubstr(const OpenCLNameDevMap& id_str_to_devs, const std::string& id_substr)
+{
+  const auto matches = FindMapEntriesByKeySubstrIgnoreCase(id_str_to_devs, id_substr);
+
+  if (matches.size() != 1)
+  {
+    std::vector<std::string> ids;
+
+    // all IDs when there is no match, otherwise the matching IDs
+    if (matches.empty())
+    {
+      for (const auto& id_dev_kv : id_str_to_devs)
+      {
+        ids.push_back(id_dev_kv.first);
+      }
+
+      xregThrow("no OpenCL device ID matches \"%s\"; available IDs: %s", id_substr.c_str(),
+                ids.empty() ? "<none>" : JoinTokens(ids.begin(), ids.end(), ", ").c_str());
+    }
+    else
+    {
+      for (const auto& it : matches)
+      {
+        ids.push_back(it->first);
+      }
+
+      xregThrow("OpenCL device ID \"%s\" is ambiguous, it matches: %s", id_substr.c_str(),
+                JoinTokens(ids.begin(), ids.end(), ", ").c_str());
+    }
+  }
+
+  return matches.front();
+}

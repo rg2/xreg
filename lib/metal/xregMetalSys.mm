@@ -353,24 +353,7 @@ std::vector<std::string> xreg::MetalDevIDStrs()
 xreg::MetalIDStrDevMap::const_iterator
 xreg::FindMetalDevByIDSubstr(const MetalIDStrDevMap& id_str_to_devs, const std::string& id_substr)
 {
-  const std::string id_substr_lower = ToLowerCase(id_substr);
-
-  std::vector<MetalIDStrDevMap::const_iterator> matches;
-
-  for (auto it = id_str_to_devs.begin(); it != id_str_to_devs.end(); ++it)
-  {
-    const std::string cur_id_lower = ToLowerCase(it->first);
-
-    if (cur_id_lower == id_substr_lower)
-    {
-      // an exact match takes precedence
-      return it;
-    }
-    else if (cur_id_lower.find(id_substr_lower) != std::string::npos)
-    {
-      matches.push_back(it);
-    }
-  }
+  const auto matches = FindMapEntriesByKeySubstrIgnoreCase(id_str_to_devs, id_substr);
 
   if (matches.empty())
   {
