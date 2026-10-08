@@ -211,14 +211,50 @@ if __name__ == '__main__':
     args = sys.argv[:]
 
     backend_str = ''
+    backend_name = None
 
-    try:
+    if '--backend' in args:
         backend_flag_idx = args.index('--backend')
-        backend_str = f'--backend {args[backend_flag_idx + 1]}'
+
+        if (backend_flag_idx + 1) >= len(args):
+            print('ERROR: could not retrieve backend when --backend flag specified; did you forget the backend name?')
+            sys.exit(1)
+            
+        backend_name = args[backend_flag_idx + 1]
+
+        backend_str = f'--backend {backend_name}'
+        
         del args[backend_flag_idx]
         del args[backend_flag_idx]
-    except:
-        pass
+
+    device_str = ''
+
+    if '--device' in args:
+        if not backend_str:
+            print('ERROR: passing device name via --device requires the backend be set via --backend <backend name>')
+            sys.exit(1)
+
+        device_flag_idx = args.index('--device')
+
+        if (device_flag_idx + 1) >= len(args):
+            print('ERROR: could not retrieve device name when --device flag specified; did you forget the device name?')
+            sys.exit(1)
+
+        device_flag_str = None
+
+        if backend_name == 'ocl':
+            device_flag_str = '--ocl-id'
+        elif backend_name == 'metal':
+            device_flag_str = '--metal-id'
+        else:
+            print(f'ERROR: device specification not supported for backend: {backend_name}')
+            sys.exit(1)
+
+        device_name = args[device_flag_idx + 1]
+        device_str = f'{device_flag_str} {device_name}'
+
+        del args[device_flag_idx]
+        del args[device_flag_idx]
     
     if len(args) > 1:
         xreg_bin_dir = args[1]
@@ -371,7 +407,7 @@ if __name__ == '__main__':
     if True:
         print('Simulated fluoroscopy...')
 
-        run_cmd(f'xreg-pao-create-synth-fluoro pao_vol_with_kwire.nii.gz pelvis_app_lands.fcsv left 5 example1_1_pd example1_1_pose {backend_str}')
+        run_cmd(f'xreg-pao-create-synth-fluoro pao_vol_with_kwire.nii.gz pelvis_app_lands.fcsv left 5 example1_1_pd example1_1_pose {backend_str} {device_str}')
 
         run_cmd('xreg-draw-xray-scene -i example1_1_pd_003.h5')
 
@@ -419,11 +455,11 @@ if __name__ == '__main__':
         
         view_image('example1_1_pd_003_proj_0_w_lands.png')
 
-        run_cmd(f'xreg-hip-surg-pelvis-single-view-regi-2d-3d pelvis.nii.gz pelvis_regi_2d_3d_lands.fcsv example1_1_pd_003_for_regi.h5 regi_pose_example1_1_pd_003_proj0.h5 regi_debug_example1_1_pd_003_proj0_w_seg.h5 -s pelvis_seg.nii.gz {backend_str}')
+        run_cmd(f'xreg-hip-surg-pelvis-single-view-regi-2d-3d pelvis.nii.gz pelvis_regi_2d_3d_lands.fcsv example1_1_pd_003_for_regi.h5 regi_pose_example1_1_pd_003_proj0.h5 regi_debug_example1_1_pd_003_proj0_w_seg.h5 -s pelvis_seg.nii.gz {backend_str} {device_str}')
         
         run_cmd('xreg-draw-xray-scene example1_1_pd_003_for_regi.h5 -p 0 pelvis_sur.ply regi_pose_example1_1_pd_003_proj0.h5 -i --bg-color 1 1 1 --mesh-color-bone')
 
-        run_cmd(f'xreg-regi2d3d-replay regi_debug_example1_1_pd_003_proj0_w_seg.h5 --video-fps 10 --proj-ds 0.5 {backend_str}')
+        run_cmd(f'xreg-regi2d3d-replay regi_debug_example1_1_pd_003_proj0_w_seg.h5 --video-fps 10 --proj-ds 0.5 {backend_str} {device_str}')
 
         view_movie('edges.mp4')
         view_movie('mov.mp4')
@@ -433,11 +469,11 @@ if __name__ == '__main__':
     if True:
         print('2D/3D registration - multi. objects, multi. views...')
 
-        run_cmd(f'xreg-pao-frag-mult-view-regi-2d-3d pelvis.nii.gz pao_cuts_seg.nii.gz left pelvis_app_lands.fcsv pelvis_regi_2d_3d_lands.fcsv example1_1_pd_003_for_regi.h5 regi_pose_pelvis.h5 regi_pose_femur.h5 regi_pose_frag.h5 rel_pose_femur.h5 rel_pose_frag.h5 multi_obj_multi_view_debug.h5 {backend_str}')
+        run_cmd(f'xreg-pao-frag-mult-view-regi-2d-3d pelvis.nii.gz pao_cuts_seg.nii.gz left pelvis_app_lands.fcsv pelvis_regi_2d_3d_lands.fcsv example1_1_pd_003_for_regi.h5 regi_pose_pelvis.h5 regi_pose_femur.h5 regi_pose_frag.h5 rel_pose_femur.h5 rel_pose_frag.h5 multi_obj_multi_view_debug.h5 {backend_str} {device_str}')
 
         run_cmd('xreg-pao-draw-bones pao_cuts_seg.nii.gz pelvis_app_lands.fcsv left --femur-frag-xform rel_pose_frag.h5 --femur-only-xform rel_pose_femur.h5 --femur-not-rel-to-frag --cam-view ap --bg-color 1 1 1')
 
-        run_cmd(f'xreg-regi2d3d-replay --video-fps 10 --proj-ds 0.5 multi_obj_multi_view_debug.h5 {backend_str}')
+        run_cmd(f'xreg-regi2d3d-replay --video-fps 10 --proj-ds 0.5 multi_obj_multi_view_debug.h5 {backend_str} {device_str}')
         
         view_movie('edges.mp4')
         view_movie('mov.mp4')
@@ -482,11 +518,11 @@ if __name__ == '__main__':
 
         print('2D/3D registration of pelvis..')
 
-        run_cmd(f'xreg-hip-surg-pelvis-single-view-regi-2d-3d TCGA-G2-A3VY_ct.nii.gz pelvis_3d_lands.fcsv 2-c73e_pd.h5 2-c73e_pelvis_regi.h5 2-c73e_regi_debug.h5 --no-log-remap -s TCGA-G2-A3VY_ct_full_pelvis-label.nii.gz {backend_str}')
+        run_cmd(f'xreg-hip-surg-pelvis-single-view-regi-2d-3d TCGA-G2-A3VY_ct.nii.gz pelvis_3d_lands.fcsv 2-c73e_pd.h5 2-c73e_pelvis_regi.h5 2-c73e_regi_debug.h5 --no-log-remap -s TCGA-G2-A3VY_ct_full_pelvis-label.nii.gz {backend_str} {device_str}')
         
         run_cmd('xreg-draw-xray-scene -i -l 2-c73e_pd.h5 pelvis.ply 2-c73e_pelvis_regi.h5 pelvis_3d_lands.fcsv 2-c73e_pelvis_regi.h5')
 
-        run_cmd(f'xreg-regi2d3d-replay --proj-ds 0.5 --video-fps 10 2-c73e_regi_debug.h5 {backend_str}')
+        run_cmd(f'xreg-regi2d3d-replay --proj-ds 0.5 --video-fps 10 2-c73e_regi_debug.h5 {backend_str} {device_str}')
         
         view_movie('edges.mp4')
         view_movie('mov.mp4')
