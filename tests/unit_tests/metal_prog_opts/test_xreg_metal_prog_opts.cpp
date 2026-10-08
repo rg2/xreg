@@ -119,11 +119,15 @@ void TestProgOpts()
     std::cout << help_str.substr(help_str.find("OpenCL Platform:")) << std::flush;
   }
 
-  // the metal backend is accepted, but it is not the default
+  // the metal backend is the default when a Metal device is available, and the
+  // other backends may still be selected
   {
+    xregASSERT(ParseArgs({})->get("backend").as_string() == "metal");
+
     auto po = ParseArgs({ "--backend", "metal" });
     xregASSERT(po->get("backend").as_string() == "metal");
-    xregASSERT(ParseArgs({})->get("backend").as_string() != "metal");
+
+    xregASSERT(ParseArgs({ "--backend", "cpu" })->get("backend").as_string() == "cpu");
   }
 
   // no ID selects the default device

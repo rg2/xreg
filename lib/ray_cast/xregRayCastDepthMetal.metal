@@ -76,27 +76,17 @@ kernel void DepthKernel(constant RayCastMetalArgs& args                 [[buffer
 
     for (uint step_idx = 0; step_idx <= seg.num_steps; ++step_idx, cur_idx += seg.step_idx)
     {
-      float cur_val = vol(cur_idx);
+      const float cur_val = vol(cur_idx);
 
       if (cur_val >= thresh)
       {
-        // binary search for the threshold crossing between the previous and
-        // current samples, consistent with RayCasterDepthCPU
-        float3 cur_step = seg.step_idx;
-
-        for (uint bt_idx = 0; bt_idx < depth_args.num_backtracking_steps; ++bt_idx)
-        {
-          cur_step *= 0.5f;
-
-          cur_idx -= (cur_val >= thresh) ? cur_step : -cur_step;
-
-          cur_val = vol(cur_idx);
-        }
+        const float3 sur_idx = BacktrackToSurface(vol, cur_idx, seg.step_idx, cur_val, thresh,
+                                                  depth_args.num_backtracking_steps);
 
         // The distance from the focal point in physical units, which is equal
         // to the distance in the camera frame since the camera pose is rigid.
         const float depth = metal::length(XformVec(depth_args.itk_idx_to_itk_phys_pt_xform,
-                                                   cur_idx - seg.pinhole_idx));
+                                                   sur_idx - seg.pinhole_idx));
 
         proj_pixels[pixel.pixel_idx] = metal::fmin(proj_pixels[pixel.pixel_idx], depth);
 

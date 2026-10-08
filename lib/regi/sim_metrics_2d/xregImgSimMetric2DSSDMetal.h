@@ -22,32 +22,41 @@
  * SOFTWARE.
  */
 
-#ifndef XREGMETALSHADERSRC_H_
-#define XREGMETALSHADERSRC_H_
+#ifndef XREGIMGSIMMETRIC2DSSDMETAL_H_
+#define XREGIMGSIMMETRIC2DSSDMETAL_H_
 
-#include <string>
+#include "xregImgSimMetric2DMetal.h"
 
 namespace xreg
 {
 
-// Sources of the Metal shader helpers in lib/metal, these are embedded at
-// build time from the corresponding files (see xreg_embed_metal_src).
-
-extern const char* const kMETAL_SHADER_SHARED_SRC;  ///< xregMetalShaderShared.h
-extern const char* const kMETAL_MATH_SRC;           ///< xregMetalMath.metal
-extern const char* const kMETAL_SPATIAL_SRC;        ///< xregMetalSpatial.metal
-extern const char* const kMETAL_INTERP_SRC;         ///< xregMetalInterp.metal
-extern const char* const kMETAL_REDUCE_SRC;         ///< xregMetalReduce.metal
-extern const char* const kMETAL_MISC_KERNELS_SRC;   ///< xregMetalMiscKernels.metal
-
-/// \brief All of the Metal shader helper sources, concatenated in dependency
-///        order.
+/// \brief Sum of squared differences similarity metric using Metal.
 ///
-/// Shader sources that depend on the helpers should be appended to this
-/// before compiling with MetalLibrary.
-std::string MetalHelperShadersSrc();
+/// The counterpart of ImgSimMetric2DSSDOCL, this computes the mean of the
+/// squared differences over the pixels that are not masked out.
+class ImgSimMetric2DSSDMetal : public ImgSimMetric2DMetal
+{
+public:
+  /// \brief Default constructor, uses the system default device and creates
+  ///        a new command queue.
+  ImgSimMetric2DSSDMetal() = default;
+
+  /// \brief Constructor specifying a device to use, creates a new command queue.
+  explicit ImgSimMetric2DSSDMetal(const MetalDevice& dev);
+
+  /// \brief Constructor specifying a command queue (and therefore device) to use.
+  explicit ImgSimMetric2DSSDMetal(const MetalCmdQueue& queue);
+
+  void allocate_resources() override;
+
+  void compute() override;
+
+private:
+  MetalComputePipeline ssd_pipeline_;
+
+  DevBuf sim_vals_dev_;
+};
 
 }  // xreg
 
 #endif
-

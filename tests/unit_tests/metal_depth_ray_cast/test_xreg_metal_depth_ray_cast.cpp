@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -168,9 +169,9 @@ constexpr float kCPU_MAX_ABS_TOL_HW    = 0.5f;
 constexpr float kCPU_MEAN_ABS_TOL      = 1.0e-2f;
 
 void TestAgainstReferences(const MetalDevice& dev, const bool force_sw, const Scene& s,
-                           const bool have_ocl)
+                           const std::optional<boost::compute::device>& ocl_ref_dev)
 {
-  if (have_ocl)
+  if (ocl_ref_dev)
   {
     for (const CoordScalar step_size : { 1.0f, 0.5f })
     {
@@ -178,7 +179,7 @@ void TestAgainstReferences(const MetalDevice& dev, const bool force_sw, const Sc
       SetupDepth(*metal_rc, s, step_size);
       metal_rc->compute();
 
-      RayCasterDepthOCL ocl_rc;
+      RayCasterDepthOCL ocl_rc(*ocl_ref_dev);
       SetupDepth(ocl_rc, s, step_size);
       ocl_rc.compute();
 
@@ -380,7 +381,13 @@ void PrintTimings(const MetalDevice& dev, const Scene& s, const bool have_ocl)
 
   if (have_ocl)
   {
-    for (const auto& ocl_dev : OpenCLDevicesMatching(dev))
+    if (OpenCLRayCastDevicesMatching(dev).size() < OpenCLDevicesMatching(dev).size())
+    {
+      std::cout << "      OpenCL:             skipped (invalid ray casts, see OpenCLRayCastersInvalid())"
+                << std::endl;
+    }
+
+    for (const auto& ocl_dev : OpenCLRayCastDevicesMatching(dev))
     {
       RayCasterDepthOCL ocl_rc(ocl_dev);
       SetupDepth(ocl_rc, s, 1);
@@ -396,9 +403,16 @@ int main(int argc, char* argv[])
 {
   const bool have_ocl = HaveOpenCL();
 
-  if (!have_ocl)
+  const std::optional<boost::compute::device> ocl_ref_dev = have_ocl ? OpenCLRayCastRefDevice() :
+                                                                        std::nullopt;
+
+  if (ocl_ref_dev)
   {
-    std::cout << "No OpenCL platform available, skipping OpenCL comparisons." << std::endl;
+    std::cout << "OpenCL reference device: " << ocl_ref_dev->name() << std::endl;
+  }
+  else
+  {
+    std::cout << "No valid OpenCL device available, skipping OpenCL comparisons." << std::endl;
   }
 
   const Scene scene        = MakeScene(kNUM_PROJS, 96, 80, 64, 120, 150, 1.2);
@@ -418,7 +432,7 @@ int main(int argc, char* argv[])
 
       std::cout << "  " << (force_sw ? "SW" : "HW") << " interpolation:" << std::endl;
 
-      TestAgainstReferences(dev, force_sw, scene, have_ocl);
+      TestAgainstReferences(dev, force_sw, scene, ocl_ref_dev);
 
       TestBacktracking(dev, force_sw, scene);
 

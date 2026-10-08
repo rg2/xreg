@@ -22,32 +22,41 @@
  * SOFTWARE.
  */
 
-#ifndef XREGMETALSHADERSRC_H_
-#define XREGMETALSHADERSRC_H_
+#ifndef XREGRAYCASTSURRENDERMETALARGS_H_
+#define XREGRAYCASTSURRENDERMETALARGS_H_
 
-#include <string>
+// Arguments of the Metal surface rendering kernel, shared by the host and the
+// kernel. This file is valid C++ and Metal Shading Language, it is also embedded
+// in the shader source compiled at runtime.
+
+#ifndef XREG_METAL_RUNTIME_SRC
+#include "xregRayCastMetalArgs.h"
+#endif
 
 namespace xreg
 {
 
-// Sources of the Metal shader helpers in lib/metal, these are embedded at
-// build time from the corresponding files (see xreg_embed_metal_src).
+/// \brief Surface rendering kernel specific arguments, passed at
+///        kRAY_CAST_METAL_EXTRA_ARGS.
+struct RayCastSurRenderMetalArgs
+{
+  /// \brief A surface is located at the first sample along a ray greater than or
+  ///        equal to this value.
+  float sur_coll_thresh;
 
-extern const char* const kMETAL_SHADER_SHARED_SRC;  ///< xregMetalShaderShared.h
-extern const char* const kMETAL_MATH_SRC;           ///< xregMetalMath.metal
-extern const char* const kMETAL_SPATIAL_SRC;        ///< xregMetalSpatial.metal
-extern const char* const kMETAL_INTERP_SRC;         ///< xregMetalInterp.metal
-extern const char* const kMETAL_REDUCE_SRC;         ///< xregMetalReduce.metal
-extern const char* const kMETAL_MISC_KERNELS_SRC;   ///< xregMetalMiscKernels.metal
+  /// \brief The number of binary search iterations used to refine the location
+  ///        of a surface between the last two samples along a ray.
+  ray_cast_metal_types::UInt num_backtracking_steps;
 
-/// \brief All of the Metal shader helper sources, concatenated in dependency
-///        order.
-///
-/// Shader sources that depend on the helpers should be appended to this
-/// before compiling with MetalLibrary.
-std::string MetalHelperShadersSrc();
+  // Phong illumination model parameters, see RayCasterSurRenderShadingParams
+  float ambient_reflection_ratio;
+  float diffuse_reflection_ratio;
+  float specular_reflection_ratio;
+  float alpha_shininess;
+};
+
+static_assert(sizeof(RayCastSurRenderMetalArgs) == 24, "unexpected RayCastSurRenderMetalArgs layout");
 
 }  // xreg
 
 #endif
-

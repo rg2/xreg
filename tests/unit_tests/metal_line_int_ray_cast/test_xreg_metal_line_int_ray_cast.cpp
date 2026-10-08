@@ -2,6 +2,7 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -107,7 +108,7 @@ constexpr float kSELF_MAX_REL_TOL  = 1.0e-5f;
 constexpr float kSELF_MEAN_REL_TOL = 1.0e-6f;
 
 void TestAgainstReferences(const MetalDevice& dev, const bool force_sw, const Scene& s,
-                           const bool have_ocl)
+                           const std::optional<boost::compute::device>& ocl_ref_dev)
 {
   // step size of 1 so that the CPU results are comparable (the CPU ray caster
   // scales by the step size, while the OpenCL and Metal ray casters do not)
@@ -137,7 +138,7 @@ void TestAgainstReferences(const MetalDevice& dev, const bool force_sw, const Sc
                kCPU_MAX_REL_TOL, kCPU_MEAN_REL_TOL);
   }
 
-  if (have_ocl)
+  if (ocl_ref_dev)
   {
     for (const CoordScalar step_size : { 1.0f, 0.5f })
     {
@@ -147,7 +148,7 @@ void TestAgainstReferences(const MetalDevice& dev, const bool force_sw, const Sc
         SetupLineInt(*metal_rc, s, step_size, kernel);
         metal_rc->compute();
 
-        RayCasterLineIntOCL ocl_rc;
+        RayCasterLineIntOCL ocl_rc(*ocl_ref_dev);
         SetupLineInt(ocl_rc, s, step_size, kernel);
         ocl_rc.compute();
 
@@ -392,7 +393,13 @@ void PrintTimings(const MetalDevice& dev, const Scene& s, const bool have_ocl)
 
   if (have_ocl)
   {
-    for (const auto& ocl_dev : OpenCLDevicesMatching(dev))
+    if (OpenCLRayCastDevicesMatching(dev).size() < OpenCLDevicesMatching(dev).size())
+    {
+      std::cout << "      OpenCL:             skipped (invalid ray casts, see OpenCLRayCastersInvalid())"
+                << std::endl;
+    }
+
+    for (const auto& ocl_dev : OpenCLRayCastDevicesMatching(dev))
     {
       RayCasterLineIntOCL ocl_rc(ocl_dev);
       SetupLineInt(ocl_rc, s, 1);
@@ -408,9 +415,16 @@ int main(int argc, char* argv[])
 {
   const bool have_ocl = HaveOpenCL();
 
-  if (!have_ocl)
+  const std::optional<boost::compute::device> ocl_ref_dev = have_ocl ? OpenCLRayCastRefDevice() :
+                                                                        std::nullopt;
+
+  if (ocl_ref_dev)
   {
-    std::cout << "No OpenCL platform available, skipping OpenCL comparisons." << std::endl;
+    std::cout << "OpenCL reference device: " << ocl_ref_dev->name() << std::endl;
+  }
+  else
+  {
+    std::cout << "No valid OpenCL device available, skipping OpenCL comparisons." << std::endl;
   }
 
   // the detector is larger than the projected volume, so some rays do not
@@ -432,7 +446,7 @@ int main(int argc, char* argv[])
 
       std::cout << "  " << (force_sw ? "SW" : "HW") << " interpolation:" << std::endl;
 
-      TestAgainstReferences(dev, force_sw, scene, have_ocl);
+      TestAgainstReferences(dev, force_sw, scene, ocl_ref_dev);
 
       TestStoreMethodsAndBuffers(dev, force_sw, scene);
     }

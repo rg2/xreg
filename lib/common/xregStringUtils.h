@@ -141,6 +141,38 @@ std::string JoinTokens(const std::vector<std::string,A>& string_list, const std:
   return JoinTokens(string_list.begin(), string_list.end(), join_str);
 }
 
+/// \brief Find the entries of a map with string keys that match a string,
+///        ignoring case.
+///
+/// When a key is equal to the string, ignoring case, only that entry is
+/// returned (an exact match takes precedence). Otherwise, every entry with a
+/// key that contains the string, ignoring case, is returned. Exactly one entry
+/// is returned when the string uniquely identifies an entry, e.g. a device ID.
+template <class tMap>
+std::vector<typename tMap::const_iterator>
+FindMapEntriesByKeySubstrIgnoreCase(const tMap& m, const std::string& key_substr)
+{
+  const std::string key_substr_lower = ToLowerCase(key_substr);
+
+  std::vector<typename tMap::const_iterator> matches;
+
+  for (auto it = m.begin(); it != m.end(); ++it)
+  {
+    const std::string cur_key_lower = ToLowerCase(it->first);
+
+    if (cur_key_lower == key_substr_lower)
+    {
+      return { it };
+    }
+    else if (cur_key_lower.find(key_substr_lower) != std::string::npos)
+    {
+      matches.push_back(it);
+    }
+  }
+
+  return matches;
+}
+
 /// \brief Split a string into tokens.
 ///
 /// The dimlimiting characters are specified by a string, where each character is

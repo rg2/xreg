@@ -31,10 +31,16 @@ if (XREG_USE_METAL)
   xreg_embed_metal_src(XREG_RAY_CAST_METAL_SRCS kRAY_CAST_LINE_INT_METAL_SRC xregRayCastLineIntMetal.metal)
   xreg_embed_metal_src(XREG_RAY_CAST_METAL_SRCS kRAY_CAST_DEPTH_METAL_ARGS_SRC xregRayCastDepthMetalArgs.h)
   xreg_embed_metal_src(XREG_RAY_CAST_METAL_SRCS kRAY_CAST_DEPTH_METAL_SRC      xregRayCastDepthMetal.metal)
+  xreg_embed_metal_src(XREG_RAY_CAST_METAL_SRCS kRAY_CAST_SUR_RENDER_METAL_ARGS_SRC  xregRayCastSurRenderMetalArgs.h)
+  xreg_embed_metal_src(XREG_RAY_CAST_METAL_SRCS kRAY_CAST_SUR_RENDER_METAL_SRC       xregRayCastSurRenderMetal.metal)
+  xreg_embed_metal_src(XREG_RAY_CAST_METAL_SRCS kRAY_CAST_OCC_CONTOUR_METAL_ARGS_SRC xregRayCastOccContourMetalArgs.h)
+  xreg_embed_metal_src(XREG_RAY_CAST_METAL_SRCS kRAY_CAST_OCC_CONTOUR_METAL_SRC      xregRayCastOccContourMetal.metal)
 
   list(APPEND XREG_RAY_CAST_METAL_SRCS xregRayCastBaseMetal.mm
                                        xregRayCastLineIntMetal.cpp
-                                       xregRayCastDepthMetal.cpp)
+                                       xregRayCastDepthMetal.cpp
+                                       xregRayCastSurRenderMetal.cpp
+                                       xregRayCastOccContourMetal.cpp)
 endif ()
 
 add_library(xreg_ray_cast OBJECT ${XREG_CUR_LIB_HEADERS}

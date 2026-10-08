@@ -283,6 +283,17 @@ ValidBackendNameAndDescs()
   
   if (need_to_init)
   {
+    // NOTE: the first backend listed is the default backend
+
+#ifdef XREG_HAS_METAL
+    if (!xreg::MetalAllDevices().empty())
+    {
+      backend_names_and_descs.push_back(
+                std::make_tuple(std::string("metal"),
+                                std::string("Apple Metal GPU processing.")));
+    }
+#endif
+
     if (!boost::compute::system::platforms().empty())
     {
       backend_names_and_descs.push_back(
@@ -293,17 +304,6 @@ ValidBackendNameAndDescs()
     backend_names_and_descs.push_back(
                 std::make_tuple(std::string("cpu"),
                                 std::string("Standard CPU processing, potentially using TBB.")));
-
-#ifdef XREG_HAS_METAL
-    // NOTE: this is listed after cpu so that it is not the default backend, since
-    //       Metal implementations of ray casters, etc. are not yet available.
-    if (!xreg::MetalAllDevices().empty())
-    {
-      backend_names_and_descs.push_back(
-                std::make_tuple(std::string("metal"),
-                                std::string("Apple Metal GPU processing.")));
-    }
-#endif
     
     need_to_init = false;
   }
@@ -1739,8 +1739,10 @@ void xreg::ProgOpts::add_ocl_select_flag()
   set_print_help_ocl_str(true);
 
   add("ocl-id", ProgOpts::kNO_SHORT_FLAG, ProgOpts::kSTORE_STRING, "ocl-id",
-      "Specify the OpenCL device to use with a unique identifier string - the available device ID strings "
-      "may be obtained with the help print-out. The default behavior is to use the default "
+      "Specify the OpenCL device to use with a device identifier string - the available device ID strings "
+      "may be obtained with the help print-out. The full ID string is not required, any case insensitive "
+      "substring that matches exactly one device ID may be used (e.g. \"amd\" or \"uhd\"). "
+      "The default behavior is to use the default "
       "device specified by the boost::compute library, which may not be constant (e.g. it "
       "may vary depending on system resources, etc.).")
     << "";
@@ -1754,14 +1756,13 @@ boost::compute::device xreg::ProgOpts::selected_ocl()
     
     if (!ocl_id.empty())
     {
-      auto id_dev_it = opencl_id_str_to_dev_map_.find(ocl_id);
-      if (id_dev_it != opencl_id_str_to_dev_map_.end())
+      try
       {
-        selected_ocl_dev_ = id_dev_it->second;
+        selected_ocl_dev_ = FindOpenCLDevByIDSubstr(opencl_id_str_to_dev_map_, ocl_id)->second;
       }
-      else
+      catch (const std::exception& e)
       {
-        xregThrow("Invalid OpenCL Device ID String: %s", ocl_id.c_str());
+        xregThrow("Invalid OpenCL Device ID String: %s", e.what());
       }
     }
     else

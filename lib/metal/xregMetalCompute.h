@@ -29,6 +29,7 @@
 // pipelines. Objective-C++ code may access the underlying Metal objects through
 // native_handle().
 
+#include <array>
 #include <map>
 #include <memory>
 #include <string>
@@ -108,6 +109,74 @@ private:
   struct Impl;
 
   std::shared_ptr<Impl> impl_;
+};
+
+/// \brief Encodes compute kernel dispatches into a command buffer of a queue.
+///
+/// Dispatches are executed in the order they are encoded and each dispatch
+/// observes the memory writes of previous dispatches, so dependent kernels may
+/// be encoded together and waited on once with commit_and_wait(). Arguments
+/// (the pipeline, buffers and bytes) persist between dispatches until they are
+/// replaced.
+///
+/// Encoded work that has not been committed is discarded on destruction.
+class MetalComputeEncoder
+{
+public:
+  using Size3 = std::array<size_type,3>;
+
+  /// \brief The maximum number of bytes that may be passed with set_bytes().
+  static constexpr size_type kMAX_SET_BYTES_LEN = 4096;
+
+  explicit MetalComputeEncoder(MetalCmdQueue& queue);
+
+  MetalComputeEncoder(const MetalComputeEncoder&) = delete;
+  MetalComputeEncoder& operator=(const MetalComputeEncoder&) = delete;
+
+  ~MetalComputeEncoder();
+
+  void set_pipeline(const MetalComputePipeline& pipeline);
+
+  /// \brief Bind a buffer at an index of the [[buffer(idx)]] argument table,
+  ///        starting at a byte offset.
+  void set_buffer(const MetalBuffer& buf, const size_type idx, const size_type off_bytes = 0);
+
+  /// \brief Bind a buffer at an index of the [[buffer(idx)]] argument table,
+  ///        starting at an element offset.
+  template <class T>
+  void set_buffer(const MetalVector<T>& v, const size_type idx, const size_type elem_off = 0)
+  {
+    set_buffer(v.buffer(), idx, elem_off * sizeof(T));
+  }
+
+  /// \brief Copy bytes (at most kMAX_SET_BYTES_LEN) into the [[buffer(idx)]]
+  ///        argument table, e.g. for a constant argument.
+  void set_bytes(const void* src, const size_type num_bytes, const size_type idx);
+
+  /// \brief Copy a value into the [[buffer(idx)]] argument table.
+  template <class T>
+  void set_value(const T& v, const size_type idx)
+  {
+    static_assert(std::is_trivially_copyable<T>::value,
+                  "values passed to Metal kernels must be trivially copyable");
+    set_bytes(&v, sizeof(T), idx);
+  }
+
+  /// \brief Dispatch a grid of threads using the current pipeline.
+  ///
+  /// The grid does not need to be a multiple of the threadgroup size. Nothing
+  /// is dispatched when the grid is empty.
+  void dispatch_threads(const Size3& grid, const Size3& threadgroup);
+
+  /// \brief Commit the encoded work, wait for it to complete and throw when
+  ///        the device reports an error.
+  ///
+  /// No more work may be encoded after this call.
+  void commit_and_wait();
+
+private:
+  struct Impl;
+  std::unique_ptr<Impl> impl_;
 };
 
 }  // xreg

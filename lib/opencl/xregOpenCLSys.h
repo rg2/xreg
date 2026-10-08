@@ -26,6 +26,7 @@
 #define XREGOPENCLSYS_H_
 
 #include <map>
+#include <string>
 #include <vector>
 
 #ifdef __APPLE__
@@ -51,6 +52,15 @@ OpenCLNameDevMap BuildDevIDStrsToDevMap();
 ///
 /// \see BuildDevIDStrsToDevMap
 std::vector<std::string> DevIDStrs(const bool use_cpu);
+
+/// \brief Find the device whose ID string matches, ignoring case, a full ID
+///        string or a substring of exactly one ID string.
+///
+/// An exact match of a full ID string takes precedence over substring matches.
+/// Throws when no ID matches or when the substring matches more than one ID.
+/// This is the counterpart of FindMetalDevByIDSubstr().
+OpenCLNameDevMap::const_iterator
+FindOpenCLDevByIDSubstr(const OpenCLNameDevMap& id_str_to_devs, const std::string& id_substr);
 
 }  // xreg
 

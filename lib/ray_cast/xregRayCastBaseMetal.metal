@@ -31,6 +31,7 @@
 #include "xregRayCastMetalArgs.h"
 #include "xregMetalMath.metal"
 #include "xregMetalSpatial.metal"
+#include "xregMetalInterp.metal"
 #endif
 
 #include <metal_stdlib>
@@ -151,6 +152,38 @@ inline RaySegment ComputeRaySegment(constant RayCastMetalArgs& args,
   seg.step_idx = seg.pinhole_to_det_idx * (step_len_idx / pinhole_to_det_len_idx);
 
   return seg;
+}
+
+/// \brief Refine the location of a surface with a binary search.
+///
+/// The sample at sur_idx (with value sur_val) is the first sample along a ray
+/// greater than or equal to the threshold, and the previous sample (at
+/// sur_idx - step_idx) is less than the threshold. Each iteration halves the
+/// step and moves back towards the focal point when the current sample is
+/// greater than or equal to the threshold, otherwise forward, consistent with
+/// the CPU ray casters. No iterations returns sur_idx.
+inline float3 BacktrackToSurface(const LinearVolumeSampler vol, float3 sur_idx, float3 step_idx,
+                                 float sur_val, const float thresh, const uint num_backtracking_steps)
+{
+  for (uint bt_idx = 0; bt_idx < num_backtracking_steps; ++bt_idx)
+  {
+    step_idx *= 0.5f;
+
+    sur_idx -= (sur_val >= thresh) ? step_idx : -step_idx;
+
+    sur_val = vol(sur_idx);
+  }
+
+  return sur_idx;
+}
+
+/// \brief Gradient of the volume with respect to continuous indices, estimated
+///        with central differences of adjacent indices.
+inline float3 CentralDiffGradient(const LinearVolumeSampler vol, const float3 idx)
+{
+  return 0.5f * float3(vol(idx + float3(1, 0, 0)) - vol(idx - float3(1, 0, 0)),
+                       vol(idx + float3(0, 1, 0)) - vol(idx - float3(0, 1, 0)),
+                       vol(idx + float3(0, 0, 1)) - vol(idx - float3(0, 0, 1)));
 }
 
 }  // xreg

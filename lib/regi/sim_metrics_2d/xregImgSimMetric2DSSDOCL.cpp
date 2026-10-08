@@ -112,13 +112,17 @@ void xreg::ImgSimMetric2DSSDOCL::allocate_resources()
   div_elems_krnl_ = prog.create_kernel("DivideBufElemsOutOfPlace");
 
   sq_dist_krnl_ = prog.create_kernel("SquareDistKernel");
+
+  ImgSimMetric2DOCL::allocate_resources();
+
+  // The buffer arguments are set after the parent call to allocate resources,
+  // which creates the fixed image buffer (when not set from a device buffer)
+  // and allocates the moving images buffer of a sync object.
   sq_dist_krnl_.set_arg(0, *this->mov_imgs_buf_);
-  sq_dist_krnl_.set_arg(1, *this->fixed_img_ocl_buf_);  
-  sq_dist_krnl_.set_arg(3, bc::uint_(one_over_n_dev_->size()));
+  sq_dist_krnl_.set_arg(1, *this->fixed_img_ocl_buf_);
+  sq_dist_krnl_.set_arg(3, bc::uint_(this->num_pix_per_proj()));
   // arguments 2,4 are set in compute(), since they may differ from the values
   // used for the maximally allocated buffer.
-  
-  ImgSimMetric2DOCL::allocate_resources();
 }
 
 void xreg::ImgSimMetric2DSSDOCL::compute()

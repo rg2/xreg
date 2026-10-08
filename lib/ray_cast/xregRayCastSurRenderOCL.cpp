@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Robert Grupp
+ * Copyright (c) 2020-2026 Robert Grupp
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -159,9 +159,8 @@ __kernel void xregSurRenderKernel2(const RayCastArgs args,
       float3 light_src_vec = (float3) (dst_step_vecs_and_intersect_pts_wrt_itk_idx[idx].s0, dst_step_vecs_and_intersect_pts_wrt_itk_idx[idx].s1, dst_step_vecs_and_intersect_pts_wrt_itk_idx[idx].s2);
       // right now, this light source vector points from the light source, it needs to be negated, and it is when normalizing a few lines below
 
-      // This vector will always point towards the pinhole.
+      // This vector will always point away from the pinhole, just the magnitude will be adjusted
       float4 step_vec_wrt_itk_idx = (float4) (light_src_vec.x, light_src_vec.y, light_src_vec.z, 0);
-      step_vec_wrt_itk_idx *= 0.5f;
 
       // normalize the direction vector to the light source, and negate to get the right orientation
       light_src_vec /= -xregFloat3Norm(light_src_vec);
@@ -170,15 +169,11 @@ __kernel void xregSurRenderKernel2(const RayCastArgs args,
       
       cur_cont_vol_idx += tex_coords_off;
 
-      // we know that we should start out backtracking.
-      cur_cont_vol_idx -= step_vec_wrt_itk_idx;
-
       for (ulong backtrack_idx = 0; backtrack_idx < sur_render_args.num_backtracking_steps; ++backtrack_idx)
       {
         step_vec_wrt_itk_idx *= 0.5f;
 
-        cur_cont_vol_idx += (read_imagef(vol_tex, sampler, cur_cont_vol_idx).x >= sur_render_args.thresh) ?
-                                  step_vec_wrt_itk_idx : -step_vec_wrt_itk_idx;
+        cur_cont_vol_idx -= (read_imagef(vol_tex, sampler, cur_cont_vol_idx).x >= sur_render_args.thresh) ? step_vec_wrt_itk_idx : -step_vec_wrt_itk_idx;
       }
 
       // compute lighting/shading according to the phong model
@@ -200,7 +195,7 @@ __kernel void xregSurRenderKernel2(const RayCastArgs args,
       tmp_vec.z = read_imagef(vol_tex, sampler, (float4) (cur_cont_vol_idx.x, cur_cont_vol_idx.y, cur_cont_vol_idx.z + 1, cur_cont_vol_idx.w)).x -
                   read_imagef(vol_tex, sampler, (float4) (cur_cont_vol_idx.x, cur_cont_vol_idx.y, cur_cont_vol_idx.z - 1, cur_cont_vol_idx.w)).x;
 
-      tmp_vec /= (-0.5f * xregFloat3Norm(tmp_vec));
+      tmp_vec /= -xregFloat3Norm(tmp_vec);
 
       float val = sur_render_args.ambient_reflection_ratio;
 

@@ -22,7 +22,28 @@
 
 file(GLOB_RECURSE XREG_CUR_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 
+set(XREG_REGI_METAL_SRCS)
+
+if (XREG_USE_METAL)
+  # Metal shader sources, embedded as strings and compiled at runtime
+  xreg_embed_metal_src(XREG_REGI_METAL_SRCS kIMG_SIM_METRIC_2D_METAL_ARGS_SRC      sim_metrics_2d/xregImgSimMetric2DMetalArgs.h)
+  xreg_embed_metal_src(XREG_REGI_METAL_SRCS kIMG_SIM_METRIC_2D_METAL_SRC           sim_metrics_2d/xregImgSimMetric2DMetal.metal)
+  xreg_embed_metal_src(XREG_REGI_METAL_SRCS kIMG_SIM_METRIC_2D_SSD_METAL_SRC       sim_metrics_2d/xregImgSimMetric2DSSDMetal.metal)
+  xreg_embed_metal_src(XREG_REGI_METAL_SRCS kIMG_SIM_METRIC_2D_NCC_METAL_SRC       sim_metrics_2d/xregImgSimMetric2DNCCMetal.metal)
+  xreg_embed_metal_src(XREG_REGI_METAL_SRCS kIMG_SIM_METRIC_2D_GRAD_IMG_METAL_SRC  sim_metrics_2d/xregImgSimMetric2DGradImgMetal.metal)
+  xreg_embed_metal_src(XREG_REGI_METAL_SRCS kIMG_SIM_METRIC_2D_PATCH_NCC_METAL_SRC sim_metrics_2d/xregImgSimMetric2DPatchNCCMetal.metal)
+
+  list(APPEND XREG_REGI_METAL_SRCS sim_metrics_2d/xregImgSimMetric2DMetal.cpp
+                                   sim_metrics_2d/xregImgSimMetric2DSSDMetal.cpp
+                                   sim_metrics_2d/xregImgSimMetric2DNCCMetal.cpp
+                                   sim_metrics_2d/xregImgSimMetric2DGradImgMetal.cpp
+                                   sim_metrics_2d/xregImgSimMetric2DGradNCCMetal.cpp
+                                   sim_metrics_2d/xregImgSimMetric2DPatchNCCMetal.cpp
+                                   sim_metrics_2d/xregImgSimMetric2DPatchGradNCCMetal.cpp)
+endif ()
+
 add_library(xreg_regi OBJECT ${XREG_CUR_LIB_HEADERS}
+                             ${XREG_REGI_METAL_SRCS}
                              xregPairedPointRegi3D3D.cpp
                              xregICP3D3D.cpp
                              xregSE3OptVars.cpp

@@ -208,6 +208,12 @@ struct ContourFn
               // we're not at the source, perform some binary search/back-tracking
               // to determine a more accurate location of where the threshold is crossed
         
+              // The surface location is refined from a copy of the sample location,
+              // so that when continuing after a collision, the next sample is one
+              // step from this sample (not from the refined location, which may be
+              // behind this sample and prevent progress along the ray).
+              itk::ContinuousIndex<CoordScalar,3> sur_cont_vol_idx = cur_cont_vol_idx;
+
               // backtracking step vector - repeatedly cut in half
               itk::Vector<CoordScalar,3> backtrack_step_vec_wrt_itk_idx = tmp_step_vec_wrt_itk_idx;
 
@@ -216,11 +222,11 @@ struct ContourFn
                    ++sur_bin_step_idx)
               {
                 backtrack_step_vec_wrt_itk_idx *= 0.5;
-                cur_cont_vol_idx -=
+                sur_cont_vol_idx -=
                   (cur_vol_val >= collision_thresh) ?
                                   backtrack_step_vec_wrt_itk_idx : -backtrack_step_vec_wrt_itk_idx;
 
-                cur_vol_val = vol_interp->EvaluateAtContinuousIndex(cur_cont_vol_idx);
+                cur_vol_val = vol_interp->EvaluateAtContinuousIndex(sur_cont_vol_idx);
               }
               // end backtracking
 
@@ -228,7 +234,7 @@ struct ContourFn
               // NOTE: these are wrt image (index) axes.
 
               // Gradient in X direction
-              tmp_cont_vol_idx_grad = cur_cont_vol_idx;
+              tmp_cont_vol_idx_grad = sur_cont_vol_idx;
               tmp_cont_vol_idx_grad[0] -= 1;
 
               cur_vol_val_for_grad[0] = vol_interp->EvaluateAtContinuousIndex(tmp_cont_vol_idx_grad);
@@ -238,7 +244,7 @@ struct ContourFn
               sur_grad_vec[0] = cur_vol_val_for_grad[1] - cur_vol_val_for_grad[0];
 
               // Gradient in Y direction
-              tmp_cont_vol_idx_grad[0] = cur_cont_vol_idx[0];
+              tmp_cont_vol_idx_grad[0] = sur_cont_vol_idx[0];
               tmp_cont_vol_idx_grad[1] -= 1;
 
               cur_vol_val_for_grad[0] = vol_interp->EvaluateAtContinuousIndex(tmp_cont_vol_idx_grad);
@@ -248,7 +254,7 @@ struct ContourFn
               sur_grad_vec[1] = cur_vol_val_for_grad[1] - cur_vol_val_for_grad[0];
 
               // Gradient in Z direction
-              tmp_cont_vol_idx_grad[1] = cur_cont_vol_idx[1];
+              tmp_cont_vol_idx_grad[1] = sur_cont_vol_idx[1];
               tmp_cont_vol_idx_grad[2] -= 1;
 
               cur_vol_val_for_grad[0] = vol_interp->EvaluateAtContinuousIndex(tmp_cont_vol_idx_grad);
