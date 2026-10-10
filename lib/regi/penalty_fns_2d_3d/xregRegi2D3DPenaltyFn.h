@@ -45,7 +45,7 @@ public:
 
   Regi2D3DPenaltyFn() = default;
 
-  ~Regi2D3DPenaltyFn() = default;
+  virtual ~Regi2D3DPenaltyFn() = default;
 
   //Regi2D3DPenaltyFn(const Regi2D3DPenaltyFn&) = delete;
   //Regi2D3DPenaltyFn& operator=(const Regi2D3DPenaltyFn&) = delete;

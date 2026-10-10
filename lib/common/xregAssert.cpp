@@ -41,8 +41,8 @@ enum AssertFailHaltMethod
   kSPIN
 };
 
-// TODO: make this selectable programmatically (or via the PreProcessor)
-static const AssertFailHaltMethod gAssertFailMethod = kTRAP_DEBUG;
+// TODO: make this selectable via the PreProcessor
+AssertFailHaltMethod gAssertFailMethod = kTRAP_DEBUG;
 
 }  // un-named
 
@@ -53,6 +53,11 @@ xreg::AssertFailedException::AssertFailedException(const char* expr_str, const c
 {
   snprintf(what_buf_, sizeof(what_buf_), "%s  %s:%d", expr_str, file_str, line_num);
   what_buf_[sizeof(what_buf_) - 1] = 0;
+}
+
+void xreg::SetAssertFailThrows(const bool throw_on_fail)
+{
+  gAssertFailMethod = throw_on_fail ? kTHROW_EXCEPTION : kTRAP_DEBUG;
 }
 
 void xreg::AssertCheck(const bool expr, const char* expr_str, const char* file_str, const int line_num)

@@ -45,6 +45,13 @@ namespace xreg
 
 void AssertCheck(const bool expr, const char* expr_str, const char* file_str, const int line_num);
 
+/// \brief Sets whether a failed assertion throws an AssertFailedException
+///        instead of raising SIGABRT (the default).
+///
+/// This is useful when xreg is used from an environment that should not be
+/// terminated by a failed assertion, such as a Python interpreter.
+void SetAssertFailThrows(const bool throw_on_fail);
+
 class AssertFailedException : public std::exception
 {
 public:
