@@ -50,6 +50,10 @@
 namespace xreg
 {
 
+/// \brief Names of the compute backends (e.g. "metal", "ocl", "cpu") that are
+///        available on this system. The first entry is the default backend.
+std::vector<std::string> ValidBackendNames();
+
 class ProgOpts
 {
 public:

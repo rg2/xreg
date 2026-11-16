@@ -910,6 +910,18 @@ std::string xreg::ProgOpts::Readable(const StoreAction a, const ArgValList& vals
   return ss.str();
 }
 
+std::vector<std::string> xreg::ValidBackendNames()
+{
+  std::vector<std::string> names;
+
+  for (const auto& name_and_desc : ValidBackendNameAndDescs())
+  {
+    names.push_back(std::get<0>(name_and_desc));
+  }
+
+  return names;
+}
+
 xreg::ProgOpts::ProgOpts()
 {
   version_num_str_ = ProjVerStrAndGitSHA1IfAvail();
