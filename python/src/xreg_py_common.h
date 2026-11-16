@@ -284,6 +284,8 @@ void BindRegi(nb::module_& m);
 
 void BindHip(nb::module_& m);
 
+void BindReplay(nb::module_& m);
+
 }  // py
 }  // xreg
 

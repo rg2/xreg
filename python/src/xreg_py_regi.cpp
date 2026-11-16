@@ -876,6 +876,9 @@ void xreg::py::BindRegi(nb::module_& m)
   dbg_cls
     .def_static("read", &ReadMultiLevel2D3DRegiDebugFromDisk, "path"_a,
                 "Reads debug information from an HDF5 file.")
+    .def("total_num_projs_per_view", &DebugML::total_num_projs_per_view,
+         "The total number of projections, per view, of all registrations: the initial pose, "
+         "each iteration, and the final pose of each registration.")
     .def_rw("regi_names", &DebugML::regi_names,
             "regi_names[i][j] is the name of the jth registration at the ith level.")
     .def_prop_rw("vols",

@@ -80,6 +80,7 @@ set(XREG_PY_SRCS src/xreg_py_module.cpp
                  src/xreg_py_sim_metrics.cpp
                  src/xreg_py_opt.cpp
                  src/xreg_py_regi.cpp
+                 src/xreg_py_replay.cpp
                  src/xreg_py_hip.cpp)
 
 set(XREG_PY_MODULE_OPTS NB_STATIC)

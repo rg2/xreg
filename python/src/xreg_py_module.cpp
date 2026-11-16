@@ -24,6 +24,8 @@
 
 #include "xreg_py_common.h"
 
+#include <H5Cpp.h>
+
 #include "xregAssert.h"
 #include "xregVersionInfo.h"
 
@@ -37,6 +39,25 @@ NB_MODULE(_xreg, m)
   // Failed xreg assertions raise a Python exception (RuntimeError) instead of
   // terminating the interpreter with SIGABRT.
   SetAssertFailThrows(true);
+
+  // Exceptions thrown by the HDF5 C++ API do not derive from std::exception;
+  // raise a RuntimeError for these (e.g. when a file does not exist or is not
+  // a HDF5 file). Also, do not let HDF5 print its error stack to stderr.
+  H5::Exception::dontPrint();
+
+  nb::register_exception_translator(
+    [](const std::exception_ptr& p, void*)
+    {
+      try
+      {
+        std::rethrow_exception(p);
+      }
+      catch (const H5::Exception& e)
+      {
+        const std::string msg = "HDF5 error: " + e.getDetailMsg() + " (" + e.getFuncName() + ")";
+        PyErr_SetString(PyExc_RuntimeError, msg.c_str());
+      }
+    });
 
   m.attr("__version__") = ProjVerStrAndGitSHA1IfAvail();
 
@@ -55,4 +76,5 @@ NB_MODULE(_xreg, m)
   BindOpt(m);
   BindRegi(m);
   BindHip(m);
+  BindReplay(m);
 }
