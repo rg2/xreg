@@ -46,6 +46,14 @@ option(XREG_BUILD_APPS "Build xreg applications in addition to the library" ${XR
 
 option(XREG_BUILD_TESTS "Build xreg unit tests" OFF)
 
+option(XREG_BUILD_PYTHON "Build the xreg Python bindings (requires Python >= 3.12 and nanobind, see python/README.md)" OFF)
+
+if (XREG_BUILD_PYTHON)
+  # The Python extension module statically links xreg (and any static dependencies),
+  # which requires position independent code on some platforms (e.g. Linux).
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif ()
+
 option(XREG_INCLUDE_GIT_HASH_IN_VER_STR "Include the git hash in the version string that is embedded into the library" OFF)
 mark_as_advanced(XREG_INCLUDE_GIT_HASH_IN_VER_STR)
 
@@ -242,6 +250,10 @@ endif ()
 if (XREG_BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)
+endif ()
+
+if (XREG_BUILD_PYTHON)
+  add_subdirectory(python)
 endif ()
 
 # only install targets and config when building the library
