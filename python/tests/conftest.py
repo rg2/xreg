@@ -134,6 +134,60 @@ def pts_about(center, r=20.0):
     return [np.asarray(center) + np.array(o) for o in offs]
 
 
+def make_gt_pose(vol, rx_deg=10.0, ry_deg=-5.0, offset=(0.0, 0.0, 0.0)):
+    """A camera world to volume pose which places the volume half-way between the X-ray source
+    and the detector (with an optional offset in camera coordinates)."""
+    center = xreg.vol_center_as_phys_pt(vol)
+
+    return (trans(center) @ rot_x(np.radians(rx_deg)) @ rot_y(np.radians(ry_deg)) @
+            trans([0, 0, 500]) @ trans(-np.asarray(offset)))
+
+
+def perturb(vol, cam_to_vol, rot_deg=(3.0, -3.0, 0.0), t=(3.0, -2.0, 5.0)):
+    """Perturbs a pose with a rotation about the volume center and a translation."""
+    center = xreg.vol_center_as_phys_pt(vol)
+
+    r = rot_x(np.radians(rot_deg[0])) @ rot_y(np.radians(rot_deg[1])) @ rot_z(np.radians(rot_deg[2]))
+
+    return trans(center) @ r @ trans(-center) @ trans(t) @ cam_to_vol
+
+
+def make_second_view(cam, rot_deg=30.0):
+    """A camera rotated about the point half-way between the source and the detector of the
+    first camera, the world frame is the frame of the first camera."""
+    extrins = trans([0, 0, -500]) @ rot_y(np.radians(rot_deg)) @ trans([0, 0, 500])
+
+    cam2 = xreg.CameraModel()
+    cam2.setup(cam.intrins, extrins, cam.num_det_rows, cam.num_det_cols,
+               cam.det_row_spacing, cam.det_col_spacing)
+
+    return cam2
+
+
+def make_level(ds_factor, backend, regis, num_views=1, sim_metric='ncc', **sm_kwargs):
+    return xreg.Level(ds_factor=ds_factor,
+                      ray_caster=xreg.make_ray_caster('line_int', backend),
+                      sim_metrics=[xreg.make_sim_metric(sim_metric, backend, **sm_kwargs)
+                                   for _ in range(num_views)],
+                      fixed_imgs_to_use=list(range(num_views)),
+                      regis=regis)
+
+
+def make_bobyqa(bounds, opt_vars='se3'):
+    bobyqa = xreg.Intensity2D3DRegiBOBYQA()
+    bobyqa.set_opt_vars(opt_vars)
+    bobyqa.set_opt_x_tol(1e-4)
+    bobyqa.set_opt_obj_fn_tol(1e-5)
+    bobyqa.set_bounds(bounds)
+    return bobyqa
+
+
+def is_rigid(x):
+    x = np.asarray(x, dtype=np.float64)
+    return (np.allclose(x[:3, :3] @ x[:3, :3].T, np.eye(3), atol=1e-3) and
+            np.allclose(x[3], [0, 0, 0, 1]) and np.all(np.isfinite(x)))
+
+
 def pytest_generate_tests(metafunc):
     # Tests with a "backend" argument are run once for each backend to test
     if 'backend' in metafunc.fixturenames:

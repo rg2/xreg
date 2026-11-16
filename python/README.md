@@ -7,7 +7,8 @@ The bindings currently cover what is needed to set up and run intensity-based 2D
 with `MultiLevelMultiObjRegi`: multiple objects, multiple views, multiple resolution levels, the
 optimizers and regularizers used by the hip surgery tools and by the
 [IPCAI 2020 experiments](https://github.com/rg2/Regi2D3D-IPCAI2020), and the surrounding utilities
-(projection pre-processing, PnP initialization, DRRs, debug output). The Python API mirrors the C++
+(projection pre-processing, PnP initialization, DRRs, debug output, and replaying a registration
+into movies). The Python API mirrors the C++
 API: classes keep their C++ names, free functions use `snake_case`, and plain structs gain keyword
 constructors. The C++ documentation and tools are therefore the best reference for *how* to set up
 a registration. In a few places short strings may replace small helper objects.
@@ -163,11 +164,44 @@ print(regi.cur_cam_to_vols[0])
 | Optimization variables | `SE3OptVarsLieAlg`, `SE3OptVarsEuler`, `SE3OptVarsTransOnly`, `SO3OptVarsLieAlg`, `SO3OptVarsEuler`, `make_opt_vars` |
 | Optimizers | `Intensity2D3DRegiCMAES`, `...BOBYQA` (and the other NLopt methods), `...DiffEvo`, `...PSO`, `...HillClimb`, `...Exhaustive` |
 | Multi-level registration | `MultiLevelMultiObjRegi`, `Level`, `SingleRegi`, `StaticRefFrame`, `CamAlignRefFrameWithCurPose`, `DynVolRefFrame`, `InitPoseId`, `InitPosePrevPoseEst`, `InitPosePrevPoseEstTransOnly`, `InitPosePrevPoseEstRotOnly`, `make_init_pose` |
-| Debug output | `DebugRegiResultsMultiLevel`, `VolPathInfo`, `ProjDataPathInfo` (files may be replayed with `xreg-regi2d3d-replay`) |
+| Debug output | `DebugRegiResultsMultiLevel`, `VolPathInfo`, `ProjDataPathInfo` |
+| Replay movies | `Regi2D3DReplay` (the implementation of `xreg-regi2d3d-replay`) |
 | Hip anatomy and PnP | `anterior_pelvic_plane_from_landmarks`, `create_ap_view_of_app`, `guess_pelvis_femur_pao_frag_labels`, `pnp_posit_and_reproj_cmaes`, `pnp_reproj_cmaes` |
 
 `help(xreg.<name>)` shows the signature and documentation of each item, and type stubs are
 installed with the package.
+
+### Replaying a registration
+
+`Regi2D3DReplay` turns the debug information collected by a registration into the movies made by
+the `xreg-regi2d3d-replay` tool; it is the same code, and the options have the tool's defaults.
+
+```python
+regi.set_save_debug_info(True)
+regi.debug_info.vols = [vol_hu]                 # volumes in HU (or VolPathInfo objects)
+regi.debug_info.fixed_projs = pp.input_projs    # projections prior to pre-processing (or a ProjDataPathInfo)
+regi.debug_info.proj_pre_proc_info = pp.params
+regi.debug_info.regi_names = [['BOBYQA']]       # one name per registration of each level
+regi.run()
+
+replay = xreg.Regi2D3DReplay(backend, proj_ds_factor=0.5)
+replay.run(regi.debug_info)                     # or the path of a file written by regi.write_debug()
+replay.write_videos('mov.mp4', 'edges.mp4', fps=10)
+
+frames = replay.edge_frames                     # list of (rows, cols, 3) uint8 RGB numpy arrays
+```
+
+* There is one frame for the initial pose, each iteration, and the final pose of every
+  registration. `drr_frames` are DRRs at those poses, `edge_frames` are the fixed images overlaid
+  with edges of the DRRs, and all views are tiled into each frame. `frame_titles` has the text
+  that is burned into the movies.
+* The volumes in the debug information should be in Hounsfield units: they are converted to
+  linear attenuation for the DRRs and thresholded (`boundary_edge_hu_thresh`) for the object
+  boundaries.
+* Movies are encoded with `ffmpeg` when it is found on the system path. Otherwise AVFoundation is
+  used on macOS and OpenCV elsewhere.
+* Paths stored in debug information (`VolPathInfo`, `ProjDataPathInfo`) are used as-is, so
+  relative paths are resolved against the current working directory when replaying.
 
 ### Conventions
 
@@ -210,10 +244,10 @@ installed with the package.
   the corresponding `Level`/`SingleRegi` fields are empty/`None` afterwards. Create new objects to
   run again.
 * **Errors**: a failed xReg assertion raises `RuntimeError` instead of terminating the
-  interpreter. `run()` checks the setup (sizes, indices, missing objects) before starting and
+  interpreter, as do errors from ITK, OpenCV and HDF5 (e.g. a file that cannot be read). `run()` checks the setup (sizes, indices, missing objects) before starting and
   raises `ValueError` or `IndexError`.
-* **Threads**: the GIL is released while registrations, DRR computations, PnP solvers, projection
-  pre-processing and image/projection file I/O run.
+* **Threads**: the GIL is released while registrations, replays, DRR computations, PnP solvers,
+  projection pre-processing and image/projection file I/O run.
 * **Output**: `set_verbose(True)` prints status to the process's standard output, which notebooks
   do not capture.
 
