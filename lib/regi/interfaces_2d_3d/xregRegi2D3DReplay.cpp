@@ -748,8 +748,8 @@ void xreg::Regi2D3DReplay::run(const DebugRegiResultsMultiLevel& regi_results)
             }
           }
 
-          // enlarge edges:
-          if (edge_dilate_width > 1)
+          // enlarge edges (there is no edge image when no edges are computed):
+          if ((edge_dilate_width > 1) && !edge_img.empty())
           {
             cv::Mat tmp_src = edge_img.clone();
             cv::dilate(tmp_src, edge_img,
